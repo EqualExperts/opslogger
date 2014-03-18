@@ -1,4 +1,4 @@
-package uk.gov.gds.performance.collector.logging;
+package com.equalexperts.logging;
 
 import java.io.*;
 import java.nio.file.*;

@@ -1,4 +1,4 @@
-package uk.gov.gds.performance.collector.logging;
+package com.equalexperts.logging;
 
 import org.joda.time.DateTimeUtils;
 import org.joda.time.Instant;

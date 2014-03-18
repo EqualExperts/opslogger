@@ -1,4 +1,4 @@
-package uk.gov.gds.performance.collector.logging;
+package com.equalexperts.logging;
 
 public interface LogMessage {
     String getMessageCode();

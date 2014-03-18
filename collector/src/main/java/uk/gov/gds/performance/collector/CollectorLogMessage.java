@@ -1,6 +1,6 @@
 package uk.gov.gds.performance.collector;
 
-import uk.gov.gds.performance.collector.logging.LogMessage;
+import com.equalexperts.logging.LogMessage;
 
 public enum CollectorLogMessage implements LogMessage {
     Success("GDS-000000", "Successfully published %d records"),

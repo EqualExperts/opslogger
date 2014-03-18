@@ -1,4 +1,4 @@
-package uk.gov.gds.performance.collector.logging;
+package com.equalexperts.logging;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static uk.gov.gds.performance.collector.logging.EnumContractRunner.EnumField;
+import static com.equalexperts.logging.EnumContractRunner.EnumField;
 
 @RunWith(EnumContractRunner.class)
 public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
