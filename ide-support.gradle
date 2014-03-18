@@ -6,7 +6,7 @@ cleanIdeaWorkspace.group = 'IDE'
 
 idea {
     project {
-        languageLevel = '1.7'
+        languageLevel = '1.8'
         ipr.withXml { provider ->
             /*
                 Automatically enable git or svn integration as appropriate — detects which VCS is used by running status commands

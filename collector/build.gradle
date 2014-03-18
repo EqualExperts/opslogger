@@ -1,8 +1,7 @@
 apply plugin: 'java'
 
-archivesBaseName = 'collector'
-group = 'uk.gov.gds.performance'
-version = '0.1'
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
 
 dependencies {
     compile jodaTime
@@ -14,7 +13,7 @@ task generateLoggingDocumentation {
     doLast {
         javaexec {
             classpath configurations.all, sourceSets.test.runtimeClasspath
-            main = 'uk.gov.gds.performance.collector.logging.GenerateLogMessageDocumentation'
+            main = 'com.equalexperts.logging.GenerateLogMessageDocumentation'
             args = [outputFile, 'build/classes/main']
         }
     }
