@@ -1,0 +1,26 @@
+apply plugin: 'java'
+
+archivesBaseName = 'collector'
+group = 'uk.gov.gds.performance'
+version = '0.1'
+
+dependencies {
+    compile jodaTime
+    testCompile junit, mockito, mutabilityDetector
+}
+
+task generateLoggingDocumentation {
+    String outputFile = "${buildDir}/log-messages.txt"
+    doLast {
+        javaexec {
+            classpath configurations.all, sourceSets.test.runtimeClasspath
+            main = 'uk.gov.gds.performance.collector.logging.GenerateLogMessageDocumentation'
+            args = [outputFile, 'build/classes/main']
+        }
+    }
+
+    dependsOn(compileJava, compileTestJava)
+    inputs.source sourceSets.main.allSource, sourceSets.test.allSource
+    outputs.file outputFile
+}
+assemble.dependsOn(generateLoggingDocumentation)

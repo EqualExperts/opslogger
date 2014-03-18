@@ -1,0 +1,41 @@
+allprojects {
+    apply plugin: 'idea'
+}
+
+cleanIdeaWorkspace.group = 'IDE'
+
+idea {
+    project {
+        languageLevel = '1.7'
+        ipr.withXml { provider ->
+            /*
+                Automatically enable git or svn integration as appropriate — detects which VCS is used by running status commands
+             */
+            def versionControlMappings = [svn: "svn info", Git: "git status"]
+
+
+            def vcs = versionControlMappings.find {
+                try {
+                    it.value.execute(null, rootProject.projectDir).waitFor() == 0
+                } catch (Exception ignore) {
+                    return false
+                }
+            }
+
+            if (vcs) {
+                def vcsConfig = provider.asNode().component.find { it.'@name' == 'VcsDirectoryMappings' }
+                vcsConfig.mapping[0].'@vcs' = vcs.key
+            }
+        }
+    }
+
+    workspace.iws.withXml { provider ->
+        def runManagerComponent = provider.asNode().component.find { it.'@name' == 'RunManager'}
+        def defaultJunitConfig = runManagerComponent.configuration.find {(it.'@default' == 'true') && (it.'@type' == 'JUnit')}
+
+        defaultJunitConfig.option.find {it.'@name' == 'WORKING_DIRECTORY'}.'@value' = '$MODULE_DIR$' //working dir should match command line tests
+        if (System.getenv('JAVA_OPTS')) {
+            defaultJunitConfig.option.find {it.'@name' == 'VM_PARAMETERS'}.'@value' = System.getenv('JAVA_OPTS') //set java opts correctly for tests
+        }
+    }
+}

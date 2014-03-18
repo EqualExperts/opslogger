@@ -1,0 +1,16 @@
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+ext {
+    jodaTime = "joda-time:joda-time:2.3"
+
+    //////////////////////////
+    //   TEST DEPENDENCIES
+    //////////////////////////
+    junit = "junit:junit:4.11"
+    mockito = "org.mockito:mockito-core:1.9.5"
+    mutabilityDetector = "org.mutabilitydetector:MutabilityDetector:0.9"
+}
