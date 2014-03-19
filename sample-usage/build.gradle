@@ -4,21 +4,25 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 dependencies {
-    testCompile junit, mockito, mutabilityDetector
+    compile project(":library")
+    testCompile project(":support")
 }
+
+group = 'com.equalexperts'
+version = '0.1'
 
 task generateLoggingDocumentation {
     String outputFile = "${buildDir}/log-messages.txt"
     doLast {
         javaexec {
-            classpath configurations.all, sourceSets.test.runtimeClasspath
+            classpath sourceSets.test.runtimeClasspath
             main = 'com.equalexperts.logging.GenerateLogMessageDocumentation'
             args = [outputFile, 'build/classes/main']
         }
     }
 
     dependsOn(compileJava, compileTestJava)
-    inputs.source sourceSets.main.allSource, sourceSets.test.allSource
+    inputs.source sourceSets.main.allSource, sourceSets.test.runtimeClasspath
     outputs.file outputFile
 }
 assemble.dependsOn(generateLoggingDocumentation)

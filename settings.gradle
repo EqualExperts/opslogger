@@ -1,1 +1,3 @@
-include "collector"
+include "library"
+include "support"
+include "sample-usage"

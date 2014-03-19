@@ -1,0 +1,12 @@
+apply plugin: 'java'
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+dependencies {
+    testCompile junit, mockito
+}
+
+group = 'com.equalexperts'
+archivesBaseName = 'operations-aware-logging'
+version = '0.1'
