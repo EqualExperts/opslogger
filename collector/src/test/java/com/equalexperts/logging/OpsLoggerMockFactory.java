@@ -2,8 +2,6 @@ package com.equalexperts.logging;
 
 import org.hamcrest.CoreMatchers;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.Arrays;
 
@@ -20,33 +18,25 @@ public class OpsLoggerMockFactory {
         @SuppressWarnings("unchecked")
         OpsLogger<T> result = (OpsLogger<T>) Mockito.mock(OpsLogger.class);
 
-        Mockito.doAnswer(new Answer() {
-            @SuppressWarnings("unchecked")
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] arguments = invocation.getArguments();
-                T logMessageInstance = validateLogMessage(arguments);
+        Mockito.doAnswer(invocation -> {
+            Object[] arguments = invocation.getArguments();
+            T logMessageInstance = validateLogMessage(arguments);
 
-                Object[] formatStringArguments = Arrays.copyOfRange(arguments, 1, arguments.length);
+            Object[] formatStringArguments = Arrays.copyOfRange(arguments, 1, arguments.length);
 
-                return String.format(logMessageInstance.getMessagePattern(), formatStringArguments);
-            }
+            return String.format(logMessageInstance.getMessagePattern(), formatStringArguments);
         }).when(result).log(Mockito.any(logMessagesClass), Mockito.anyVararg());
 
-        Mockito.doAnswer(new Answer() {
-            @SuppressWarnings("unchecked")
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] arguments = invocation.getArguments();
-                T logMessageInstance = validateLogMessage(arguments);
+        Mockito.doAnswer(invocation -> {
+            Object[] arguments = invocation.getArguments();
+            T logMessageInstance = validateLogMessage(arguments);
 
-                Throwable throwableInstance = (Throwable) arguments[1];
-                assertNotNull("Throwable instance must be provided", throwableInstance);
+            Throwable throwableInstance = (Throwable) arguments[1];
+            assertNotNull("Throwable instance must be provided", throwableInstance);
 
-                Object[] formatStringArguments = Arrays.copyOfRange(arguments, 2, arguments.length);
+            Object[] formatStringArguments = Arrays.copyOfRange(arguments, 2, arguments.length);
 
-                return String.format(logMessageInstance.getMessagePattern(), formatStringArguments);
-            }
+            return String.format(logMessageInstance.getMessagePattern(), formatStringArguments);
         }).when(result).log(Mockito.any(logMessagesClass), Mockito.any(Throwable.class), Mockito.anyVararg());
 
         return result;
