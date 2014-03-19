@@ -3,8 +3,9 @@ package com.equalexperts.logging;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 import static com.equalexperts.logging.EnumContractRunner.EnumField;
@@ -26,15 +27,15 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
         if (enumValue.getMessageCode().equals("")) {
             return; //don't test duplication for empty string values — too complicated anyway
         }
-        List<T> logMessagesWithThisCode = new ArrayList<>();
-        for (T value : enumValue.getDeclaringClass().getEnumConstants()) {
-            if (value != enumValue && enumValue.getMessageCode().equalsIgnoreCase(value.getMessageCode())) {
-                logMessagesWithThisCode.add(value);
-            }
-        }
 
-        if (logMessagesWithThisCode.size() > 0) {
-            fail(enumValue.name() + " has the same code as " + join(logMessagesWithThisCode));
+        List<String> otherLogMessagesWithThisCode = Stream.of(enumValue.getDeclaringClass().getEnumConstants())
+                .filter(t -> t != enumValue)
+                .filter(t -> enumValue.getMessageCode().equalsIgnoreCase(t.getMessageCode()))
+                .map(this::formatForErrorMessage)
+                .collect(Collectors.toList());
+
+        if (!otherLogMessagesWithThisCode.isEmpty()) {
+            fail(enumValue.name() + " has the same code as " + String.join(",", otherLogMessagesWithThisCode));
         }
     }
 
@@ -67,26 +68,7 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
         assertInstancesOf(enumValue.getClass(), areImmutable());
     }
 
-    private String join(List<T> values) {
-        StringBuilder result = new StringBuilder();
-        if (values.size() == 1) {
-            append(result, values.get(0));
-            return result.toString();
-        }
-
-        for(T value : values.subList(0, values.size() - 2)) {
-            append(result, value);
-            result.append(", ");
-        }
-        append(result, values.get(values.size() - 2));
-        result.append(" and ");
-        append(result, values.get(values.size() - 1));
-        return result.toString();
-    }
-
-    private void append(StringBuilder builder, T value) {
-        builder.append(value.getClass().getSimpleName());
-        builder.append(".");
-        builder.append(value.name());
+    private String formatForErrorMessage(T value) {
+        return value.getClass().getSimpleName() + "." + value.name();
     }
 }
