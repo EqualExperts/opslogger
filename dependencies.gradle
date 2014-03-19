@@ -12,5 +12,6 @@ ext {
     //////////////////////////
     junit = "junit:junit:4.11"
     mockito = "org.mockito:mockito-core:1.9.5"
-    mutabilityDetector = "org.mutabilitydetector:MutabilityDetector:0.9"
+    //mutabilityDetector = "org.mutabilitydetector:MutabilityDetector:0.9"
+    mutabilityDetector = files("MutabilityDetector-0.10-SNAPSHOT.jar")
 }

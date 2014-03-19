@@ -8,6 +8,8 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static com.equalexperts.logging.EnumContractRunner.EnumField;
+import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
+import static org.mutabilitydetector.unittesting.MutabilityMatchers.areImmutable;
 
 @RunWith(EnumContractRunner.class)
 public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
@@ -54,10 +56,15 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
     }
 
     @Test
-    public void getMessagePattern_shouldNotBeEmptyString() throws Exception {
+    public void getMessagePattern_shouldNotBeAnEmptyString() throws Exception {
         if("".equals(enumValue.getMessagePattern())) {
             fail("A proper message pattern is required");
         }
+    }
+
+    @Test
+    public void enumInstance_shouldBeImmutable() throws Exception {
+        assertInstancesOf(enumValue.getClass(), areImmutable());
     }
 
     private String join(List<T> values) {
