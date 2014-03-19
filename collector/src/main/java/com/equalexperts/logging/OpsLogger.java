@@ -1,15 +1,23 @@
 package com.equalexperts.logging;
 
-import org.joda.time.Instant;
 
 import java.io.PrintStream;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Formatter;
 
 public class OpsLogger <T extends Enum<T> & LogMessage> {
     private final PrintStream output;
+    final Clock clock;
 
     public OpsLogger(PrintStream output) {
+        this(output, Clock.systemUTC());
+    }
+
+    //exposed so a clock can be injected for testing
+    OpsLogger(PrintStream output, Clock clock) {
         this.output = output;
+        this.clock = clock;
     }
 
     public void log(T message, Object... details) {
@@ -25,7 +33,7 @@ public class OpsLogger <T extends Enum<T> & LogMessage> {
     }
 
     private StringBuilder buildBasicLogMessage(T message, Object[] details) {
-        Instant timestamp = new Instant();
+        Instant timestamp = clock.instant();
         StringBuilder result = new StringBuilder(timestamp.toString());
         result.append(" ");
         result.append(message.getMessageCode());

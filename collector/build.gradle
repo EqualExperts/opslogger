@@ -4,7 +4,6 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 dependencies {
-    compile jodaTime
     testCompile junit, mockito, mutabilityDetector
 }
 

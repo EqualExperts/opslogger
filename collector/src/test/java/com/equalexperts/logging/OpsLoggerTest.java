@@ -1,29 +1,17 @@
 package com.equalexperts.logging;
 
-import org.joda.time.DateTimeUtils;
-import org.joda.time.Instant;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.time.Clock;
+import java.time.ZoneOffset;
 
 import static org.junit.Assert.assertEquals;
 
 public class OpsLoggerTest {
     private final TestPrintStream output = new TestPrintStream();
-    private final OpsLogger<TestMessages> logger = new OpsLogger<>(output);
-
-    @Before
-    public void setSpecificJodaTimeTimestamp() {
-        DateTimeUtils.setCurrentMillisFixed(new Instant("2014-02-01T14:57:12.500Z").getMillis());
-    }
-
-    @After
-    public void resetJodaTimeTimestamp() {
-        DateTimeUtils.setCurrentMillisSystem();
-    }
+    private final OpsLogger<TestMessages> logger = new OpsLogger<>(output, Clock.fixed(java.time.Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC));
 
     @Test
     public void log_shouldWriteATimestampedCodedLogMessageToThePrintStream_givenALogMessageInstance() throws Exception {
@@ -50,6 +38,13 @@ public class OpsLoggerTest {
         theException.printStackTrace(expectedOutput);
 
         assertEquals(expectedOutput.toString(), output.toString());
+    }
+
+    @Test
+    public void defaultConstructor_shouldInjectTheSystemClock() throws Exception {
+        OpsLogger<TestMessages> logger = new OpsLogger<>(output);
+
+        assertEquals(Clock.systemUTC(), logger.clock);
     }
 
     static enum TestMessages implements LogMessage {

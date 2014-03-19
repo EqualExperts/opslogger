@@ -5,8 +5,6 @@ allprojects {
 }
 
 ext {
-    jodaTime = "joda-time:joda-time:2.3"
-
     //////////////////////////
     //   TEST DEPENDENCIES
     //////////////////////////
