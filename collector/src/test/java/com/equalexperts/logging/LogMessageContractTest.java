@@ -5,10 +5,11 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
 import static com.equalexperts.logging.EnumContractRunner.EnumField;
+import static java.util.Arrays.stream;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
 import static org.mutabilitydetector.unittesting.MutabilityMatchers.areImmutable;
 
@@ -28,7 +29,7 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
             return; //don't test duplication for empty string values — too complicated anyway
         }
 
-        List<String> otherLogMessagesWithThisCode = Stream.of(enumValue.getDeclaringClass().getEnumConstants())
+        List<String> otherLogMessagesWithThisCode = stream(enumValue.getDeclaringClass().getEnumConstants())
                 .filter(t -> t != enumValue)
                 .filter(t -> enumValue.getMessageCode().equalsIgnoreCase(t.getMessageCode()))
                 .map(this::formatForErrorMessage)
