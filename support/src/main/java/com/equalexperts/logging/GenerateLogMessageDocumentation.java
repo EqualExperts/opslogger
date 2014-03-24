@@ -1,8 +1,12 @@
 package com.equalexperts.logging;
 
-import java.io.*;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,38 +30,33 @@ public class GenerateLogMessageDocumentation {
 
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)))) {
             for(String it : classFoldersToDocument) {
-
-                final Holder<Boolean> logMessageImplementationFound = new Holder<>(false);
-
-                final Path classFolder = Paths.get(it);
-                Files.walkFileTree(classFolder, new SimpleFileVisitor<Path>() {
-                    @SuppressWarnings("NullableProblems")
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        if (!file.toString().endsWith(".class")) {
-                            return super.visitFile(file, attrs);
-                        }
-
-                        Path relativePath = classFolder.relativize(file);
-                        String className = toClassName(relativePath);
-
-                        try {
-                            Class<?> clazz = Class.forName(className);
-                            if (isValidClass(clazz)) {
-                                logMessageImplementationFound.set(true);
-                                documentLogMessageEnum(out, clazz);
+                Holder<Boolean> logMessageImplementationFound = new Holder<>(false);
+                Path classFolder = Paths.get(it);
+                Files.walk(classFolder)
+                        .filter(p -> !Files.isDirectory(p))
+                        .filter(p -> p.toString().endsWith(".class"))
+                        .map(p -> loadClass(classFolder, p))
+                        .filter(this::isValidClass)
+                        .peek(c -> logMessageImplementationFound.set(true))
+                        .onClose(() -> {
+                            if (!logMessageImplementationFound.get()) {
+                                throw new RuntimeException("No LogMessage implementations found in " + classFolder.toString());
                             }
-                        } catch (ClassNotFoundException e) {
-                            //this is an inner class, or not a class, etc
-                        }
-                        return super.visitFile(file, attrs);
-                    }
-                });
-
-                if (!logMessageImplementationFound.get()) {
-                    throw new RuntimeException("No LogMessage implementations found in " + classFolder.toString());
-                }
+                        })
+                        .forEach(c -> documentLogMessageEnum(out, c));
             }
+        }
+    }
+
+    private Class<?> loadClass(Path classFolder, Path classFile) {
+        Path relativePath = classFolder.relativize(classFile);
+        String className = toClassName(relativePath);
+
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            //this is an inner class, or not a class, etc
+            return null;
         }
     }
 
@@ -79,7 +78,7 @@ public class GenerateLogMessageDocumentation {
     }
 
     private boolean isValidClass(Class<?> clazz) {
-        return clazz.isEnum() && LogMessage.class.isAssignableFrom(clazz);
+        return clazz != null && clazz.isEnum() && LogMessage.class.isAssignableFrom(clazz);
     }
 
     private static class Holder<T> {
