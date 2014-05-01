@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.util.IllegalFormatException;
 
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
@@ -22,12 +23,23 @@ public class OpsLoggerFactoryMockTest {
     }
 
     @Test
-    public void mockLogger_shouldValidateFormatStrings_givenACallToLog() throws Exception {
+    public void mockLogger_shouldThrowAnExceptionWhenNotEnoughFormatStringArgumentsAreProvided_givenACallToLog() throws Exception {
         try {
             logger.log(TestMessages.Bar);
             fail("expected an exception");
         } catch (IllegalFormatException e) {
             //this exception is expected
+        }
+    }
+
+    @Test
+    public void mockLogger_shouldThrowAnExceptionWhenTooManyFormatStringArgumentsAreProvided_givenACallToLog() throws Exception {
+        try {
+            logger.log(TestMessages.Bar, "Foo", "Bar");
+            fail("expected an exception");
+        } catch (IllegalArgumentException e) {
+            //this exception is expected
+            assertEquals("Too many format string arguments provided", e.getMessage());
         }
     }
 
@@ -82,13 +94,25 @@ public class OpsLoggerFactoryMockTest {
     }
 
     @Test
-    public void mockLogger_shouldValidateFormatStrings_givenACallToLogThatIncludesAThrowable() throws Exception {
+    public void mockLogger_shouldThrowAnExceptionWhenNotEnoughFormatStringArgumentsAreProvided_givenACallToLogThatIncludesAThrowable() throws Exception {
 
         try {
             logger.log(TestMessages.Bar, new RuntimeException());
             fail("expected an exception");
         } catch (IllegalFormatException e) {
             //this exception is expected
+        }
+    }
+
+    @Test
+    public void mockLogger_shouldThrowAnExceptionWhenTooManyFormatStringArgumentsAreProvided_givenACallToLogThatIncludesAThrowable() throws Exception {
+
+        try {
+            logger.log(TestMessages.Bar, new RuntimeException(), "Foo", "Bar");
+            fail("expected an exception");
+        } catch (IllegalArgumentException e) {
+            //this exception is expected
+            assertEquals("Too many format string arguments provided", e.getMessage());
         }
     }
 

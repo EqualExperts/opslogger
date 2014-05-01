@@ -4,6 +4,7 @@ import org.hamcrest.CoreMatchers;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.MissingFormatArgumentException;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -24,6 +25,8 @@ public class OpsLoggerMockFactory {
 
             Object[] formatStringArguments = Arrays.copyOfRange(arguments, 1, arguments.length);
 
+            checkForTooManyFormatStringArguments(logMessageInstance, formatStringArguments);
+
             return String.format(logMessageInstance.getMessagePattern(), formatStringArguments);
         }).when(result).log(Mockito.any(logMessagesClass), Mockito.anyVararg());
 
@@ -36,10 +39,27 @@ public class OpsLoggerMockFactory {
 
             Object[] formatStringArguments = Arrays.copyOfRange(arguments, 2, arguments.length);
 
+            checkForTooManyFormatStringArguments(logMessageInstance, formatStringArguments);
+
             return String.format(logMessageInstance.getMessagePattern(), formatStringArguments);
         }).when(result).log(Mockito.any(logMessagesClass), Mockito.any(Throwable.class), Mockito.anyVararg());
 
         return result;
+    }
+
+    private static <T extends Enum<T> & LogMessage> void checkForTooManyFormatStringArguments(T logMessageInstance, Object[] formatStringArguments) {
+        if (formatStringArguments.length > 0) {
+            /*
+                Check for too many arguments by removing one, and expecting "not enough arguments" to happen.
+             */
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                String.format(logMessageInstance.getMessagePattern(), Arrays.copyOfRange(formatStringArguments, 0, formatStringArguments.length - 1));
+                throw new IllegalArgumentException("Too many format string arguments provided");
+            } catch (MissingFormatArgumentException expected) {
+                //expected
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
