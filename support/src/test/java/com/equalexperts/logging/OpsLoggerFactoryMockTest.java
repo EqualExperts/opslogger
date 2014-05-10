@@ -44,6 +44,13 @@ public class OpsLoggerFactoryMockTest {
     }
 
     @Test
+    public void mockLogger_shouldCorrectlyAllowLogMessagesWithTwoOrMoreFormatStringArguments_givenACallToLog() throws Exception {
+        logger.log(TestMessages.MessageWithMultipleArguments, "Foo", "Bar");
+
+        verify(logger).log(TestMessages.MessageWithMultipleArguments, "Foo", "Bar");
+    }
+
+    @Test
     public void mockLogger_shouldEnforceANonNullLogMessage_givenACallToLog() throws Exception {
         try {
             logger.log(null);
@@ -117,6 +124,14 @@ public class OpsLoggerFactoryMockTest {
     }
 
     @Test
+    public void mockLogger_shouldCorrectlyAllowLogMessagesWithTwoOrMoreFormatStringArguments_givenACallToLogThatIncludesAThrowable() throws Exception {
+        RuntimeException expectedException = new RuntimeException();
+        logger.log(TestMessages.MessageWithMultipleArguments, expectedException, "Foo", "Bar");
+
+        verify(logger).log(TestMessages.MessageWithMultipleArguments, expectedException, "Foo", "Bar");
+    }
+
+    @Test
     public void mockLogger_shouldEnforceANonNullLogMessage_givenACallToLogThatIncludesAThrowable() throws Exception {
         try {
             logger.log(null, new RuntimeException());
@@ -182,7 +197,8 @@ public class OpsLoggerFactoryMockTest {
         InvalidNullCode(null, "Blah"),
         InvalidEmptyCode("", "Blah"),
         InvalidNullFormat("CODE-InvalidNullFormat", null),
-        InvalidEmptyFormat("CODE-InvalidEmptyFormat", "");
+        InvalidEmptyFormat("CODE-InvalidEmptyFormat", ""),
+        MessageWithMultipleArguments("CODE-MultipleArguments", "Multiple Format String Arguments: %s %s");
 
         //region LogMessage implementation guts
         private final String messageCode;
