@@ -4,5 +4,5 @@ apply from: 'dependencies.gradle'
 task ci(type: GradleBuild) {
     description = 'Everything you need to run for continuous integration'
     group = "CI"
-    tasks = ['clean', 'build']
+    tasks = ['clean', 'build', 'jacocoTestReport']
 }
