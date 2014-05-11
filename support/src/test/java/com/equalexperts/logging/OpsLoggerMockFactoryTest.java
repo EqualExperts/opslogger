@@ -10,7 +10,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
-public class OpsLoggerFactoryMockTest {
+public class OpsLoggerMockFactoryTest {
 
     private final OpsLogger<TestMessages> logger = OpsLoggerMockFactory.mockLogger(TestMessages.class);
 
