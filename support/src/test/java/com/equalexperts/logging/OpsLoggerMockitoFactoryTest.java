@@ -7,9 +7,9 @@ import java.util.MissingFormatArgumentException;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class OpsLoggerMockFactoryTest {
+public class OpsLoggerMockitoFactoryTest {
 
-    private final OpsLogger<TestMessages> logger = OpsLoggerMockFactory.mockLogger(TestMessages.class);
+    private final OpsLogger<TestMessages> logger = OpsLoggerMockitoFactory.mockLogger(TestMessages.class);
 
     @Test
     public void mockLogger_shouldCreateAMockitoSpy() throws Exception {
