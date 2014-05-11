@@ -1,14 +1,14 @@
 package uk.gov.gds.performance.collector;
 
 import com.equalexperts.logging.OpsLogger;
-import com.equalexperts.logging.OpsLoggerMockitoFactory;
+import com.equalexperts.logging.OpsLoggerTestDouble;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class ClassThatLogsTest {
-    private final OpsLogger<CollectorLogMessage> mockLogger = OpsLoggerMockitoFactory.mockLogger(CollectorLogMessage.class);
+    private final OpsLogger<CollectorLogMessage> mockLogger = spy(new OpsLoggerTestDouble<>());
     private final ClassThatLogs theClass = new ClassThatLogs(mockLogger);
 
     @Test
