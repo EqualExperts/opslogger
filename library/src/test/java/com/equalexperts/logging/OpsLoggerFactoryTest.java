@@ -1,14 +1,20 @@
 package com.equalexperts.logging;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 import java.time.Clock;
 
 import static org.junit.Assert.*;
 
 public class OpsLoggerFactoryTest {
+
+    @Rule
+    public TempFileFixture tempFiles = new TempFileFixture();
+
     @Test
     public void build_shouldReturnACorrectlyConfiguredBasicOpsLoggerToSystemOut_whenNoConfigurationIsPerformed() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
@@ -30,6 +36,25 @@ public class OpsLoggerFactoryTest {
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertSame(expectedPrintStream, basicLogger.getOutput());
         assertEquals(Clock.systemUTC(), basicLogger.getClock());
+    }
+
+    @Test
+    public void build_shouldReturnABasicOpsLoggerConfiguredToAutoFlushAndAppendToTheRightFile_whenAFileIsSet() throws Exception {
+        File expectedFile = tempFiles.createTempFileThatDoesNotExist(".log");
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .loggingTo(expectedFile)
+                .build(TestMessages.class);
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        assertEquals(Clock.systemUTC(), basicLogger.getClock());
+
+        TestFriendlyPrintStream loggerOutputStream = (TestFriendlyPrintStream) basicLogger.getOutput();
+        assertEquals(true, loggerOutputStream.getAutoFlush());
+
+        TestFriendlyFileOutputStream loggerFileOutputStream = loggerOutputStream.getOut();
+        assertSame(expectedFile, loggerFileOutputStream.getFile());
+        assertSame(true, loggerFileOutputStream.getAppend());
     }
 
     static enum TestMessages implements LogMessage {
