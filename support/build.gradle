@@ -4,6 +4,6 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 dependencies {
-    compile junit, mockito, mutabilityDetector
+    compile junit, mutabilityDetector
     compile project(":library")
 }
