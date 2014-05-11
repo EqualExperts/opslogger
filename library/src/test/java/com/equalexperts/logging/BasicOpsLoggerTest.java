@@ -9,9 +9,9 @@ import java.time.ZoneOffset;
 
 import static org.junit.Assert.assertEquals;
 
-public class OpsLoggerTest {
+public class BasicOpsLoggerTest {
     private final TestPrintStream output = new TestPrintStream();
-    private final OpsLogger<TestMessages> logger = new OpsLogger<>(output, Clock.fixed(java.time.Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC));
+    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, Clock.fixed(java.time.Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC));
 
     @Test
     public void log_shouldWriteATimestampedCodedLogMessageToThePrintStream_givenALogMessageInstance() throws Exception {
@@ -42,7 +42,7 @@ public class OpsLoggerTest {
 
     @Test
     public void defaultConstructor_shouldInjectTheSystemClock() throws Exception {
-        OpsLogger<TestMessages> logger = new OpsLogger<>(output);
+        BasicOpsLogger<TestMessages> logger = new BasicOpsLogger<>(output);
 
         assertEquals(Clock.systemUTC(), logger.clock);
     }
@@ -82,6 +82,5 @@ public class OpsLoggerTest {
             ByteArrayOutputStream out = (ByteArrayOutputStream) super.out;
             return new String(out.toByteArray());
         }
-
     }
 }
