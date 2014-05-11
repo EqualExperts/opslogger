@@ -40,13 +40,6 @@ public class BasicOpsLoggerTest {
         assertEquals(expectedOutput.toString(), output.toString());
     }
 
-    @Test
-    public void defaultConstructor_shouldInjectTheSystemClock() throws Exception {
-        BasicOpsLogger<TestMessages> logger = new BasicOpsLogger<>(output);
-
-        assertEquals(Clock.systemUTC(), logger.clock);
-    }
-
     static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred"),
         Bar("CODE-Bar", "An event with %d %s messages");

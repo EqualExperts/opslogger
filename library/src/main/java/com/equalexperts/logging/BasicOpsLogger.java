@@ -6,15 +6,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Formatter;
 
-public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
+class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final PrintStream output;
-    final Clock clock;
+    private final Clock clock;
 
-    public BasicOpsLogger(PrintStream output) {
-        this(output, Clock.systemUTC());
-    }
-
-    //exposed so a clock can be injected for testing
     BasicOpsLogger(PrintStream output, Clock clock) {
         this.output = output;
         this.clock = clock;
