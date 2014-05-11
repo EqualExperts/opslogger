@@ -38,4 +38,12 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         new Formatter(result).format(message.getMessagePattern(), details);
         return result;
     }
+
+    PrintStream getOutput() {
+        return output;
+    }
+
+    Clock getClock() {
+        return clock;
+    }
 }
