@@ -1,12 +1,13 @@
 package com.equalexperts.logging;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 
+import static java.nio.file.StandardOpenOption.*;
+
 public class OpsLoggerFactory {
-    private static final boolean ENABLE_APPEND = true;
     private static final boolean ENABLE_AUTO_FLUSH = true;
 
     private PrintStream loggerOutput = System.out;
@@ -16,13 +17,14 @@ public class OpsLoggerFactory {
         return this;
     }
 
-    public OpsLoggerFactory loggingTo(File file) throws FileNotFoundException {
-        TestFriendlyFileOutputStream fileOutputStream = new TestFriendlyFileOutputStream(file, ENABLE_APPEND);
-        loggerOutput = new TestFriendlyPrintStream(fileOutputStream, ENABLE_AUTO_FLUSH);
+    public OpsLoggerFactory loggingTo(Path path) throws IOException {
+        OutputStream outputStream = Files.newOutputStream(path, CREATE, APPEND);
+        loggerOutput = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
         return this;
     }
 
-    public <T extends Enum<T> & LogMessage> OpsLogger<T> build(@SuppressWarnings("UnusedParameters") Class<T> messageType) {
+    @SuppressWarnings("UnusedParameters")
+    public <T extends Enum<T> & LogMessage> OpsLogger<T> build(Class<T> messageType) {
         return new BasicOpsLogger<>(loggerOutput, Clock.systemUTC());
     }
 }

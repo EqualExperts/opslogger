@@ -4,11 +4,16 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 
+import static com.equalexperts.logging.PrintStreamTestUtils.*;
+import static java.nio.file.StandardOpenOption.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class OpsLoggerFactoryTest {
 
@@ -39,22 +44,23 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void build_shouldReturnABasicOpsLoggerConfiguredToAutoFlushAndAppendToTheRightFile_whenAFileIsSet() throws Exception {
-        File expectedFile = tempFiles.createTempFileThatDoesNotExist(".log");
+    public void build_shouldReturnABasicOpsLoggerConfiguredToAutoFlushAndAppendToTheRightFile_whenAPathIsSet() throws Exception {
+        Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
+        OutputStream expectedOutputStream = mock(OutputStream.class);
+        when(Files.newOutputStream(expectedPath, CREATE, APPEND)).thenReturn(expectedOutputStream);
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
-                .loggingTo(expectedFile)
+                .loggingTo(expectedPath)
                 .build(TestMessages.class);
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertEquals(Clock.systemUTC(), basicLogger.getClock());
 
-        TestFriendlyPrintStream loggerOutputStream = (TestFriendlyPrintStream) basicLogger.getOutput();
-        assertEquals(true, loggerOutputStream.getAutoFlush());
+        PrintStream loggerOutputStream = basicLogger.getOutput();
+        assertEquals(true, getAutoFlush(loggerOutputStream));
 
-        TestFriendlyFileOutputStream loggerFileOutputStream = loggerOutputStream.getOut();
-        assertSame(expectedFile, loggerFileOutputStream.getFile());
-        assertSame(true, loggerFileOutputStream.getAppend());
+        OutputStream actualOutputStream = getBackingOutputStream(loggerOutputStream);
+        assertSame(expectedOutputStream, actualOutputStream);
     }
 
     static enum TestMessages implements LogMessage {
