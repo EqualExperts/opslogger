@@ -12,12 +12,12 @@ public class OpsLoggerFactory {
 
     private PrintStream loggerOutput = System.out;
 
-    public OpsLoggerFactory loggingTo(PrintStream printStream) {
+    public OpsLoggerFactory setDestination(PrintStream printStream) {
         loggerOutput = printStream;
         return this;
     }
 
-    public OpsLoggerFactory loggingTo(Path path) throws IOException {
+    public OpsLoggerFactory setDestination(Path path) throws IOException {
         OutputStream outputStream = Files.newOutputStream(path, CREATE, APPEND);
         loggerOutput = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
         return this;

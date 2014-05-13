@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="loggerFactory" class="com.equalexperts.logging.OpsLoggerFactory">
+        <!-- or log to a file by changing the value passed to the builder -->
+        <!--<property name="destination" value="#{T(java.nio.file.Paths).get('/tmp/test.log')}"/>-->
+        <property name="destination" value="#{T(System).out}"/>
+    </bean>
+
+    <bean id="logger" factory-bean="loggerFactory" factory-method="build"/>
+
+    <bean id="classThatLogs" class="uk.gov.gds.performance.collector.ClassThatLogs">
+        <constructor-arg ref="logger"/>
+    </bean>
+</beans>

@@ -5,6 +5,9 @@ allprojects {
 }
 
 ext {
+
+    spring = "org.springframework:spring-context:4.0.4.RELEASE"
+
     //////////////////////////
     //   TEST DEPENDENCIES
     //////////////////////////

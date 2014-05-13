@@ -35,7 +35,7 @@ public class OpsLoggerFactoryTest {
         PrintStream expectedPrintStream = new PrintStream(new ByteArrayOutputStream());
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
-                .loggingTo(expectedPrintStream)
+                .setDestination(expectedPrintStream)
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
@@ -50,7 +50,7 @@ public class OpsLoggerFactoryTest {
         when(Files.newOutputStream(expectedPath, CREATE, APPEND)).thenReturn(expectedOutputStream);
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
-                .loggingTo(expectedPath)
+                .setDestination(expectedPath)
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
