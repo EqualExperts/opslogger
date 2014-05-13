@@ -23,7 +23,7 @@ public class OpsLoggerFactoryTest {
     @Test
     public void build_shouldReturnACorrectlyConfiguredBasicOpsLoggerToSystemOut_whenNoConfigurationIsPerformed() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
-                .build(TestMessages.class);
+                .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertSame(System.out, basicLogger.getOutput());
@@ -36,7 +36,7 @@ public class OpsLoggerFactoryTest {
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .loggingTo(expectedPrintStream)
-                .build(TestMessages.class);
+                .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertSame(expectedPrintStream, basicLogger.getOutput());
@@ -51,7 +51,7 @@ public class OpsLoggerFactoryTest {
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .loggingTo(expectedPath)
-                .build(TestMessages.class);
+                .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertEquals(Clock.systemUTC(), basicLogger.getClock());

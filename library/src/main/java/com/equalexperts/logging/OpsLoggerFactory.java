@@ -23,8 +23,7 @@ public class OpsLoggerFactory {
         return this;
     }
 
-    @SuppressWarnings("UnusedParameters")
-    public <T extends Enum<T> & LogMessage> OpsLogger<T> build(Class<T> messageType) {
+    public <T extends Enum<T> & LogMessage> OpsLogger<T> build() {
         return new BasicOpsLogger<>(loggerOutput, Clock.systemUTC());
     }
 }
