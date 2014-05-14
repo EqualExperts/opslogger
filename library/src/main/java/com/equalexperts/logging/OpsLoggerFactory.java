@@ -17,7 +17,7 @@ public class OpsLoggerFactory {
         return this;
     }
 
-    public OpsLoggerFactory setDestination(Path path) throws IOException {
+    public OpsLoggerFactory setPath(Path path) throws IOException {
         OutputStream outputStream = Files.newOutputStream(path, CREATE, APPEND);
         loggerOutput = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
         return this;
