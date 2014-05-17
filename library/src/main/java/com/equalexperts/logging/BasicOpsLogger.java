@@ -1,6 +1,6 @@
 package com.equalexperts.logging;
 
-
+import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Clock;
 import java.time.Instant;
@@ -13,6 +13,13 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     BasicOpsLogger(PrintStream output, Clock clock) {
         this.output = output;
         this.clock = clock;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (!streamIsSpecial()) {
+            output.close();
+        }
     }
 
     @Override
@@ -37,6 +44,10 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         result.append(": ");
         new Formatter(result).format(message.getMessagePattern(), details);
         return result;
+    }
+
+    private boolean streamIsSpecial() {
+        return (output == System.out) || (output == System.err);
     }
 
     PrintStream getOutput() {

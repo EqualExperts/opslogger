@@ -2,6 +2,7 @@ package com.equalexperts.logging;
 
 import org.hamcrest.CoreMatchers;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.MissingFormatArgumentException;
 
@@ -28,6 +29,11 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
         checkForTooManyFormatStringArguments(message, details);
         //noinspection ResultOfMethodCallIgnored
         String.format(message.getMessagePattern(), details);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 
     private void checkForTooManyFormatStringArguments(T message, Object[] formatStringArguments) {

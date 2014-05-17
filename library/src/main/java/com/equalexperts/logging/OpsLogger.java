@@ -1,6 +1,8 @@
 package com.equalexperts.logging;
 
-public interface OpsLogger<T extends Enum<T> & LogMessage> {
+import java.io.Closeable;
+
+public interface OpsLogger<T extends Enum<T> & LogMessage> extends Closeable {
     void log(T message, Object... details);
     void log(T message, Throwable cause, Object... details);
 }

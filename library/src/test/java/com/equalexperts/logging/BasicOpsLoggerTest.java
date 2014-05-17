@@ -1,17 +1,27 @@
 package com.equalexperts.logging;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.ZoneOffset;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 public class BasicOpsLoggerTest {
+
+    @Rule
+    public TempFileFixture tempFiles = new TempFileFixture();
+    @Rule
+    public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
+
     private final TestPrintStream output = new TestPrintStream();
-    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, Clock.fixed(java.time.Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC));
+    private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
+    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock);
 
     @Test
     public void log_shouldWriteATimestampedCodedLogMessageToThePrintStream_givenALogMessageInstance() throws Exception {
@@ -38,6 +48,38 @@ public class BasicOpsLoggerTest {
         theException.printStackTrace(expectedOutput);
 
         assertEquals(expectedOutput.toString(), output.toString());
+    }
+
+    @Test
+    public void close_shouldCloseThePrintStream() throws Exception {
+        PrintStream mockPrintStream = mock(PrintStream.class);
+        OpsLogger<TestMessages> logger = new BasicOpsLogger<>(mockPrintStream, fixedClock);
+
+        logger.close();
+
+        verify(mockPrintStream).close();
+    }
+
+    @Test
+    public void close_shouldNotCloseThePrintStream_whenThePrintStreamIsSystemOut() throws Exception {
+        PrintStream mockPrintStream = mock(PrintStream.class);
+        System.setOut(mockPrintStream);
+        OpsLogger<TestMessages> logger = new BasicOpsLogger<>(mockPrintStream, fixedClock);
+
+        logger.close();
+
+        verify(mockPrintStream, never()).close();
+    }
+
+    @Test
+    public void close_shouldNotCloseThePrintStream_whenThePrintStreamIsSystemErr() throws Exception {
+        PrintStream mockPrintStream = mock(PrintStream.class);
+        System.setErr(mockPrintStream);
+        OpsLogger<TestMessages> logger = new BasicOpsLogger<>(mockPrintStream, fixedClock);
+
+        logger.close();
+
+        verify(mockPrintStream, never()).close();
     }
 
     static enum TestMessages implements LogMessage {
