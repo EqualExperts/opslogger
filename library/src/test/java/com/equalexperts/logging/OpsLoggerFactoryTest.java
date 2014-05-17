@@ -2,6 +2,8 @@ package com.equalexperts.logging;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -61,6 +63,19 @@ public class OpsLoggerFactoryTest {
 
         OutputStream actualOutputStream = getBackingOutputStream(loggerOutputStream);
         assertSame(expectedOutputStream, actualOutputStream);
+    }
+
+    @Test
+    public void factoryShouldWorkWithSpring() throws Exception {
+        //expose the temp file path into spring via a parent context
+        StaticApplicationContext parentContext = new StaticApplicationContext();
+        parentContext.getBeanFactory().registerSingleton("logFilePath", tempFiles.createTempFileThatDoesNotExist(".log"));
+        parentContext.refresh();
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(new String[] {"classpath:/applicationContext.xml"}, false, parentContext);
+
+        context.refresh();
+
+        context.close();
     }
 
     static enum TestMessages implements LogMessage {

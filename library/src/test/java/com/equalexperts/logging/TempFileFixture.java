@@ -6,6 +6,7 @@ import org.junit.runners.model.Statement;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -20,9 +21,9 @@ public class TempFileFixture implements TestRule {
                 .forEach(File::delete));
     }
 
-    public File createTempFileThatDoesNotExist(String suffix) throws IOException {
+    public Path createTempFileThatDoesNotExist(String suffix) throws IOException {
         File result = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString() + suffix);
-        return register(result);
+        return register(result).toPath();
     }
 
     public File register(File file) {

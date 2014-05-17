@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="systemOutLoggerFactory" class="com.equalexperts.logging.OpsLoggerFactory">
+        <!--<property name="path" value="#{T(java.nio.file.Paths).get('/tmp/test.log')}"/>-->
+        <property name="destination" value="#{T(System).out}"/>
+    </bean>
+    <bean id="systemOutLogger" factory-bean="systemOutLoggerFactory" factory-method="build" destroy-method="close"/>
+
+    <bean id="tempFileLoggerFactory" class="com.equalexperts.logging.OpsLoggerFactory">
+        <!--suppress SpringModelInspection -->
+        <property name="path" ref="logFilePath"/> <!-- provided via parent context in test -->
+    </bean>
+    <bean id="tempFileLogger" factory-bean="tempFileLoggerFactory" factory-method="build" destroy-method="close"/>
+</beans>
