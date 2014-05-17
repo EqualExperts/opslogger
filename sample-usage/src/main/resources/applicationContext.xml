@@ -3,11 +3,11 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="loggerFactory" class="com.equalexperts.logging.OpsLoggerFactory">
-        <property name="path" value="#{T(java.nio.file.Paths).get('/tmp/test.log')}"/>
-        <!--<property name="destination" value="#{T(System).out}"/>-->
+        <!--<property name="path" value="#{T(java.nio.file.Paths).get('/tmp/test.log')}"/>-->
+        <property name="destination" value="#{T(System).out}"/>
     </bean>
 
-    <bean id="logger" factory-bean="loggerFactory" factory-method="build"/>
+    <bean id="logger" factory-bean="loggerFactory" factory-method="build" destroy-method="close"/>
 
     <bean id="classThatLogs" class="uk.gov.gds.performance.collector.ClassThatLogs">
         <constructor-arg ref="logger"/>
