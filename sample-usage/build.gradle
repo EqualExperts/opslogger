@@ -27,3 +27,5 @@ task generateLoggingDocumentation {
     outputs.file outputFile
 }
 assemble.dependsOn(generateLoggingDocumentation)
+
+ext.springLocations = 'src/main/resources/applicationContext.xml'

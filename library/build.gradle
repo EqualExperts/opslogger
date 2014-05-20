@@ -13,3 +13,5 @@ archivesBaseName = 'operations-aware-logging'
 version = rootProject.version
 
 apply from: rootProject.file("bintray-support.gradle")
+
+ext.springLocations = 'src/test/resources/applicationContext.xml'

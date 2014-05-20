@@ -1,5 +1,39 @@
 allprojects {
     apply plugin: 'idea'
+    ext.xml = { String rawXml -> new XmlParser().parseText(rawXml) }
+}
+
+//register spring facets for all projects with a springLocations property
+gradle.taskGraph.whenReady {
+    allprojects { p ->
+
+        if (p.plugins.hasPlugin('java') && p.hasProperty("springLocations")) {
+            List springLocations = [p.springLocations].flatten()
+
+            idea {
+                module {
+                    iml.withXml { provider ->
+                        Node facetComponent = p.xml '<component name="FacetManager"/>'
+
+                        springLocations.each { location ->
+                            def component = p.xml """
+                                <facet type="Spring" name="Spring">
+                                    <configuration>
+                                        <fileset id="fileset1" name="XML Application Context" removed="false">
+                                            <file>file://\$MODULE_DIR\$/${location}</file>
+                                        </fileset>
+                                    </configuration>
+                                </facet>
+                            """
+                            facetComponent.append(component)
+                        }
+
+                        provider.asNode().append(facetComponent)
+                    }
+                }
+            }
+        }
+    }
 }
 
 cleanIdeaWorkspace.group = 'IDE'
