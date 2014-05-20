@@ -9,13 +9,13 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
 public class BasicOpsLoggerTest {
 
     @Rule
     public TempFileFixture tempFiles = new TempFileFixture();
+
     @Rule
     public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
 
@@ -52,34 +52,27 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void close_shouldCloseThePrintStream() throws Exception {
-        PrintStream mockPrintStream = mock(PrintStream.class);
-        OpsLogger<TestMessages> logger = new BasicOpsLogger<>(mockPrintStream, fixedClock);
-
         logger.close();
 
-        verify(mockPrintStream).close();
+        assertTrue(output.isClosed());
     }
 
     @Test
     public void close_shouldNotCloseThePrintStream_whenThePrintStreamIsSystemOut() throws Exception {
-        PrintStream mockPrintStream = mock(PrintStream.class);
-        System.setOut(mockPrintStream);
-        OpsLogger<TestMessages> logger = new BasicOpsLogger<>(mockPrintStream, fixedClock);
+        System.setOut(output);
 
         logger.close();
 
-        verify(mockPrintStream, never()).close();
+        assertFalse(output.isClosed());
     }
 
     @Test
     public void close_shouldNotCloseThePrintStream_whenThePrintStreamIsSystemErr() throws Exception {
-        PrintStream mockPrintStream = mock(PrintStream.class);
-        System.setErr(mockPrintStream);
-        OpsLogger<TestMessages> logger = new BasicOpsLogger<>(mockPrintStream, fixedClock);
+        System.setErr(output);
 
         logger.close();
 
-        verify(mockPrintStream, never()).close();
+        assertFalse(output.isClosed());
     }
 
     static enum TestMessages implements LogMessage {
@@ -111,11 +104,22 @@ public class BasicOpsLoggerTest {
         private TestPrintStream() {
             super(new ByteArrayOutputStream(), true);
         }
+        private boolean closed = false;
 
         @Override
         public String toString() {
             ByteArrayOutputStream out = (ByteArrayOutputStream) super.out;
             return new String(out.toByteArray());
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+            super.close();
+        }
+
+        public boolean isClosed() {
+            return closed;
         }
     }
 }
