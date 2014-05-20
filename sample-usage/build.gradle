@@ -10,7 +10,7 @@ dependencies {
 }
 
 group = 'com.equalexperts'
-version = '0.1'
+version = rootProject.version
 
 task generateLoggingDocumentation {
     String outputFile = "${buildDir}/log-messages.txt"

@@ -1,0 +1,27 @@
+apply plugin: 'bintray'
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    configurations = ['archives']
+    pkg {
+        repo = 'open-source'
+        userOrg = 'equalexperts'
+        name = getProject().archivesBaseName
+        licenses = ['Apache-2.0']
+    }
+}

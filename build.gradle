@@ -6,3 +6,14 @@ task ci(type: GradleBuild) {
     group = "CI"
     tasks = ['clean', 'build', 'jacocoTestReport']
 }
+
+version = "0.1.0-rc1"
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3'
+    }
+}

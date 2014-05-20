@@ -7,3 +7,8 @@ dependencies {
     compile junit, mutabilityDetector
     compile project(":library")
 }
+
+archivesBaseName = "operations-aware-logging-support"
+version = rootProject.version
+
+apply from: rootProject.file("bintray-support.gradle")

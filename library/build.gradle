@@ -10,4 +10,6 @@ dependencies {
 
 group = 'com.equalexperts'
 archivesBaseName = 'operations-aware-logging'
-version = '0.1'
+version = rootProject.version
+
+apply from: rootProject.file("bintray-support.gradle")
