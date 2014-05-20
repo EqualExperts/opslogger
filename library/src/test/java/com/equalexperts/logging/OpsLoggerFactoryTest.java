@@ -22,6 +22,9 @@ public class OpsLoggerFactoryTest {
     @Rule
     public TempFileFixture tempFiles = new TempFileFixture();
 
+    @Rule
+    public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
+
     @Test
     public void build_shouldReturnACorrectlyConfiguredBasicOpsLoggerToSystemOut_whenNoConfigurationIsPerformed() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()

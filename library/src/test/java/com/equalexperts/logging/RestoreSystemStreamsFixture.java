@@ -4,9 +4,12 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 
+/**
+ * Resets standard input, output, and error at the end of tests,
+ * and prevents any standard streams from being closed.
+ */
 public class RestoreSystemStreamsFixture implements TestRule {
 
     @Override
@@ -17,6 +20,10 @@ public class RestoreSystemStreamsFixture implements TestRule {
                 InputStream originalSystemIn = System.in;
                 PrintStream originalSystemOut = System.out;
                 PrintStream originalSystemErr = System.err;
+
+                System.setIn(new NonCloseableInputStream(originalSystemIn));
+                System.setOut(new NonCloseablePrintStream(originalSystemOut));
+                System.setErr(new NonCloseablePrintStream(originalSystemErr));
                 try {
                     base.evaluate();
                 } finally {
@@ -26,5 +33,28 @@ public class RestoreSystemStreamsFixture implements TestRule {
                 }
             }
         };
+    }
+
+    private static class NonCloseableInputStream extends FilterInputStream {
+        NonCloseableInputStream(InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public void close() {
+            //don't close
+        }
+    }
+
+    private static class NonCloseablePrintStream extends PrintStream {
+        NonCloseablePrintStream(OutputStream out) {
+            super(out);
+        }
+
+        @Override
+        public void close() {
+            super.flush();
+            //don't close
+        }
     }
 }
