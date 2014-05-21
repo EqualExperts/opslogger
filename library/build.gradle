@@ -14,4 +14,4 @@ version = rootProject.version
 
 apply from: rootProject.file("bintray-support.gradle")
 
-ext.springLocations = 'src/test/resources/applicationContext.xml'
+idea.springFacets << 'src/test/resources/applicationContext.xml'

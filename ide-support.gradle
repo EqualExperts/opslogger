@@ -1,14 +1,14 @@
 allprojects {
     apply plugin: 'idea'
+    idea.ext.springFacets = []
     ext.xml = { String rawXml -> new XmlParser().parseText(rawXml) }
 }
 
 //register spring facets for all projects with a springLocations property
 gradle.taskGraph.whenReady {
     allprojects { p ->
-
-        if (p.plugins.hasPlugin('java') && p.hasProperty("springLocations")) {
-            List springLocations = [p.springLocations].flatten()
+        if (p.plugins.hasPlugin('java') && p.idea.springFacets) {
+            List springLocations = [p.idea.springFacets].flatten()
 
             idea {
                 module {

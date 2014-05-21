@@ -28,4 +28,4 @@ task generateLoggingDocumentation {
 }
 assemble.dependsOn(generateLoggingDocumentation)
 
-ext.springLocations = 'src/main/resources/applicationContext.xml'
+idea.springFacets << 'src/main/resources/applicationContext.xml'
