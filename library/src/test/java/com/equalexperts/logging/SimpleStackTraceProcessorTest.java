@@ -11,16 +11,17 @@ public class SimpleStackTraceProcessorTest {
     private final StackTraceProcessor processor = new SimpleStackTraceProcessor();
 
     @Test
-    public void process_shouldReturnTheStackTraceAsAMultilineString() throws Exception {
+    public void process_shouldPrintTheStackTraceAsAMultilineString_givenAThrowableAndAnAppendable() throws Exception {
         String expectedMessage = "blah blah blah";
         Throwable expectedException = new RuntimeException(expectedMessage);
         String expectedProcessedMessage = getExceptionPrintout(expectedException);
+        StringBuilder actualOutput = new StringBuilder();
 
-        String processedException = processor.process(expectedException);
+        processor.process(expectedException, actualOutput);
 
-        assertEquals(expectedProcessedMessage, processedException);
-        assertThat(processedException, CoreMatchers.containsString("\n"));
-        assertThat(processedException, CoreMatchers.containsString(expectedMessage));
+        assertEquals(expectedProcessedMessage, actualOutput.toString());
+        assertThat(actualOutput.toString(), CoreMatchers.containsString("\n"));
+        assertThat(actualOutput.toString(), CoreMatchers.containsString(expectedMessage));
     }
 
     private String getExceptionPrintout(Throwable expectedException) {

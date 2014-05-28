@@ -9,9 +9,9 @@ import java.io.StringWriter;
  */
 class SimpleStackTraceProcessor implements StackTraceProcessor {
     @Override
-    public String process(Throwable throwable) {
-        StringWriter out = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(out));
-        return out.toString();
+    public void process(Throwable throwable, StringBuilder out) {
+        StringWriter sw = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(sw));
+        out.append(sw.toString());
     }
 }
