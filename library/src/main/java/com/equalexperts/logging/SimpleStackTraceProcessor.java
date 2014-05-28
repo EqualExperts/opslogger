@@ -12,10 +12,10 @@ class SimpleStackTraceProcessor implements StackTraceProcessor {
     public void process(Throwable throwable, StringBuilder out) {
         StringWriter sw = new StringWriter();
         throwable.printStackTrace(new PrintWriter(sw));
-        out.append(getTextWithoutLastCharacter(sw));
+        out.append(stripLastCharacter(sw));
     }
 
-    String getTextWithoutLastCharacter(StringWriter sw) {
+    String stripLastCharacter(StringWriter sw) {
         String result = sw.toString();
         return result.substring(0, result.length() - 1);
     }
