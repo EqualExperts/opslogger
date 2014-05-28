@@ -3,8 +3,6 @@ package com.equalexperts.logging;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -98,28 +96,5 @@ public class BasicOpsLoggerTest {
             return messagePattern;
         }
         //endregion
-    }
-
-    static class TestPrintStream extends PrintStream {
-        private TestPrintStream() {
-            super(new ByteArrayOutputStream(), true);
-        }
-        private boolean closed = false;
-
-        @Override
-        public String toString() {
-            ByteArrayOutputStream out = (ByteArrayOutputStream) super.out;
-            return new String(out.toByteArray());
-        }
-
-        @Override
-        public void close() {
-            closed = true;
-            super.close();
-        }
-
-        public boolean isClosed() {
-            return closed;
-        }
     }
 }
