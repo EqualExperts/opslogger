@@ -19,7 +19,8 @@ public class BasicOpsLoggerTest {
 
     private final TestPrintStream output = new TestPrintStream();
     private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock);
+    private final SimpleStackTraceProcessor stackTraceProcessor = new SimpleStackTraceProcessor();
+    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock, stackTraceProcessor);
 
     @Test
     public void log_shouldWriteATimestampedCodedLogMessageToThePrintStream_givenALogMessageInstance() throws Exception {
@@ -29,21 +30,15 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldFormatTheLogMessage_givenALogMessageInstance() throws Exception {
-        logger.log(TestMessages.Bar, 2, "custom");
-
-        assertEquals("2014-02-01T14:57:12.500Z CODE-Bar: An event with 2 custom messages\n", output.toString());
-    }
-
-    @Test
     public void log_shouldWriteATimestampedCodedFormattedLogMessageWithStacktraceToThePrintStream_givenALogMessageInstanceAndAThrowable() throws Exception {
         RuntimeException theException = new RuntimeException("theException");
 
         logger.log(TestMessages.Bar, theException, 1, "silly");
 
-        TestPrintStream expectedOutput = new TestPrintStream();
-        expectedOutput.print("2014-02-01T14:57:12.500Z CODE-Bar: An event with 1 silly messages ");
-        theException.printStackTrace(expectedOutput);
+        StringBuilder expectedOutput = new StringBuilder();
+        expectedOutput.append("2014-02-01T14:57:12.500Z CODE-Bar: An event with 1 silly messages ");
+        stackTraceProcessor.process(theException, expectedOutput);
+        expectedOutput.append("\n");
 
         assertEquals(expectedOutput.toString(), output.toString());
     }

@@ -24,6 +24,6 @@ public class OpsLoggerFactory {
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() {
-        return new BasicOpsLogger<>(loggerOutput, Clock.systemUTC());
+        return new BasicOpsLogger<>(loggerOutput, Clock.systemUTC(), new SimpleStackTraceProcessor());
     }
 }

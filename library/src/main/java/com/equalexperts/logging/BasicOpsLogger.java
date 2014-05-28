@@ -9,10 +9,12 @@ import java.util.Formatter;
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final PrintStream output;
     private final Clock clock;
+    private final SimpleStackTraceProcessor stackTraceProcessor;
 
-    BasicOpsLogger(PrintStream output, Clock clock) {
+    BasicOpsLogger(PrintStream output, Clock clock, SimpleStackTraceProcessor stackTraceProcessor) {
         this.output = output;
         this.clock = clock;
+        this.stackTraceProcessor = stackTraceProcessor;
     }
 
     @Override
@@ -32,8 +34,8 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     public void log(T message, Throwable cause, Object... details) {
         StringBuilder result = buildBasicLogMessage(message, details);
         result.append(" "); //the gap between the basic message and the stack trace
-        output.print(result);
-        cause.printStackTrace(output);
+        stackTraceProcessor.process(cause, result);
+        output.println(result);
     }
 
     private StringBuilder buildBasicLogMessage(T message, Object[] details) {
