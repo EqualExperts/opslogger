@@ -1,8 +1,10 @@
 package com.equalexperts.logging;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -20,8 +22,8 @@ public class SimpleStackTraceProcessorTest {
         processor.process(expectedException, actualOutput);
 
         assertEquals(expectedProcessedMessage, actualOutput.toString());
-        assertThat(actualOutput.toString(), CoreMatchers.containsString("\n"));
-        assertThat(actualOutput.toString(), CoreMatchers.containsString(expectedMessage));
+        assertThat(actualOutput.toString(), containsString("\n"));
+        assertThat(actualOutput.toString(), containsString(expectedMessage));
     }
 
     @Test
@@ -31,7 +33,7 @@ public class SimpleStackTraceProcessorTest {
 
         processor.process(expectedException, output);
 
-        assertThat(output.toString(), CoreMatchers.not(CoreMatchers.endsWith("\n")));
+        assertThat(output.toString(), not(endsWith("\n")));
     }
 
     private String getExceptionPrintout(Throwable expectedException) {
