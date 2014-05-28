@@ -14,6 +14,7 @@ import java.time.Clock;
 
 import static com.equalexperts.logging.PrintStreamTestUtils.*;
 import static java.nio.file.StandardOpenOption.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -32,7 +33,7 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertSame(System.out, basicLogger.getOutput());
-        assertEquals(Clock.systemUTC(), basicLogger.getClock());
+        ensureCorrectlyConfigured(basicLogger);
     }
 
     @Test
@@ -45,7 +46,7 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertSame(expectedPrintStream, basicLogger.getOutput());
-        assertEquals(Clock.systemUTC(), basicLogger.getClock());
+        ensureCorrectlyConfigured(basicLogger);
     }
 
     @Test
@@ -59,13 +60,18 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertEquals(Clock.systemUTC(), basicLogger.getClock());
+        ensureCorrectlyConfigured(basicLogger);
 
         PrintStream loggerOutputStream = basicLogger.getOutput();
         assertEquals(true, getAutoFlush(loggerOutputStream));
 
         OutputStream actualOutputStream = getBackingOutputStream(loggerOutputStream);
         assertSame(expectedOutputStream, actualOutputStream);
+    }
+
+    void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> basicLogger) {
+        assertEquals(Clock.systemUTC(), basicLogger.getClock());
+        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     @Test

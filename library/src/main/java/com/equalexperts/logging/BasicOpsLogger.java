@@ -59,4 +59,8 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     Clock getClock() {
         return clock;
     }
+
+    SimpleStackTraceProcessor getStackTraceProcessor() {
+        return stackTraceProcessor;
+    }
 }
