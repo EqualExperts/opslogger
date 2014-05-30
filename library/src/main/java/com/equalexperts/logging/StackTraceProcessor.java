@@ -5,5 +5,5 @@ package com.equalexperts.logging;
  * (normally single-line) suitable for a log file.
  */
 interface StackTraceProcessor {
-    void process(Throwable throwable, StringBuilder output);
+    void process(Throwable throwable, StringBuilder output) throws Exception;
 }
