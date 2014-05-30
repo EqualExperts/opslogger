@@ -1,5 +1,6 @@
 package com.equalexperts.logging;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -10,6 +11,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Clock;
 
 import static com.equalexperts.logging.PrintStreamTestUtils.*;
@@ -69,9 +71,42 @@ public class OpsLoggerFactoryTest {
         assertSame(expectedOutputStream, actualOutputStream);
     }
 
-    void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> basicLogger) {
-        assertEquals(Clock.systemUTC(), basicLogger.getClock());
-        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+    @Test
+    public void setPath_shouldThrowAnException_givenANullPath() throws Exception {
+        OpsLoggerFactory factory = new OpsLoggerFactory();
+
+        try {
+            factory.setPath(null);
+            fail("Expected an exception");
+        } catch (IllegalArgumentException expected) {
+            assertThat(expected.getMessage(), CoreMatchers.containsString("must not be null"));
+        }
+    }
+
+    @Test
+    public void setPath_shouldThrowAnException_givenAPathThatIsADirectory() throws Exception {
+        Path directory = Paths.get(System.getProperty("java.io.tmpdir"));
+        assertTrue("precondition: must be a directory", Files.isDirectory(directory));
+        OpsLoggerFactory factory = new OpsLoggerFactory();
+
+        try {
+            factory.setPath(directory);
+            fail("Expected an exception");
+        } catch (IllegalArgumentException expected) {
+            assertThat(expected.getMessage(), CoreMatchers.containsString("must not be a directory"));
+        }
+    }
+
+    @Test
+    public void setDestination_shouldThrowAnException_givenANullPrintStream() throws Exception {
+        OpsLoggerFactory factory = new OpsLoggerFactory();
+
+        try {
+            factory.setDestination(null);
+            fail("Expected an exception");
+        } catch (IllegalArgumentException expected) {
+            assertThat(expected.getMessage(), CoreMatchers.containsString("must not be null"));
+        }
     }
 
     @Test
@@ -85,6 +120,11 @@ public class OpsLoggerFactoryTest {
         context.refresh();
 
         context.close();
+    }
+
+    void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> basicLogger) {
+        assertEquals(Clock.systemUTC(), basicLogger.getClock());
+        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     static enum TestMessages implements LogMessage {
