@@ -20,9 +20,17 @@ public class OpsLoggerFactory {
 
     public OpsLoggerFactory setPath(Path path) throws IOException {
         validatePath(path);
+        ensureParentDirectoriesExist(path);
         OutputStream outputStream = Files.newOutputStream(path, CREATE, APPEND);
         loggerOutput = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
         return this;
+    }
+
+    private void ensureParentDirectoriesExist(Path path) throws IOException {
+        Path parent = path.getParent();
+        if (Files.notExists(parent)) {
+            Files.createDirectories(parent);
+        }
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() {

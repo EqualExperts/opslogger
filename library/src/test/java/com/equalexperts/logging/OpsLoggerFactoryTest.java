@@ -1,6 +1,5 @@
 package com.equalexperts.logging;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -13,10 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.util.UUID;
 
 import static com.equalexperts.logging.PrintStreamTestUtils.*;
 import static java.nio.file.StandardOpenOption.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -56,6 +56,7 @@ public class OpsLoggerFactoryTest {
         Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
         OutputStream expectedOutputStream = mock(OutputStream.class);
         when(Files.newOutputStream(expectedPath, CREATE, APPEND)).thenReturn(expectedOutputStream);
+        //using a mock so that we can be sure the stream is created with the correct I/O mode
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setPath(expectedPath)
@@ -79,7 +80,7 @@ public class OpsLoggerFactoryTest {
             factory.setPath(null);
             fail("Expected an exception");
         } catch (IllegalArgumentException expected) {
-            assertThat(expected.getMessage(), CoreMatchers.containsString("must not be null"));
+            assertThat(expected.getMessage(), containsString("must not be null"));
         }
     }
 
@@ -93,8 +94,29 @@ public class OpsLoggerFactoryTest {
             factory.setPath(directory);
             fail("Expected an exception");
         } catch (IllegalArgumentException expected) {
-            assertThat(expected.getMessage(), CoreMatchers.containsString("must not be a directory"));
+            assertThat(expected.getMessage(), containsString("must not be a directory"));
         }
+    }
+
+    @Test
+    public void setPath_shouldCreateAllNecessaryParentDirectories_givenAPathWithParentsThatDoNotExist() throws Exception {
+        Path grandParent = tempFiles.createTempDirectoryThatDoesNotExist();
+        Path parent = tempFiles.register(grandParent.resolve(UUID.randomUUID().toString()));
+        Path logFile = tempFiles.register(parent.resolve("log.txt"));
+        OpsLoggerFactory factory = new OpsLoggerFactory();
+
+        //preconditions
+        assertFalse(Files.exists(grandParent));
+        assertFalse(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+
+        //execute
+        factory.setPath(logFile);
+
+        //assert
+        assertTrue(Files.exists(grandParent));
+        assertTrue(Files.exists(parent));
+        assertTrue(Files.exists(logFile));
     }
 
     @Test
@@ -105,7 +127,7 @@ public class OpsLoggerFactoryTest {
             factory.setDestination(null);
             fail("Expected an exception");
         } catch (IllegalArgumentException expected) {
-            assertThat(expected.getMessage(), CoreMatchers.containsString("must not be null"));
+            assertThat(expected.getMessage(), containsString("must not be null"));
         }
     }
 

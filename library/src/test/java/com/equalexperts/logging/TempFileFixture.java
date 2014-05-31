@@ -6,30 +6,38 @@ import org.junit.runners.model.Statement;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class TempFileFixture implements TestRule {
-    private final List<File> tempFiles = new ArrayList<>();
+    private final List<Path> tempFiles = new ArrayList<>();
 
     @Override
     public Statement apply(Statement base, Description description) {
         return statement(base, () -> tempFiles.stream()
-                .filter(File::exists)
+                .filter(Files::exists)
+                .map(Path::toFile)
                 .forEach(File::delete));
     }
 
     public Path createTempFileThatDoesNotExist(String suffix) throws IOException {
-        File result = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString() + suffix);
-        return register(result).toPath();
+        Path result = Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString() + suffix);
+        return register(result);
     }
 
-    public File register(File file) {
-        file.deleteOnExit();
-        tempFiles.add(file);
-        return file;
+    public Path createTempDirectoryThatDoesNotExist() throws IOException {
+        Path result = Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
+        return register(result);
+    }
+
+    public Path register(Path path) {
+        path.toFile().deleteOnExit();
+        tempFiles.add(path);
+        return path;
     }
 
     /*
