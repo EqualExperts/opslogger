@@ -8,7 +8,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class ClassThatLogsTest {
-    private final OpsLogger<CollectorLogMessage> mockLogger = spy(new OpsLoggerTestDouble<>());
+    private final OpsLogger<CollectorLogMessage> mockLogger = spy(new OpsLoggerTestDouble<CollectorLogMessage>());
     private final ClassThatLogs theClass = new ClassThatLogs(mockLogger);
 
     @Test

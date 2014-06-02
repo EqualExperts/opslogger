@@ -15,7 +15,8 @@ class ThrowableFingerprintCalculator {
         MessageDigest md5 = getMD5Instance();
         PrintStream ps = new PrintStream(new DigestOutputStream(new DoNothingOutputStream(), md5));
         t.printStackTrace(ps);
-        return null; //base64Encoder.encodeToString(md5.digest());
+        return Base64.encodeBytes(md5.digest());
+//        return base64Encoder.encodeToString(md5.digest());
     }
 
     private MessageDigest getMD5Instance() {

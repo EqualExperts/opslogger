@@ -3,11 +3,11 @@ package com.equalexperts.logging;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.equalexperts.logging.EnumContractRunner.EnumField;
-import static java.util.Arrays.stream;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
@@ -29,14 +29,16 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
             return; //don't test duplication for empty string values — too complicated anyway
         }
 
-        List<String> otherLogMessagesWithThisCode = stream(enumValue.getDeclaringClass().getEnumConstants())
-                .filter(t -> t != enumValue)
-                .filter(t -> enumValue.getMessageCode().equalsIgnoreCase(t.getMessageCode()))
-                .map(this::formatForErrorMessage)
-                .collect(Collectors.toList());
+        List<String> otherLogMessagesWithThisCode = new ArrayList<>();
+        T[] enumConstants = enumValue.getDeclaringClass().getEnumConstants();
+        for (T t : enumConstants) {
+            if (t != enumValue && enumValue.getMessageCode().equalsIgnoreCase(t.getMessageCode())) {
+                otherLogMessagesWithThisCode.add(formatForErrorMessage(t));
+            }
+        }
 
         if (!otherLogMessagesWithThisCode.isEmpty()) {
-            fail(enumValue.name() + " has the same code as " + String.join(",", otherLogMessagesWithThisCode));
+            fail(enumValue.name() + " has the same code as " + join(",", otherLogMessagesWithThisCode));
         }
     }
 
@@ -71,5 +73,15 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
 
     private String formatForErrorMessage(T value) {
         return value.getClass().getSimpleName() + "." + value.name();
+    }
+
+    private String join(String separator, Collection<String> stuff) {
+        String sep = "";
+        final StringBuilder b = new StringBuilder();
+        for (Object x : stuff) {
+            b.append(sep).append(x);
+            sep = separator;
+        }
+        return b.toString();
     }
 }

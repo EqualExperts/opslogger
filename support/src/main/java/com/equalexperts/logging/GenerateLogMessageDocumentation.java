@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -27,25 +26,33 @@ public class GenerateLogMessageDocumentation {
     }
 
     public void generate() throws Exception {
-
-        try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)))) {
-            for(String it : classFoldersToDocument) {
-                Holder<Boolean> logMessageImplementationFound = new Holder<>(false);
+        try (
+                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputFile)))
+        ) {
+            for (String it : classFoldersToDocument) {
                 Path classFolder = Paths.get(it);
-                Files.walk(classFolder)
-                        .filter(p -> !Files.isDirectory(p))
-                        .filter(p -> p.toString().endsWith(".class"))
-                        .map(p -> loadClass(classFolder, p))
-                        .filter(this::isValidClass)
-                        .peek(c -> logMessageImplementationFound.set(true))
-                        .onClose(() -> {
-                            if (!logMessageImplementationFound.get()) {
-                                throw new RuntimeException("No LogMessage implementations found in " + classFolder.toString());
-                            }
-                        })
-                        .forEach(c -> documentLogMessageEnum(out, c));
+                boolean logMessageImplementationFound = walkDir(classFolder, classFolder.toFile(), out);
+                if (!logMessageImplementationFound) {
+                    throw new RuntimeException("No LogMessage implementations found in " + classFolder.toString());
+                }
             }
         }
+    }
+
+    private boolean walkDir(Path classFolder, File file, PrintWriter out) {
+        boolean logMessageImplementationFound = false;
+        if (file.isDirectory()) {
+            for (File sub : file.listFiles()) {
+                logMessageImplementationFound = walkDir(classFolder, sub, out) || logMessageImplementationFound;
+            }
+        } else if (file.toString().endsWith(".class")) {
+            Class<?> cls = loadClass(classFolder, file.toPath());
+            if (isValidClass(cls)) {
+                logMessageImplementationFound = true;
+                documentLogMessageEnum(out, cls);
+            }
+        }
+        return logMessageImplementationFound;
     }
 
     private Class<?> loadClass(Path classFolder, Path classFile) {
@@ -70,7 +77,7 @@ public class GenerateLogMessageDocumentation {
         out.println(":");
         out.println("Code\t\tMessage");
         out.println("==========\t==========");
-        for(Object o : clazz.getEnumConstants()) {
+        for (Object o : clazz.getEnumConstants()) {
             LogMessage message = (LogMessage) o;
             out.printf("%s\t%s\n", message.getMessageCode(), message.getMessagePattern());
         }
