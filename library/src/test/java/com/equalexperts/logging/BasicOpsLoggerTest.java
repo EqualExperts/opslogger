@@ -1,7 +1,7 @@
 package com.equalexperts.logging;
 
 import com.equalexperts.util.Clock;
-import com.equalexperts.util.ZoneOffset;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,7 +17,7 @@ public class BasicOpsLoggerTest {
     public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
 
     private final TestPrintStream output = new TestPrintStream();
-    private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
+    private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), DateTimeZone.UTC);
     private final SimpleStackTraceProcessor stackTraceProcessor = new SimpleStackTraceProcessor();
     private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock, stackTraceProcessor);
 

@@ -1,5 +1,6 @@
 package com.equalexperts.util;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 
 public abstract class Clock {
@@ -7,31 +8,30 @@ public abstract class Clock {
     public abstract Instant instant();
 
     public static class SystemClock extends Clock {
-        private final long offsetFromUTC;
+        private final DateTimeZone tz;
 
-        public SystemClock(long offsetFromUTC) {
-            this.offsetFromUTC = offsetFromUTC;
+        public SystemClock(DateTimeZone tz) {
+            this.tz = tz;
         }
 
         public Instant instant() {
-            return new Instant(System.currentTimeMillis() + offsetFromUTC);
+            return new Instant(tz.convertUTCToLocal(System.currentTimeMillis()));
         }
     }
 
-    private static final Clock systemDefault = new SystemClock(0);
-    private static final Clock systemUTC = new SystemClock(0); // TODO UTC correction
-
-    public static Clock systemDefaultZone() {
-        return systemDefault;
-    }
+    private static final Clock systemUTC = new SystemClock(DateTimeZone.UTC);
 
     public static Clock systemUTC() {
         return systemUTC;
     }
 
-    public static Clock fixed(final Instant requiredInstant, final ZoneOffset offset) {
+    public static Clock systemDefaultZone() {
+        return new SystemClock(DateTimeZone.getDefault());
+    }
+
+    public static Clock fixed(final Instant requiredInstant, final DateTimeZone tz) {
         return new Clock() {
-            final Instant adjustedInstant = new Instant(requiredInstant.getMillis() + offset.offsetMillis);
+            final Instant adjustedInstant = new Instant(tz.convertUTCToLocal(requiredInstant.getMillis()));
 
             public Instant instant() {
                 return adjustedInstant;
