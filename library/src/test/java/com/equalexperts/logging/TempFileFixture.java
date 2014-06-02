@@ -15,20 +15,21 @@ public class TempFileFixture implements TestRule {
     private final List<File> tempFiles = new ArrayList<>();
 
     @Override
-    public Statement apply(Statement base, Description description) {
-        Statement result = null;
-        try {
-            result = base.evaluate();
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        } finally {
-            for (File file : tempFiles) {
-                if (file.exists()) {
-                    file.delete();
+    public Statement apply(final Statement base, final Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                try {
+                    base.evaluate();
+                } finally {
+                    for (File file : tempFiles) {
+                        if (file.exists()) {
+                            file.delete();
+                        }
+                    }
                 }
             }
-        }
-        return result;
+        };
     }
 
     public Path createTempFileThatDoesNotExist(String suffix) throws IOException {

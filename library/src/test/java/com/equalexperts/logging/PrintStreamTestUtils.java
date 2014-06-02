@@ -4,7 +4,6 @@ import java.io.FilterOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.util.stream.Stream;
 
 public class PrintStreamTestUtils {
     /**
