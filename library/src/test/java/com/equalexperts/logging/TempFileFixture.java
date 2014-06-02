@@ -16,9 +16,19 @@ public class TempFileFixture implements TestRule {
 
     @Override
     public Statement apply(Statement base, Description description) {
-        return statement(base, () -> tempFiles.stream()
-                .filter(File::exists)
-                .forEach(File::delete));
+        Statement result = null;
+        try {
+            result = base.evaluate();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        } finally {
+            for (File file : tempFiles) {
+                if (file.exists()) {
+                    file.delete();
+                }
+            }
+        }
+        return result;
     }
 
     public Path createTempFileThatDoesNotExist(String suffix) throws IOException {
@@ -36,19 +46,19 @@ public class TempFileFixture implements TestRule {
         Code to make creating Statements Java 8-friendly even though Statement is an abstract class
      */
 
-    @FunctionalInterface
-    private static interface StatementClosure {
-        void evaluate() throws Throwable;
-    }
-
-    private static Statement statement(Statement base, StatementClosure closure) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                base.evaluate();
-                closure.evaluate();
-            }
-        };
-    }
+//    @FunctionalInterface
+//    private static interface StatementClosure {
+//        void evaluate() throws Throwable;
+//    }
+//
+//    private static Statement statement(Statement base, StatementClosure closure) {
+//        return new Statement() {
+//            @Override
+//            public void evaluate() throws Throwable {
+//                base.evaluate();
+//                closure.evaluate();
+//            }
+//        };
+//    }
 }
 

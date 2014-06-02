@@ -1,10 +1,11 @@
 apply plugin: 'java'
 apply from: rootProject.file("jacoco-support.gradle")
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
 
 dependencies {
+    compile joda.time
     testCompile junit, mockito, spring
 }
 

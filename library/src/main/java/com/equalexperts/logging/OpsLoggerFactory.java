@@ -1,9 +1,10 @@
 package com.equalexperts.logging;
 
+import com.equalexperts.util.Clock;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
 
 import static java.nio.file.StandardOpenOption.*;
 

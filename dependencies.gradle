@@ -6,6 +6,10 @@ allprojects {
 
 ext {
 
+    joda = [
+            time: "joda-time:joda-time:2.3",
+            convert: "org.joda:joda-convert:1.6"
+    ]
     spring = "org.springframework:spring-context:4.0.4.RELEASE"
 
     //////////////////////////

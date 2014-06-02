@@ -27,10 +27,13 @@ public class PrintStreamTestUtils {
      * Obtains a reference to a non-public field and makes it accessible
      */
     private static Field getInternalField(Class<?> cls, String fieldName) {
-        Field field = Stream.of(cls.getDeclaredFields())
-                .filter(f -> f.getName().equals(fieldName))
-                .findFirst().get();
-        field.setAccessible(true);
-        return field;
+        Field[] fields = cls.getDeclaredFields();
+        for (Field f : fields) {
+            if (f.getName().equals(fieldName)) {
+                f.setAccessible(true);
+                return f;
+            }
+        }
+        throw new IllegalArgumentException(fieldName + " not found.");
     }
 }

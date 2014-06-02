@@ -1,9 +1,10 @@
 package com.equalexperts.logging;
 
+import com.equalexperts.util.Clock;
+import org.joda.time.Instant;
+
 import java.io.IOException;
 import java.io.PrintStream;
-import java.time.Clock;
-import java.time.Instant;
 import java.util.Formatter;
 
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {

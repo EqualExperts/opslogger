@@ -1,11 +1,10 @@
 package com.equalexperts.logging;
 
+import com.equalexperts.util.Clock;
+import com.equalexperts.util.ZoneOffset;
+import org.joda.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 
 import static org.junit.Assert.*;
 
