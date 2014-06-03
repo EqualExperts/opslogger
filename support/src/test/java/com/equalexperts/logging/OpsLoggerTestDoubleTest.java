@@ -204,6 +204,20 @@ public class OpsLoggerTestDoubleTest {
         }
     }
 
+    @Test
+    public void close_shouldThrowAnException() throws Exception {
+        /*
+            Application code shouldn't normally close a real logger, so throw an Exception in the test double
+            to discourage it
+         */
+        try {
+            logger.close();
+            fail("Expected an exception");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), containsString("OpsLogger instances should not be closed by application code."));
+        }
+    }
+
     static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "No Fields"),
         Bar("CODE-Bar", "One Field: %s"),

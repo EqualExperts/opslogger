@@ -32,7 +32,7 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
 
     @Override
     public void close() throws IOException {
-
+        throw new IllegalStateException("OpsLogger instances should not be closed by application code.");
     }
 
     private void validateFormatString(String pattern, Object... details) {
