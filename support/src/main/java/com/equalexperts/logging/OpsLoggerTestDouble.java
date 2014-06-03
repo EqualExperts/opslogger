@@ -17,18 +17,17 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
     @Override
     public void log(T message, Object... details) {
         validate(message);
-        checkForTooManyFormatStringArguments(message, details);
-        //noinspection ResultOfMethodCallIgnored
-        String.format(message.getMessagePattern(), details);
+        checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
+        validateFormatString(message.getMessagePattern(), details);
+
     }
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
         validate(message);
         assertNotNull("Throwable instance must be provided", cause);
-        checkForTooManyFormatStringArguments(message, details);
-        //noinspection ResultOfMethodCallIgnored
-        String.format(message.getMessagePattern(), details);
+        checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
+        validateFormatString(message.getMessagePattern(), details);
     }
 
     @Override
@@ -36,14 +35,19 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
 
     }
 
-    private void checkForTooManyFormatStringArguments(T message, Object[] formatStringArguments) {
-        if (formatStringArguments.length > 1) {
+    private void validateFormatString(String pattern, Object... details) {
+        //noinspection ResultOfMethodCallIgnored
+        String.format(pattern, details);
+    }
+
+    private void checkForTooManyFormatStringArguments(String pattern, Object... details) {
+        if (details.length > 1) {
             /*
                 Check for too many arguments by removing one, and expecting "not enough arguments" to happen.
              */
             try {
                 //noinspection ResultOfMethodCallIgnored
-                String.format(message.getMessagePattern(), Arrays.copyOfRange(formatStringArguments, 0, formatStringArguments.length - 1));
+                String.format(pattern, Arrays.copyOfRange(details, 0, details.length - 1));
                 throw new IllegalArgumentException("Too many format string arguments provided");
             } catch (MissingFormatArgumentException expected) {
                 //expected
