@@ -13,6 +13,14 @@ public class OpsLoggerFactory {
 
     private PrintStream loggerOutput = System.out;
 
+    public OpsLoggerFactory() {
+        // does nothing
+    }
+
+    public OpsLoggerFactory(PrintStream loggerOutput) {
+        this.loggerOutput = loggerOutput;
+    }
+
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateDestination(printStream);
         loggerOutput = printStream;
