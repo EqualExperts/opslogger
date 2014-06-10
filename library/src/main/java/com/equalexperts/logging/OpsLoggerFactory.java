@@ -10,20 +10,34 @@ import static java.nio.file.StandardOpenOption.*;
 public class OpsLoggerFactory {
     private static final boolean ENABLE_AUTO_FLUSH = true;
 
-    private PrintStream loggerOutput = System.out;
+    private PrintStream loggerOutput = null;
+    private Path loggerPath = null;
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateDestination(printStream);
         loggerOutput = printStream;
+        loggerPath = null;
         return this;
     }
 
     public OpsLoggerFactory setPath(Path path) throws IOException {
         validatePath(path);
-        ensureParentDirectoriesExist(path);
-        OutputStream outputStream = Files.newOutputStream(path, CREATE, APPEND);
-        loggerOutput = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
+        loggerPath = path;
+        loggerOutput = null;
         return this;
+    }
+
+    public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+        PrintStream output = System.out;
+        if (loggerOutput != null) {
+            output = loggerOutput;
+        }
+        if (loggerPath != null) {
+            ensureParentDirectoriesExist(loggerPath);
+            OutputStream outputStream = Files.newOutputStream(loggerPath, CREATE, APPEND);
+            output = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
+        }
+        return new BasicOpsLogger<>(output, Clock.systemUTC(), new SimpleStackTraceProcessor());
     }
 
     private void ensureParentDirectoriesExist(Path path) throws IOException {
@@ -31,10 +45,6 @@ public class OpsLoggerFactory {
         if (Files.notExists(parent)) {
             Files.createDirectories(parent);
         }
-    }
-
-    public <T extends Enum<T> & LogMessage> OpsLogger<T> build() {
-        return new BasicOpsLogger<>(loggerOutput, Clock.systemUTC(), new SimpleStackTraceProcessor());
     }
 
     private void validateDestination(PrintStream printStream) {

@@ -121,6 +121,24 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void setPath_shouldNotCreateAFileOrParentDirectory_whenBuildIsNotCalled() throws Exception {
+        Path parent = tempFiles.createTempDirectoryThatDoesNotExist();
+        Path logFile = tempFiles.register(parent.resolve("log.txt"));
+
+        //preconditions
+        assertFalse(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+
+        //execute
+        new OpsLoggerFactory()
+                .setPath(logFile);
+
+        //assert
+        assertFalse(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+    }
+
+    @Test
     public void setDestination_shouldThrowAnException_givenANullPrintStream() throws Exception {
         OpsLoggerFactory factory = new OpsLoggerFactory();
 
