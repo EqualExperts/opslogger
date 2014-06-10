@@ -73,6 +73,28 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldCreateAllNecessaryParentDirectories_whenAPathWithParentsThatDoNotExistIsSet() throws Exception {
+        Path grandParent = tempFiles.createTempDirectoryThatDoesNotExist();
+        Path parent = tempFiles.register(grandParent.resolve(UUID.randomUUID().toString()));
+        Path logFile = tempFiles.register(parent.resolve("log.txt"));
+
+        //preconditions
+        assertFalse(Files.exists(grandParent));
+        assertFalse(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+
+        //execute
+        new OpsLoggerFactory()
+                .setPath(logFile)
+                .<TestMessages>build();
+
+        //assert
+        assertTrue(Files.exists(grandParent));
+        assertTrue(Files.exists(parent));
+        assertTrue(Files.exists(logFile));
+    }
+
+    @Test
     public void setPath_shouldThrowAnException_givenANullPath() throws Exception {
         OpsLoggerFactory factory = new OpsLoggerFactory();
 
@@ -96,27 +118,6 @@ public class OpsLoggerFactoryTest {
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage(), containsString("must not be a directory"));
         }
-    }
-
-    @Test
-    public void setPath_shouldCreateAllNecessaryParentDirectories_givenAPathWithParentsThatDoNotExist() throws Exception {
-        Path grandParent = tempFiles.createTempDirectoryThatDoesNotExist();
-        Path parent = tempFiles.register(grandParent.resolve(UUID.randomUUID().toString()));
-        Path logFile = tempFiles.register(parent.resolve("log.txt"));
-        OpsLoggerFactory factory = new OpsLoggerFactory();
-
-        //preconditions
-        assertFalse(Files.exists(grandParent));
-        assertFalse(Files.exists(parent));
-        assertFalse(Files.exists(logFile));
-
-        //execute
-        factory.setPath(logFile);
-
-        //assert
-        assertTrue(Files.exists(grandParent));
-        assertTrue(Files.exists(parent));
-        assertTrue(Files.exists(logFile));
     }
 
     @Test
