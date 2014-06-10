@@ -18,6 +18,7 @@ import static com.equalexperts.logging.PrintStreamTestUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class OpsLoggerFactoryTest {
@@ -70,6 +71,16 @@ public class OpsLoggerFactoryTest {
 
         OutputStream actualOutputStream = getBackingOutputStream(loggerOutputStream);
         assertSame(expectedOutputStream, actualOutputStream);
+    }
+
+    @Test
+    public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotSpecified() throws Exception {
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setDestination(new PrintStream(new ByteArrayOutputStream()))
+                .build();
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     @Test

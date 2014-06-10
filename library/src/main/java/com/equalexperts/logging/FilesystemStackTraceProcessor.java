@@ -25,6 +25,10 @@ public class FilesystemStackTraceProcessor implements StackTraceProcessor {
         printSubstituteMessage(output, throwable, stackTraceFile);
     }
 
+    Path getDestination() {
+        return destination;
+    }
+
     private void writeStracktraceToPathIfNecessary(Throwable throwable, Path stackTraceFile) throws IOException {
         if (Files.notExists(stackTraceFile)) {
             try(PrintStream out = new PrintStream(Files.newOutputStream(stackTraceFile, CREATE_NEW, WRITE))) {
