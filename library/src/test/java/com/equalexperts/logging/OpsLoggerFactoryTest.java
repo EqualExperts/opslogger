@@ -227,15 +227,23 @@ public class OpsLoggerFactoryTest {
 
     @Test
     public void setStackTraceStoragePath_shouldThrowAnException_givenAPathThatExistsAndIsNotADirectory() throws Exception {
-        Path storageLocationThatIsAFile = tempFiles.createTempFile(".txt");
+        Path file = tempFiles.createTempFile(".txt");
         OpsLoggerFactory factory = new OpsLoggerFactory();
 
         try {
-            factory.setStackTraceStoragePath(storageLocationThatIsAFile);
+            factory.setStackTraceStoragePath(file);
             fail("expected an exception");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage(), containsString("must be a directory"));
         }
+    }
+
+    @Test
+    public void setStackTraceStoragePath_shouldNotThrowAnException_givenAPathThatExistsAndIsADirectory() throws Exception {
+        Path directory = tempFiles.createTempDirectory();
+
+        new OpsLoggerFactory()
+                .setStackTraceStoragePath(directory);
     }
 
     @Test

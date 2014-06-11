@@ -28,6 +28,10 @@ public class TempFileFixture implements TestRule {
         return register(Files.createTempFile("", suffix));
     }
 
+    public Path createTempDirectory() throws IOException {
+        return register(Files.createTempDirectory(null));
+    }
+
     public Path createTempFileThatDoesNotExist(String suffix) throws IOException {
         Path result = Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString() + suffix);
         return register(result);
