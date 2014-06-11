@@ -19,6 +19,7 @@ import static java.nio.file.StandardOpenOption.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
 
 public class OpsLoggerFactoryTest {
@@ -96,7 +97,7 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotSpecified() throws Exception {
+    public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotConfigured() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setDestination(new PrintStream(new ByteArrayOutputStream()))
                 .build();
@@ -115,7 +116,7 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void build_shouldSetAFileSystemStackTraceProcessorToAParentPath_whenAPathIsSetAndAStackTraceProcessorIsNotSet() throws Exception {
+    public void build_shouldSetAFileSystemStackTraceProcessorToAParentPath_whenAPathIsSetAndAStackTraceProcessorIsNotConfigured() throws Exception {
         Path parent = tempFiles.createTempDirectoryThatDoesNotExist();
         Path logFile = tempFiles.register(parent.resolve("log.txt"));
 
@@ -127,6 +128,130 @@ public class OpsLoggerFactoryTest {
         FilesystemStackTraceProcessor stackTraceProcessor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
 
         assertEquals(parent, stackTraceProcessor.getDestination());
+    }
+
+    @Test
+    public void build_shouldConfigureASimpleStackTraceProcessor_whenSetStoreStackTracesInFilesystemIsCalledWithFalse() throws Exception {
+        Path logFile = tempFiles.createTempFileThatDoesNotExist(".log");
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setPath(logFile)
+                .setStoreStackTracesInFilesystem(false)
+                .build();
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+    }
+
+    @Test
+    public void build_shouldConfigureAFileSystemStackTraceProcessor_whenSetStoreStackTraceStoragePathIsCalled() throws Exception {
+        Path stackTraceStorage = tempFiles.createTempDirectoryThatDoesNotExist();
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setStackTraceStoragePath(stackTraceStorage)
+                .build();
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        assertEquals(stackTraceStorage, processor.getDestination());
+    }
+
+    @Test
+    public void build_shouldEnsureThatParentDirectoriesExist_whenSetStoreStackTraceStoragePathIsCalled() throws Exception {
+        Path stackTraceStorage = tempFiles.createTempDirectoryThatDoesNotExist();
+
+        new OpsLoggerFactory()
+                .setStackTraceStoragePath(stackTraceStorage)
+                .<TestMessages>build();
+
+        assertTrue(Files.exists(stackTraceStorage));
+        assertTrue(Files.isDirectory(stackTraceStorage));
+    }
+
+    @Test
+    public void build_shouldThrowAnException_whenSetStoreStackTracesInFileSystemIsSetToTrueNoPathsHaveBeenProvided() throws Exception {
+        OpsLoggerFactory factory = new OpsLoggerFactory()
+                .setDestination(System.out)
+                .setStoreStackTracesInFilesystem(true);
+
+        try {
+            factory.<TestMessages>build();
+            fail("expected an exception");
+        } catch (IllegalStateException expected) {
+            assertThat(expected.getMessage(), containsString("Cannot store stack traces in the filesystem without a path"));
+        }
+    }
+
+    @Test
+    public void setStoreStackTracesInFilesystem_shouldClearTheStackTraceStoragePath_givenFalse() throws Exception {
+        Path originalStackTraceDestination = tempFiles.createTempDirectoryThatDoesNotExist();
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setPath(tempFiles.createTempFileThatDoesNotExist(".log"))
+                .setStackTraceStoragePath(originalStackTraceDestination)
+                .setStoreStackTracesInFilesystem(false)
+                .setStoreStackTracesInFilesystem(true)
+                .build();
+
+        BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
+        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        assertNotEquals(originalStackTraceDestination, processor.getDestination());
+    }
+
+    @Test
+    public void setStoreStackTracesInFileSystem_shouldWorkIfItIsCalledBeforeAPathIsSet() throws Exception {
+        Path parent = tempFiles.createTempDirectoryThatDoesNotExist();
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setStoreStackTracesInFilesystem(true)
+                .setDestination(System.out)
+                .setStackTraceStoragePath(parent)
+                .build();
+
+        BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
+        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        assertEquals(parent, processor.getDestination());
+    }
+
+    @Test
+    public void setStackTraceStoragePath_shouldThrowAnException_givenNull() throws Exception {
+        OpsLoggerFactory factory = new OpsLoggerFactory();
+
+        try {
+            factory.setStackTraceStoragePath(null);
+            fail("Expected an exception");
+        } catch (IllegalArgumentException expected) {
+            assertThat(expected.getMessage(), containsString("must not be null"));
+        }
+    }
+
+    @Test
+    public void setStackTraceStoragePath_shouldThrowAnException_givenAPathThatExistsAndIsNotADirectory() throws Exception {
+        Path storageLocationThatIsAFile = tempFiles.createTempFile(".txt");
+        OpsLoggerFactory factory = new OpsLoggerFactory();
+
+        try {
+            factory.setStackTraceStoragePath(storageLocationThatIsAFile);
+            fail("expected an exception");
+        } catch (IllegalArgumentException expected) {
+            assertThat(expected.getMessage(), containsString("must be a directory"));
+        }
+    }
+
+    @Test
+    public void setStackTraceStoragePath_shouldNotCreateAnyDirectories_whenBuildIsNotCalled() throws Exception {
+        Path parent = tempFiles.createTempDirectoryThatDoesNotExist();
+        Path child = tempFiles.register(parent.resolve("child"));
+
+        //preconditions
+        assertFalse(Files.exists(parent));
+        assertFalse(Files.exists(child));
+
+        new OpsLoggerFactory()
+                .setStackTraceStoragePath(child);
+
+        assertFalse(Files.exists(parent));
+        assertFalse(Files.exists(child));
     }
 
     @Test
@@ -190,6 +315,7 @@ public class OpsLoggerFactoryTest {
         //expose the temp file path into spring via a parent context
         StaticApplicationContext parentContext = new StaticApplicationContext();
         parentContext.getBeanFactory().registerSingleton("logFilePath", tempFiles.createTempFileThatDoesNotExist(".log"));
+        parentContext.getBeanFactory().registerSingleton("stackTracePath", tempFiles.createTempDirectoryThatDoesNotExist());
         parentContext.refresh();
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(new String[] {"classpath:/applicationContext.xml"}, false, parentContext);
 

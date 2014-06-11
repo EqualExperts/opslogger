@@ -24,6 +24,10 @@ public class TempFileFixture implements TestRule {
                 .forEach(File::delete));
     }
 
+    public Path createTempFile(String suffix) throws IOException {
+        return register(Files.createTempFile("", suffix));
+    }
+
     public Path createTempFileThatDoesNotExist(String suffix) throws IOException {
         Path result = Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString() + suffix);
         return register(result);

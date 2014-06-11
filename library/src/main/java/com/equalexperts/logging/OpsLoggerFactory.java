@@ -13,38 +13,82 @@ public class OpsLoggerFactory {
     static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
 
     private PrintStream loggerOutput = null;
-    private Path loggerPath = null;
+    private Path logfilePath = null;
+
+    private Boolean storeStackTracesInFilesystem = null;
+    private Path stackTraceStoragePath = null;
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateDestination(printStream);
         loggerOutput = printStream;
-        loggerPath = null;
+        logfilePath = null;
         return this;
     }
 
-    public OpsLoggerFactory setPath(Path path) throws IOException {
-        validatePath(path);
-        loggerPath = path;
+    public OpsLoggerFactory setPath(Path path) {
+        validateLogfilePath(path);
+        logfilePath = path;
         loggerOutput = null;
         return this;
     }
 
+    public OpsLoggerFactory setStoreStackTracesInFilesystem(boolean store) {
+        storeStackTracesInFilesystem = store;
+        if (!store) {
+            stackTraceStoragePath = null;
+        }
+        return this;
+    }
+
+    public OpsLoggerFactory setStackTraceStoragePath(Path directory) {
+        if (directory == null) {
+            throw new IllegalArgumentException("path must not be null");
+        }
+        if (Files.exists(directory) && !Files.isDirectory(directory)) {
+            throw new IllegalArgumentException("path must be a directory");
+        }
+        setStoreStackTracesInFilesystem(true);
+        stackTraceStoragePath = directory;
+        return this;
+    }
+
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        PrintStream output = System.out;
-        StackTraceProcessor stackTraceProcessor = null;
-        if (loggerOutput != null) {
-            output = loggerOutput;
-        }
-        if (loggerPath != null) {
-            Files.createDirectories(loggerPath.getParent());
-            OutputStream outputStream = Files.newOutputStream(loggerPath, CREATE, APPEND);
-            output = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
-            stackTraceProcessor = new FilesystemStackTraceProcessor(loggerPath.getParent(), new ThrowableFingerprintCalculator());
-        }
-        if (stackTraceProcessor == null) {
-            stackTraceProcessor = new SimpleStackTraceProcessor();
-        }
+        StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
+        PrintStream output = configureOutput();
         return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, DEFAULT_ERROR_HANDLER);
+    }
+
+    private PrintStream configureOutput() throws IOException {
+        if (loggerOutput != null) {
+            return loggerOutput;
+        }
+        if (logfilePath != null) {
+            Files.createDirectories(logfilePath.getParent());
+            OutputStream outputStream = Files.newOutputStream(logfilePath, CREATE, APPEND);
+            return new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
+        }
+        return System.out;
+    }
+
+    private StackTraceProcessor configureStackTraceProcessor() throws IOException {
+        Path storagePath = null;
+        if (storeStackTracesInFilesystem == null && logfilePath != null) {
+            //default behaviour
+            storagePath = logfilePath.getParent();
+        }
+        if ((storeStackTracesInFilesystem != null) && storeStackTracesInFilesystem) {
+            //explicit behaviour
+            if ((stackTraceStoragePath == null) && (logfilePath == null)) {
+                throw new IllegalStateException("Cannot store stack traces in the filesystem without a path");
+            }
+            storagePath = stackTraceStoragePath != null ? stackTraceStoragePath : logfilePath.getParent();
+        }
+
+        if (storagePath != null) {
+            Files.createDirectories(storagePath);
+            return new FilesystemStackTraceProcessor(storagePath, new ThrowableFingerprintCalculator());
+        }
+        return new SimpleStackTraceProcessor();
     }
 
     private void validateDestination(PrintStream printStream) {
@@ -53,7 +97,7 @@ public class OpsLoggerFactory {
         }
     }
 
-    private void validatePath(Path path) {
+    private void validateLogfilePath(Path path) {
         if (path == null) {
             throw new IllegalArgumentException("Path must not be null");
         }
