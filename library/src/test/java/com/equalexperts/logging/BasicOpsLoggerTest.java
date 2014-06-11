@@ -2,12 +2,16 @@ package com.equalexperts.logging;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.spy;
 
 public class BasicOpsLoggerTest {
 
@@ -19,8 +23,11 @@ public class BasicOpsLoggerTest {
 
     private final TestPrintStream output = new TestPrintStream();
     private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    private final SimpleStackTraceProcessor stackTraceProcessor = new SimpleStackTraceProcessor();
-    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock, stackTraceProcessor);
+    private final SimpleStackTraceProcessor stackTraceProcessor = spy(new SimpleStackTraceProcessor());
+
+    @SuppressWarnings("unchecked")
+    private final Consumer<Throwable> exceptionConsumer = (Consumer<Throwable>) Mockito.mock(Consumer.class);
+    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock, stackTraceProcessor, exceptionConsumer);
 
     @Test
     public void log_shouldWriteATimestampedCodedLogMessageToThePrintStream_givenALogMessageInstance() throws Exception {
@@ -41,6 +48,16 @@ public class BasicOpsLoggerTest {
         expectedOutput.append("\n");
 
         assertEquals(expectedOutput.toString(), output.toString());
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenALogMessageInstanceAndAThrowable() throws Exception {
+        RuntimeException expected = new RuntimeException();
+        Mockito.doThrow(expected).when(stackTraceProcessor).process(any(Throwable.class), any(StringBuilder.class));
+
+        logger.log(TestMessages.Foo, new Exception());
+
+        Mockito.verify(exceptionConsumer).accept(expected);
     }
 
     @Test

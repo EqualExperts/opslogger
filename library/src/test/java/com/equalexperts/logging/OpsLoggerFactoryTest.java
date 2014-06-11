@@ -74,16 +74,6 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotSpecified() throws Exception {
-        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
-                .setDestination(new PrintStream(new ByteArrayOutputStream()))
-                .build();
-
-        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
-    }
-
-    @Test
     public void build_shouldCreateAllNecessaryParentDirectories_whenAPathWithParentsThatDoNotExistIsSet() throws Exception {
         Path grandParent = tempFiles.createTempDirectoryThatDoesNotExist();
         Path parent = tempFiles.register(grandParent.resolve(UUID.randomUUID().toString()));
@@ -103,6 +93,16 @@ public class OpsLoggerFactoryTest {
         assertTrue(Files.exists(grandParent));
         assertTrue(Files.exists(parent));
         assertTrue(Files.exists(logFile));
+    }
+
+    @Test
+    public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotSpecified() throws Exception {
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setDestination(new PrintStream(new ByteArrayOutputStream()))
+                .build();
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     @Test
@@ -174,9 +174,24 @@ public class OpsLoggerFactoryTest {
         context.close();
     }
 
+    @Test
+    public void defaultErrorHandler_shouldPrintTheThrowableToStandardError() throws Exception {
+        ByteArrayOutputStream actualSystemErrContents = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(actualSystemErrContents));
+        Throwable expected = new RuntimeException().fillInStackTrace();
+
+        OpsLoggerFactory.DEFAULT_ERROR_HANDLER.accept(expected);
+
+        ByteArrayOutputStream expectedSystemErrContents = new ByteArrayOutputStream();
+        expected.printStackTrace(new PrintStream(expectedSystemErrContents));
+
+        assertArrayEquals(expectedSystemErrContents.toByteArray(), actualSystemErrContents.toByteArray());
+    }
+
     void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> basicLogger) {
         assertEquals(Clock.systemUTC(), basicLogger.getClock());
         assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+        assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
     }
 
     static enum TestMessages implements LogMessage {

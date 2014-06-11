@@ -4,11 +4,13 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.function.Consumer;
 
 import static java.nio.file.StandardOpenOption.*;
 
 public class OpsLoggerFactory {
     private static final boolean ENABLE_AUTO_FLUSH = true;
+    static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
 
     private PrintStream loggerOutput = null;
     private Path loggerPath = null;
@@ -37,7 +39,7 @@ public class OpsLoggerFactory {
             OutputStream outputStream = Files.newOutputStream(loggerPath, CREATE, APPEND);
             output = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
         }
-        return new BasicOpsLogger<>(output, Clock.systemUTC(), new SimpleStackTraceProcessor());
+        return new BasicOpsLogger<>(output, Clock.systemUTC(), new SimpleStackTraceProcessor(), DEFAULT_ERROR_HANDLER);
     }
 
     private void ensureParentDirectoriesExist(Path path) throws IOException {

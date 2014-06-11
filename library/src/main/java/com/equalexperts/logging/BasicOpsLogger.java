@@ -5,16 +5,19 @@ import java.io.PrintStream;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Formatter;
+import java.util.function.Consumer;
 
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final PrintStream output;
     private final Clock clock;
     private final SimpleStackTraceProcessor stackTraceProcessor;
+    private final Consumer<Throwable> errorHandler;
 
-    BasicOpsLogger(PrintStream output, Clock clock, SimpleStackTraceProcessor stackTraceProcessor) {
+    BasicOpsLogger(PrintStream output, Clock clock, SimpleStackTraceProcessor stackTraceProcessor, Consumer<Throwable> errorHandler) {
         this.output = output;
         this.clock = clock;
         this.stackTraceProcessor = stackTraceProcessor;
+        this.errorHandler = errorHandler;
     }
 
     @Override
@@ -32,10 +35,14 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
-        StringBuilder result = buildBasicLogMessage(message, details);
-        result.append(" "); //the gap between the basic message and the stack trace
-        stackTraceProcessor.process(cause, result);
-        output.println(result);
+        try {
+            StringBuilder result = buildBasicLogMessage(message, details);
+            result.append(" "); //the gap between the basic message and the stack trace
+            stackTraceProcessor.process(cause, result);
+            output.println(result);
+        } catch (Throwable t) {
+            errorHandler.accept(t);
+        }
     }
 
     private StringBuilder buildBasicLogMessage(T message, Object[] details) {
@@ -63,4 +70,6 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     StackTraceProcessor getStackTraceProcessor() {
         return stackTraceProcessor;
     }
+
+    Consumer<Throwable> getErrorHandler() { return errorHandler; }
 }
