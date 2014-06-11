@@ -36,7 +36,7 @@ public class OpsLoggerFactory {
             output = loggerOutput;
         }
         if (loggerPath != null) {
-            ensureParentDirectoriesExist(loggerPath);
+            Files.createDirectories(loggerPath.getParent());
             OutputStream outputStream = Files.newOutputStream(loggerPath, CREATE, APPEND);
             output = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
             stackTraceProcessor = new FilesystemStackTraceProcessor(loggerPath.getParent(), new ThrowableFingerprintCalculator());
@@ -45,10 +45,6 @@ public class OpsLoggerFactory {
             stackTraceProcessor = new SimpleStackTraceProcessor();
         }
         return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, DEFAULT_ERROR_HANDLER);
-    }
-
-    private void ensureParentDirectoriesExist(Path path) throws IOException {
-        Files.createDirectories(path.getParent());
     }
 
     private void validateDestination(PrintStream printStream) {
