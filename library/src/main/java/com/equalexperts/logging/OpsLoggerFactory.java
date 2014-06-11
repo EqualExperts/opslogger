@@ -67,6 +67,15 @@ public class OpsLoggerFactory {
     }
 
     private StackTraceProcessor configureStackTraceProcessor() throws IOException {
+        Optional<Path> storagePath = determineStackTraceProcessorPath();
+        if (storagePath.isPresent()) {
+            Files.createDirectories(storagePath.get());
+            return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
+        }
+        return new SimpleStackTraceProcessor();
+    }
+
+    private Optional<Path> determineStackTraceProcessorPath() {
         Optional<Path> storagePath = Optional.empty();
         if (storeStackTracesInFilesystem == null && logfilePath != null) {
             //default behaviour
@@ -80,12 +89,7 @@ public class OpsLoggerFactory {
             Path p = stackTraceStoragePath != null ? stackTraceStoragePath : logfilePath.getParent();
             storagePath = Optional.of(p);
         }
-
-        if (storagePath.isPresent()) {
-            Files.createDirectories(storagePath.get());
-            return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
-        }
-        return new SimpleStackTraceProcessor();
+        return storagePath;
     }
 
     private void validateDestination(PrintStream printStream) {
