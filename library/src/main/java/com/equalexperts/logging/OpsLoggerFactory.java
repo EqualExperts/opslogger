@@ -41,12 +41,7 @@ public class OpsLoggerFactory {
     }
 
     public OpsLoggerFactory setStackTraceStoragePath(Path directory) {
-        if (directory == null) {
-            throw new IllegalArgumentException("path must not be null");
-        }
-        if (Files.exists(directory) && !Files.isDirectory(directory)) {
-            throw new IllegalArgumentException("path must be a directory");
-        }
+        validateStackTraceStoragePath(directory);
         setStoreStackTracesInFilesystem(true);
         stackTraceStoragePath = directory;
         return this;
@@ -94,6 +89,15 @@ public class OpsLoggerFactory {
     private void validateDestination(PrintStream printStream) {
         if (printStream == null) {
             throw new IllegalArgumentException("Destination must not be null");
+        }
+    }
+
+    private void validateStackTraceStoragePath(Path directory) {
+        if (directory == null) {
+            throw new IllegalArgumentException("path must not be null");
+        }
+        if (Files.exists(directory) && !Files.isDirectory(directory)) {
+            throw new IllegalArgumentException("path must be a directory");
         }
     }
 
