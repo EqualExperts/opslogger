@@ -13,31 +13,31 @@ public class OpsLoggerFactory {
     private static final boolean ENABLE_AUTO_FLUSH = true;
     static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
 
-    private PrintStream loggerOutput = null;
-    private Path logfilePath = null;
+    private Optional<PrintStream> loggerOutput = Optional.empty();
+    private Optional<Path> logfilePath = Optional.empty();
 
-    private Boolean storeStackTracesInFilesystem = null;
-    private Path stackTraceStoragePath = null;
-    private Consumer<Throwable> errorHandler = null;
+    private Optional<Boolean> storeStackTracesInFilesystem = Optional.empty();
+    private Optional<Path> stackTraceStoragePath = Optional.empty();
+    private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateDestination(printStream);
-        loggerOutput = printStream;
-        logfilePath = null;
+        loggerOutput = Optional.of(printStream);
+        logfilePath = Optional.empty();
         return this;
     }
 
     public OpsLoggerFactory setPath(Path path) {
         validateLogfilePath(path);
-        logfilePath = path;
-        loggerOutput = null;
+        logfilePath = Optional.of(path);
+        loggerOutput = Optional.empty();
         return this;
     }
 
     public OpsLoggerFactory setStoreStackTracesInFilesystem(boolean store) {
-        storeStackTracesInFilesystem = store;
+        storeStackTracesInFilesystem = Optional.of(store);
         if (!store) {
-            stackTraceStoragePath = null;
+            stackTraceStoragePath = Optional.empty();
         }
         return this;
     }
@@ -45,29 +45,28 @@ public class OpsLoggerFactory {
     public OpsLoggerFactory setStackTraceStoragePath(Path directory) {
         validateStackTraceStoragePath(directory);
         setStoreStackTracesInFilesystem(true);
-        stackTraceStoragePath = directory;
+        stackTraceStoragePath = Optional.of(directory);
         return this;
     }
 
     public OpsLoggerFactory setErrorHandler(Consumer<Throwable> handler) {
-        errorHandler = handler;
+        errorHandler = Optional.of(handler);
         return this;
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         PrintStream output = configureOutput();
-        Consumer<Throwable> errorHandler = (this.errorHandler != null) ? this.errorHandler : DEFAULT_ERROR_HANDLER;
-        return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, errorHandler);
+        return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
     }
 
     private PrintStream configureOutput() throws IOException {
-        if (loggerOutput != null) {
-            return loggerOutput;
+        if (loggerOutput.isPresent()) {
+            return loggerOutput.get();
         }
-        if (logfilePath != null) {
-            Files.createDirectories(logfilePath.getParent());
-            OutputStream outputStream = Files.newOutputStream(logfilePath, CREATE, APPEND);
+        if (logfilePath.isPresent()) {
+            Files.createDirectories(logfilePath.get().getParent());
+            OutputStream outputStream = Files.newOutputStream(logfilePath.get(), CREATE, APPEND);
             return new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
         }
         return System.out;
@@ -83,25 +82,25 @@ public class OpsLoggerFactory {
     }
 
     private Optional<Path> determineStackTraceProcessorPath() {
-        if (storeStackTracesInFilesystem == null && logfilePath != null) {
+        if (!storeStackTracesInFilesystem.isPresent() && logfilePath.isPresent()) {
             //default behaviour
-            return Optional.of(logfilePath.getParent());
+            return logfilePath.map(Path::getParent);
         }
 
-        if ((storeStackTracesInFilesystem != null) && storeStackTracesInFilesystem) {
+        if ((storeStackTracesInFilesystem.isPresent()) && storeStackTracesInFilesystem.get()) {
             //storing stack traces in the filesystem has been explicitly enabled
 
-            if ((stackTraceStoragePath == null) && (logfilePath == null)) {
+            if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
                 throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
             }
 
-            if (stackTraceStoragePath != null) {
+            if (stackTraceStoragePath.isPresent()) {
                 //use the explicitly provided location
-                return Optional.of(stackTraceStoragePath);
+                return stackTraceStoragePath;
             }
 
             //store stack traces in the same directory as the log file
-            return Optional.of(logfilePath.getParent());
+            return logfilePath.map(Path::getParent);
         }
         return Optional.empty();
     }
