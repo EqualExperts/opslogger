@@ -48,10 +48,7 @@ public class OpsLoggerFactory {
     }
 
     private void ensureParentDirectoriesExist(Path path) throws IOException {
-        Path parent = path.getParent();
-        if (Files.notExists(parent)) {
-            Files.createDirectories(parent);
-        }
+        Files.createDirectories(path.getParent());
     }
 
     private void validateDestination(PrintStream printStream) {
