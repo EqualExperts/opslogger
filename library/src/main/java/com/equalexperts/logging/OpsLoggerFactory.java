@@ -56,11 +56,11 @@ public class OpsLoggerFactory {
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-        PrintStream output = configureOutput();
+        PrintStream output = configurePrintStream();
         return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
     }
 
-    private PrintStream configureOutput() throws IOException {
+    private PrintStream configurePrintStream() throws IOException {
         if (loggerOutput.isPresent()) {
             return loggerOutput.get();
         }
@@ -82,13 +82,12 @@ public class OpsLoggerFactory {
     }
 
     private Optional<Path> determineStackTraceProcessorPath() {
-        if (!storeStackTracesInFilesystem.isPresent() && logfilePath.isPresent()) {
-            //default behaviour
-            return logfilePath.map(Path::getParent);
-        }
+        if (storeStackTracesInFilesystem.isPresent()) {
+            //storing stack traces in the filesystem has been explicitly configured
 
-        if ((storeStackTracesInFilesystem.isPresent()) && storeStackTracesInFilesystem.get()) {
-            //storing stack traces in the filesystem has been explicitly enabled
+            if (!storeStackTracesInFilesystem.get()) {
+                return Optional.empty(); //explicitly disabled
+            }
 
             if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
                 throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
@@ -98,11 +97,10 @@ public class OpsLoggerFactory {
                 //use the explicitly provided location
                 return stackTraceStoragePath;
             }
-
-            //store stack traces in the same directory as the log file
-            return logfilePath.map(Path::getParent);
         }
-        return Optional.empty();
+
+        //No explicit path provided. Store stack traces in the same directory as the log file, if one is specified.
+        return logfilePath.map(Path::getParent);
     }
 
     private void validateDestination(PrintStream printStream) {
