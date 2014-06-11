@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -66,22 +67,23 @@ public class OpsLoggerFactory {
     }
 
     private StackTraceProcessor configureStackTraceProcessor() throws IOException {
-        Path storagePath = null;
+        Optional<Path> storagePath = Optional.empty();
         if (storeStackTracesInFilesystem == null && logfilePath != null) {
             //default behaviour
-            storagePath = logfilePath.getParent();
+            storagePath = Optional.of(logfilePath.getParent());
         }
         if ((storeStackTracesInFilesystem != null) && storeStackTracesInFilesystem) {
             //explicit behaviour
             if ((stackTraceStoragePath == null) && (logfilePath == null)) {
                 throw new IllegalStateException("Cannot store stack traces in the filesystem without a path");
             }
-            storagePath = stackTraceStoragePath != null ? stackTraceStoragePath : logfilePath.getParent();
+            Path p = stackTraceStoragePath != null ? stackTraceStoragePath : logfilePath.getParent();
+            storagePath = Optional.of(p);
         }
 
-        if (storagePath != null) {
-            Files.createDirectories(storagePath);
-            return new FilesystemStackTraceProcessor(storagePath, new ThrowableFingerprintCalculator());
+        if (storagePath.isPresent()) {
+            Files.createDirectories(storagePath.get());
+            return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
         }
         return new SimpleStackTraceProcessor();
     }
