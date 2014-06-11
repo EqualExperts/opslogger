@@ -25,9 +25,9 @@ public class FilesystemStackTraceProcessorTest {
         //setup is hairy — mocking a lot of file IO
         Throwable expectedException = new RuntimeException("blah!");
         String expectedFingerprint = "12345";
-        String expectedFilename = "stacktrace_RuntimeException_" + expectedFingerprint + ".txt";
+        String expectedFilename = "stacktrace_" + expectedFingerprint + ".txt";
         String expectedStacktraceUri = "file:///tmp/log/" + expectedFilename;
-        String expectedMessage = expectedException.getMessage() + " (" + expectedStacktraceUri + ")";
+        String expectedMessage = expectedException.toString() + " (" + expectedStacktraceUri + ")";
 
         when(fingerprintCalculator.calculateFingerprint(expectedException)).thenReturn(expectedFingerprint);
 
@@ -58,9 +58,9 @@ public class FilesystemStackTraceProcessorTest {
         //setup is hairy — mocking a lot of file IO
         Throwable expectedException = new RuntimeException("blah!");
         String expectedFingerprint = "12345";
-        String expectedFilename = "stacktrace_RuntimeException_" + expectedFingerprint + ".txt";
+        String expectedFilename = "stacktrace_" + expectedFingerprint + ".txt";
         String expectedStacktraceUri = "file:///tmp/log/" + expectedFilename;
-        String expectedMessage = expectedException.getMessage() + " (" + expectedStacktraceUri + ")";
+        String expectedMessage = expectedException.toString() + " (" + expectedStacktraceUri + ")";
 
         when(fingerprintCalculator.calculateFingerprint(expectedException)).thenReturn(expectedFingerprint);
 
@@ -84,9 +84,9 @@ public class FilesystemStackTraceProcessorTest {
         //setup is hairy — mocking a lot of file IO
         Throwable expectedException = new RuntimeException("blah!");
         String expectedFingerprint = "12345";
-        String expectedFilename = "stacktrace_RuntimeException_" + expectedFingerprint + ".txt";
+        String expectedFilename = "stacktrace_" + expectedFingerprint + ".txt";
         String expectedStacktraceUri = "file:///tmp/log/" + expectedFilename;
-        String expectedMessage = expectedException.getMessage() + " (" + expectedStacktraceUri + ")";
+        String expectedMessage = expectedException.toString() + " (" + expectedStacktraceUri + ")";
 
         when(fingerprintCalculator.calculateFingerprint(expectedException)).thenReturn(expectedFingerprint);
 
