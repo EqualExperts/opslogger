@@ -76,10 +76,9 @@ public class OpsLoggerFactory {
     }
 
     private Optional<Path> determineStackTraceProcessorPath() {
-        Optional<Path> storagePath = Optional.empty();
         if (storeStackTracesInFilesystem == null && logfilePath != null) {
             //default behaviour
-            storagePath = Optional.of(logfilePath.getParent());
+            return Optional.of(logfilePath.getParent());
         }
         if ((storeStackTracesInFilesystem != null) && storeStackTracesInFilesystem) {
             //explicit behaviour
@@ -87,9 +86,9 @@ public class OpsLoggerFactory {
                 throw new IllegalStateException("Cannot store stack traces in the filesystem without a path");
             }
             Path p = stackTraceStoragePath != null ? stackTraceStoragePath : logfilePath.getParent();
-            storagePath = Optional.of(p);
+            return Optional.of(p);
         }
-        return storagePath;
+        return Optional.empty();
     }
 
     private void validateDestination(PrintStream printStream) {
