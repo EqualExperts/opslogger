@@ -10,10 +10,10 @@ import java.util.function.Consumer;
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final PrintStream output;
     private final Clock clock;
-    private final SimpleStackTraceProcessor stackTraceProcessor;
+    private final StackTraceProcessor stackTraceProcessor;
     private final Consumer<Throwable> errorHandler;
 
-    BasicOpsLogger(PrintStream output, Clock clock, SimpleStackTraceProcessor stackTraceProcessor, Consumer<Throwable> errorHandler) {
+    BasicOpsLogger(PrintStream output, Clock clock, StackTraceProcessor stackTraceProcessor, Consumer<Throwable> errorHandler) {
         this.output = output;
         this.clock = clock;
         this.stackTraceProcessor = stackTraceProcessor;

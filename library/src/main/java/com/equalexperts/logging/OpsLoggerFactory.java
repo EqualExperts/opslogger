@@ -31,6 +31,7 @@ public class OpsLoggerFactory {
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         PrintStream output = System.out;
+        StackTraceProcessor stackTraceProcessor = null;
         if (loggerOutput != null) {
             output = loggerOutput;
         }
@@ -38,8 +39,12 @@ public class OpsLoggerFactory {
             ensureParentDirectoriesExist(loggerPath);
             OutputStream outputStream = Files.newOutputStream(loggerPath, CREATE, APPEND);
             output = new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
+            stackTraceProcessor = new FilesystemStackTraceProcessor(loggerPath.getParent(), new ThrowableFingerprintCalculator());
         }
-        return new BasicOpsLogger<>(output, Clock.systemUTC(), new SimpleStackTraceProcessor(), DEFAULT_ERROR_HANDLER);
+        if (stackTraceProcessor == null) {
+            stackTraceProcessor = new SimpleStackTraceProcessor();
+        }
+        return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, DEFAULT_ERROR_HANDLER);
     }
 
     private void ensureParentDirectoriesExist(Path path) throws IOException {

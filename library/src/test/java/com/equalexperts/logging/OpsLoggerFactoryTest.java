@@ -106,6 +106,30 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldSetASimpleStackTraceProcessor_whenNoConfigurationIsPerformed() throws Exception {
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .build();
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+    }
+
+    @Test
+    public void build_shouldSetAFileSystemStackTraceProcessorToAParentPath_whenAPathIsSetAndAStackTraceProcessorIsNotSet() throws Exception {
+        Path parent = tempFiles.createTempDirectoryThatDoesNotExist();
+        Path logFile = tempFiles.register(parent.resolve("log.txt"));
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setPath(logFile)
+                .build();
+
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        FilesystemStackTraceProcessor stackTraceProcessor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+
+        assertEquals(parent, stackTraceProcessor.getDestination());
+    }
+
+    @Test
     public void setPath_shouldThrowAnException_givenANullPath() throws Exception {
         OpsLoggerFactory factory = new OpsLoggerFactory();
 
@@ -190,7 +214,6 @@ public class OpsLoggerFactoryTest {
 
     void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> basicLogger) {
         assertEquals(Clock.systemUTC(), basicLogger.getClock());
-        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
         assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
     }
 
