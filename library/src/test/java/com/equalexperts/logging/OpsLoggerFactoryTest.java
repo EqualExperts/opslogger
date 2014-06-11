@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static com.equalexperts.logging.PrintStreamTestUtils.*;
 import static java.nio.file.StandardOpenOption.*;
@@ -180,6 +181,17 @@ public class OpsLoggerFactoryTest {
         } catch (IllegalStateException expected) {
             assertThat(expected.getMessage(), containsString("Cannot store stack traces in the filesystem without providing a path"));
         }
+    }
+
+    @Test
+    public void build_shouldConstructABasicOpsLoggerWithTheCorrectErrorHandler_whenACustomErrorHandlerHasBeenSet() throws Exception {
+        Consumer<Throwable> expectedErrorHandler = (t) -> {};
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setErrorHandler(expectedErrorHandler)
+                .build();
+
+        BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
+        assertSame(expectedErrorHandler, basicLogger.getErrorHandler());
     }
 
     @Test

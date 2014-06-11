@@ -18,6 +18,7 @@ public class OpsLoggerFactory {
 
     private Boolean storeStackTracesInFilesystem = null;
     private Path stackTraceStoragePath = null;
+    private Consumer<Throwable> errorHandler = null;
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateDestination(printStream);
@@ -48,10 +49,16 @@ public class OpsLoggerFactory {
         return this;
     }
 
+    public OpsLoggerFactory setErrorHandler(Consumer<Throwable> handler) {
+        errorHandler = handler;
+        return this;
+    }
+
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         PrintStream output = configureOutput();
-        return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, DEFAULT_ERROR_HANDLER);
+        Consumer<Throwable> errorHandler = (this.errorHandler != null) ? this.errorHandler : DEFAULT_ERROR_HANDLER;
+        return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, errorHandler);
     }
 
     private PrintStream configureOutput() throws IOException {
