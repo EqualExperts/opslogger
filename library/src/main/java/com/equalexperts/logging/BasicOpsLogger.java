@@ -48,9 +48,9 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private StringBuilder buildBasicLogMessage(T message, Object[] details) {
         Instant timestamp = clock.instant();
         StringBuilder result = new StringBuilder(timestamp.toString());
-        result.append(" ");
+        result.append(",");
         result.append(message.getMessageCode());
-        result.append(": ");
+        result.append(",");
         new Formatter(result).format(message.getMessagePattern(), details);
         return result;
     }
