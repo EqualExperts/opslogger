@@ -178,7 +178,7 @@ public class OpsLoggerFactoryTest {
             factory.<TestMessages>build();
             fail("expected an exception");
         } catch (IllegalStateException expected) {
-            assertThat(expected.getMessage(), containsString("Cannot store stack traces in the filesystem without a path"));
+            assertThat(expected.getMessage(), containsString("Cannot store stack traces in the filesystem without providing a path"));
         }
     }
 

@@ -80,13 +80,21 @@ public class OpsLoggerFactory {
             //default behaviour
             return Optional.of(logfilePath.getParent());
         }
+
         if ((storeStackTracesInFilesystem != null) && storeStackTracesInFilesystem) {
-            //explicit behaviour
+            //storing stack traces in the filesystem has been explicitly enabled
+
             if ((stackTraceStoragePath == null) && (logfilePath == null)) {
-                throw new IllegalStateException("Cannot store stack traces in the filesystem without a path");
+                throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
             }
-            Path p = stackTraceStoragePath != null ? stackTraceStoragePath : logfilePath.getParent();
-            return Optional.of(p);
+
+            if (stackTraceStoragePath != null) {
+                //use the explicitly provided location
+                return Optional.of(stackTraceStoragePath);
+            }
+
+            //store stack traces in the same directory as the log file
+            return Optional.of(logfilePath.getParent());
         }
         return Optional.empty();
     }
