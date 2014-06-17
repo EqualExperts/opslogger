@@ -16,6 +16,16 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
+    public void log_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArguments() throws Exception {
+        try {
+            logger.log(TestMessages.BadFormatString, 42);
+            fail("expected an exception");
+        } catch (IllegalFormatException e) {
+            //this exception is expected
+        }
+    }
+
+    @Test
     public void log_shouldThrowAnException_whenNotEnoughFormatStringArgumentsAreProvided() throws Exception {
         try {
             logger.log(TestMessages.Bar);
@@ -94,6 +104,16 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldAllowValidCalls_givenAThrowable() throws Exception {
         logger.log(TestMessages.Foo, new RuntimeException());
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArgumentsAndAThrowable() throws Exception {
+        try {
+            logger.log(TestMessages.BadFormatString, new RuntimeException(), 42);
+            fail("expected an exception");
+        } catch (IllegalFormatException e) {
+            //this exception is expected
+        }
     }
 
     @Test
@@ -184,9 +204,24 @@ public class OpsLoggerTestDoubleTest {
         }
     }
 
+    @Test
+    public void close_shouldThrowAnException() throws Exception {
+        /*
+            Application code shouldn't normally close a real logger, so throw an Exception in the test double
+            to discourage it
+         */
+        try {
+            logger.close();
+            fail("Expected an exception");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), containsString("OpsLogger instances should not be closed by application code."));
+        }
+    }
+
     static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "No Fields"),
         Bar("CODE-Bar", "One Field: %s"),
+        BadFormatString("CODE-BFS", "%++d"),
         InvalidNullCode(null, "Blah"),
         InvalidEmptyCode("", "Blah"),
         InvalidNullFormat("CODE-InvalidNullFormat", null),

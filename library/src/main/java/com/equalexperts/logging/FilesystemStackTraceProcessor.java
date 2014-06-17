@@ -21,11 +21,15 @@ public class FilesystemStackTraceProcessor implements StackTraceProcessor {
     @Override
     public void process(Throwable throwable, StringBuilder output) throws Exception {
         Path stackTraceFile = calculateFilenameForException(throwable);
-        writeStracktraceToPathIfNecessary(throwable, stackTraceFile);
+        writeStacktraceToPathIfNecessary(throwable, stackTraceFile);
         printSubstituteMessage(output, throwable, stackTraceFile);
     }
 
-    private void writeStracktraceToPathIfNecessary(Throwable throwable, Path stackTraceFile) throws IOException {
+    Path getDestination() {
+        return destination;
+    }
+
+    private void writeStacktraceToPathIfNecessary(Throwable throwable, Path stackTraceFile) throws IOException {
         if (Files.notExists(stackTraceFile)) {
             try(PrintStream out = new PrintStream(Files.newOutputStream(stackTraceFile, CREATE_NEW, WRITE))) {
                 throwable.printStackTrace(out);
@@ -36,7 +40,7 @@ public class FilesystemStackTraceProcessor implements StackTraceProcessor {
     }
 
     private void printSubstituteMessage(StringBuilder output, Throwable throwable, Path stackTraceFile) {
-        output.append(throwable.getMessage());
+        output.append(throwable.toString());
         output.append(" (");
         output.append(stackTraceFile.toUri().toString());
         output.append(")");
@@ -44,7 +48,7 @@ public class FilesystemStackTraceProcessor implements StackTraceProcessor {
 
     private Path calculateFilenameForException(Throwable throwable) {
         String fingerprint = fingerprintCalculator.calculateFingerprint(throwable);
-        String filePath = "stacktrace_" + throwable.getClass().getSimpleName() + "_" + fingerprint + ".txt";
+        String filePath = "stacktrace_" + fingerprint + ".txt";
         return destination.resolve(filePath);
     }
 }

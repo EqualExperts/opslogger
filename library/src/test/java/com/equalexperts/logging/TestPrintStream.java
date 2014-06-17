@@ -7,6 +7,7 @@ class TestPrintStream extends PrintStream {
     TestPrintStream() {
         super(new ByteArrayOutputStream(), true);
     }
+
     private boolean closed = false;
 
     @Override

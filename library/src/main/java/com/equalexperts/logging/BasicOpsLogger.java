@@ -1,6 +1,7 @@
 package com.equalexperts.logging;
 
 import com.equalexperts.util.Clock;
+import com.equalexperts.util.Consumer;
 import org.joda.time.Instant;
 
 import java.io.IOException;
@@ -10,12 +11,14 @@ import java.util.Formatter;
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final PrintStream output;
     private final Clock clock;
-    private final SimpleStackTraceProcessor stackTraceProcessor;
+    private final StackTraceProcessor stackTraceProcessor;
+    private final Consumer<Throwable> errorHandler;
 
-    BasicOpsLogger(PrintStream output, Clock clock, SimpleStackTraceProcessor stackTraceProcessor) {
+    BasicOpsLogger(PrintStream output, Clock clock, StackTraceProcessor stackTraceProcessor, Consumer<Throwable> errorHandler) {
         this.output = output;
         this.clock = clock;
         this.stackTraceProcessor = stackTraceProcessor;
+        this.errorHandler = errorHandler;
     }
 
     @Override
@@ -33,18 +36,22 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
-        StringBuilder result = buildBasicLogMessage(message, details);
-        result.append(" "); //the gap between the basic message and the stack trace
-        stackTraceProcessor.process(cause, result);
-        output.println(result);
+        try {
+            StringBuilder result = buildBasicLogMessage(message, details);
+            result.append(" "); //the gap between the basic message and the stack trace
+            stackTraceProcessor.process(cause, result);
+            output.println(result);
+        } catch (Throwable t) {
+            errorHandler.accept(t);
+        }
     }
 
     private StringBuilder buildBasicLogMessage(T message, Object[] details) {
         Instant timestamp = clock.instant();
         StringBuilder result = new StringBuilder(timestamp.toString());
-        result.append(" ");
+        result.append(",");
         result.append(message.getMessageCode());
-        result.append(": ");
+        result.append(",");
         new Formatter(result).format(message.getMessagePattern(), details);
         return result;
     }
@@ -64,4 +71,6 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     StackTraceProcessor getStackTraceProcessor() {
         return stackTraceProcessor;
     }
+
+    Consumer<Throwable> getErrorHandler() { return errorHandler; }
 }
