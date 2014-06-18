@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -103,25 +104,19 @@ public class OpsLoggerFactory {
         return logfilePath.map(Path::getParent);
     }
 
-    private void validateDestination(PrintStream printStream) {
-        if (printStream == null) {
-            throw new IllegalArgumentException("Destination must not be null");
-        }
+    private void validateDestination(PrintStream destination) {
+        Objects.requireNonNull(destination, "Destination must not be null");
     }
 
     private void validateStackTraceStoragePath(Path directory) {
-        if (directory == null) {
-            throw new IllegalArgumentException("path must not be null");
-        }
+        Objects.requireNonNull(directory, "path must not be null");
         if (Files.exists(directory) && !Files.isDirectory(directory)) {
             throw new IllegalArgumentException("path must be a directory");
         }
     }
 
     private void validateLogfilePath(Path path) {
-        if (path == null) {
-            throw new IllegalArgumentException("Path must not be null");
-        }
+        Objects.requireNonNull(path, "path must not be null");
         if (Files.isDirectory(path)) {
             throw new IllegalArgumentException("Path must not be a directory");
         }

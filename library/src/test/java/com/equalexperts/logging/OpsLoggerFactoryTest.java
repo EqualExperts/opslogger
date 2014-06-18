@@ -232,7 +232,7 @@ public class OpsLoggerFactoryTest {
         try {
             factory.setStackTraceStoragePath(null);
             fail("Expected an exception");
-        } catch (IllegalArgumentException expected) {
+        } catch (NullPointerException expected) {
             assertThat(expected.getMessage(), containsString("must not be null"));
         }
     }
@@ -281,7 +281,7 @@ public class OpsLoggerFactoryTest {
         try {
             factory.setPath(null);
             fail("Expected an exception");
-        } catch (IllegalArgumentException expected) {
+        } catch (NullPointerException expected) {
             assertThat(expected.getMessage(), containsString("must not be null"));
         }
     }
@@ -325,7 +325,7 @@ public class OpsLoggerFactoryTest {
         try {
             factory.setDestination(null);
             fail("Expected an exception");
-        } catch (IllegalArgumentException expected) {
+        } catch (NullPointerException expected) {
             assertThat(expected.getMessage(), containsString("must not be null"));
         }
     }
