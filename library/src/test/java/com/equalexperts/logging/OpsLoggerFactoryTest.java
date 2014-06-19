@@ -186,12 +186,23 @@ public class OpsLoggerFactoryTest {
     @Test
     public void build_shouldConstructABasicOpsLoggerWithTheCorrectErrorHandler_whenACustomErrorHandlerHasBeenSet() throws Exception {
         Consumer<Throwable> expectedErrorHandler = (t) -> {};
+
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setErrorHandler(expectedErrorHandler)
                 .build();
 
         BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
         assertSame(expectedErrorHandler, basicLogger.getErrorHandler());
+    }
+
+    @Test
+    public void build_shouldConstructABasicOpsLoggerWithTheDefaultErrorHandler_whenSetErrorHandlerIsCalledWithNull() throws Exception {
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setErrorHandler(null)
+                .build();
+
+        BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
+        assertSame(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
     }
 
     @Test

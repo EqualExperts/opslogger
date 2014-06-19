@@ -51,7 +51,7 @@ public class OpsLoggerFactory {
     }
 
     public OpsLoggerFactory setErrorHandler(Consumer<Throwable> handler) {
-        errorHandler = Optional.of(handler);
+        errorHandler = Optional.ofNullable(handler);
         return this;
     }
 
