@@ -22,14 +22,14 @@ public class OpsLoggerFactory {
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
-        validateDestination(printStream);
+        validateParametersForSetDestination(printStream);
         loggerOutput = Optional.of(printStream);
         logfilePath = Optional.empty();
         return this;
     }
 
     public OpsLoggerFactory setPath(Path path) {
-        validateLogfilePath(path);
+        validateParametersForSetPath(path);
         logfilePath = Optional.of(path);
         loggerOutput = Optional.empty();
         return this;
@@ -44,7 +44,7 @@ public class OpsLoggerFactory {
     }
 
     public OpsLoggerFactory setStackTraceStoragePath(Path directory) {
-        validateStackTraceStoragePath(directory);
+        validateParametersForSetStackTraceStoragePath(directory);
         setStoreStackTracesInFilesystem(true);
         stackTraceStoragePath = Optional.of(directory);
         return this;
@@ -104,18 +104,18 @@ public class OpsLoggerFactory {
         return logfilePath.map(Path::getParent);
     }
 
-    private void validateDestination(PrintStream destination) {
+    private void validateParametersForSetDestination(PrintStream destination) {
         Objects.requireNonNull(destination, "Destination must not be null");
     }
 
-    private void validateStackTraceStoragePath(Path directory) {
+    private void validateParametersForSetStackTraceStoragePath(Path directory) {
         Objects.requireNonNull(directory, "path must not be null");
         if (Files.exists(directory) && !Files.isDirectory(directory)) {
             throw new IllegalArgumentException("path must be a directory");
         }
     }
 
-    private void validateLogfilePath(Path path) {
+    private void validateParametersForSetPath(Path path) {
         Objects.requireNonNull(path, "path must not be null");
         if (Files.isDirectory(path)) {
             throw new IllegalArgumentException("Path must not be a directory");
