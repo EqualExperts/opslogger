@@ -1,13 +1,18 @@
 package com.equalexperts.logging;
 
 import org.hamcrest.CoreMatchers;
+import org.mutabilitydetector.AnalysisResult;
+import org.mutabilitydetector.Configurations;
+import org.mutabilitydetector.IsImmutable;
+import org.mutabilitydetector.locations.Dotted;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.MissingFormatArgumentException;
+import java.util.*;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
+import static org.mutabilitydetector.unittesting.MutabilityMatchers.areEffectivelyImmutable;
 
 /**
  * An OpsLogger implementation that validates arguments, but doesn't actually
@@ -17,14 +22,15 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
     @Override
     public void log(T message, Object... details) {
         validate(message);
+        ensureImmutableDetails(details);
         checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
         validateFormatString(message.getMessagePattern(), details);
-
     }
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
         validate(message);
+        ensureImmutableDetails(details);
         assertNotNull("Throwable instance must be provided", cause);
         checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
         validateFormatString(message.getMessagePattern(), details);
@@ -61,5 +67,34 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
         assertThat("MessageCode must be provided", message.getMessageCode(), CoreMatchers.not(""));
         assertNotNull("MessagePattern must be provided", message.getMessagePattern());
         assertThat("MessagePattern must be provided", message.getMessagePattern(), CoreMatchers.not(""));
+    }
+
+    private void ensureImmutableDetails(Object... details) {
+        for (Object o : details) {
+            Class<?> aClass = o.getClass();
+            if (!IMMUTABLE_CLASSES_FROM_THE_JDK.contains(aClass)) {
+                assertInstancesOf(aClass, areEffectivelyImmutable());
+            }
+        }
+    }
+
+    /**
+     * The immutability detector maintains this list, but itself only uses it on fields.
+     * We need to pass these classes themselves.
+     */
+    private static final Set<Class> IMMUTABLE_CLASSES_FROM_THE_JDK;
+
+    static {
+        try {
+            Set<Class> temp = new HashSet<>();
+            for (Map.Entry<Dotted, AnalysisResult> entry : Configurations.JDK_CONFIGURATION.hardcodedResults().entrySet()) {
+                if (entry.getValue().isImmutable == IsImmutable.IMMUTABLE) {
+                    temp.add(Class.forName(entry.getKey().toString()));
+                }
+            }
+            IMMUTABLE_CLASSES_FROM_THE_JDK = Collections.unmodifiableSet(temp);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

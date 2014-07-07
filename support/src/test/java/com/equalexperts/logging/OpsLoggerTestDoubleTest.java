@@ -1,6 +1,7 @@
 package com.equalexperts.logging;
 
 import org.junit.Test;
+import org.mutabilitydetector.unittesting.MutabilityAssertionError;
 
 import java.util.IllegalFormatException;
 
@@ -98,6 +99,16 @@ public class OpsLoggerTestDoubleTest {
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
+        }
+    }
+    
+    @Test
+    public void log_shouldThrowAnException_givenAMutableFormatStringArgument() throws Exception {
+        try {
+            logger.log(TestMessages.MessageWithMultipleArguments, "foo", new StringBuilder("bar"));
+            fail("expected an exception");
+        } catch (MutabilityAssertionError e) {
+            assertThat(e.getMessage(), containsString("StringBuilder"));
         }
     }
 
@@ -201,6 +212,16 @@ public class OpsLoggerTestDoubleTest {
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAThrowableAndAMutableFormatStringArgument() throws Exception {
+        try {
+            logger.log(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "foo", new StringBuilder("bar"));
+            fail("expected an exception");
+        } catch (MutabilityAssertionError e) {
+            assertThat(e.getMessage(), containsString("StringBuilder"));
         }
     }
 
