@@ -3,8 +3,6 @@ package com.equalexperts.logging;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Clock;
-import java.time.Instant;
-import java.util.Formatter;
 import java.util.function.Consumer;
 
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
@@ -29,30 +27,22 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     @Override
     public void log(T message, Object... details) {
-        StringBuilder result = buildBasicLogMessage(message, details);
-        output.println(result);
+        LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), message, null, details);
+        publish(record);
     }
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
+        LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), message, cause, details);
+        publish(record);
+    }
+
+    private void publish(LogicalLogRecord<T> record) {
         try {
-            StringBuilder result = buildBasicLogMessage(message, details);
-            result.append(" "); //the gap between the basic message and the stack trace
-            stackTraceProcessor.process(cause, result);
-            output.println(result);
+            output.println(record.format(stackTraceProcessor));
         } catch (Throwable t) {
             errorHandler.accept(t);
         }
-    }
-
-    private StringBuilder buildBasicLogMessage(T message, Object[] details) {
-        Instant timestamp = clock.instant();
-        StringBuilder result = new StringBuilder(timestamp.toString());
-        result.append(",");
-        result.append(message.getMessageCode());
-        result.append(",");
-        new Formatter(result).format(message.getMessagePattern(), details);
-        return result;
     }
 
     private boolean streamIsSpecial() {

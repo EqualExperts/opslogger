@@ -37,6 +37,15 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenALogMessageInstance() throws Exception {
+        RuntimeException expected = TestMessages.EXPLODE_EXCEPTION;
+
+        logger.log(TestMessages.Explode);
+
+        Mockito.verify(exceptionConsumer).accept(expected);
+    }
+
+    @Test
     public void log_shouldWriteATimestampedCodedFormattedLogMessageWithStacktraceToThePrintStream_givenALogMessageInstanceAndAThrowable() throws Exception {
         RuntimeException theException = new RuntimeException("theException");
 
@@ -87,7 +96,15 @@ public class BasicOpsLoggerTest {
 
     static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred"),
-        Bar("CODE-Bar", "An event with %d %s messages");
+        Bar("CODE-Bar", "An event with %d %s messages"),
+        Explode("CODE-Exp", "Boom! Threw an exception") {
+            @Override
+            public String getMessageCode() {
+                throw EXPLODE_EXCEPTION;
+            }
+        };
+
+        static final RuntimeException EXPLODE_EXCEPTION = new RuntimeException();
 
         //region LogMessage implementation guts
         private final String messageCode;
