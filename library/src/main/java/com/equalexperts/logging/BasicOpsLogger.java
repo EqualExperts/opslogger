@@ -3,6 +3,7 @@ package com.equalexperts.logging;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Clock;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
@@ -27,13 +28,13 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     @Override
     public void log(T message, Object... details) {
-        LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), message, null, details);
+        LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), message, Optional.empty(), details);
         publish(record);
     }
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
-        LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), message, cause, details);
+        LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), message, Optional.of(cause), details);
         publish(record);
     }
 
