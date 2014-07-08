@@ -52,8 +52,6 @@ public class LogicalLogRecordTest {
         }
     }
 
-
-
     @Test
     public void format_shouldProduceAnAppropriatelyFormattedMessage_givenNoThrowableSet() throws Exception {
         Instant instant = Instant.parse("2014-04-01T13:37:00.123Z");
@@ -62,6 +60,16 @@ public class LogicalLogRecordTest {
         String result = record.format(PROCESSOR_SHOULD_NOT_BE_CALLED);
 
         assertEquals("2014-04-01T13:37:00.123Z,CODE-Bar,A Bar event occurred, with argument 42", result);
+    }
+
+    @Test
+    public void format_shouldIncludeMilliseconds_whenTheTimestampIsAnEvenSecond() throws Exception {
+        Instant instant = Instant.parse("2014-04-01T13:37:00.000Z");
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(instant, TestMessages.Foo, Optional.empty());
+
+        String result = record.format(PROCESSOR_SHOULD_NOT_BE_CALLED);
+
+        assertEquals("2014-04-01T13:37:00.000Z,CODE-Foo,An event of some kind occurred", result);
     }
 
     @Test

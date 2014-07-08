@@ -1,11 +1,20 @@
 package com.equalexperts.logging;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Formatter;
 import java.util.Objects;
 import java.util.Optional;
 
 class LogicalLogRecord<T extends Enum<T> & LogMessage> {
+
+    private static final DateTimeFormatter ISO_ALWAYS_WITH_MILLISECONDS = new DateTimeFormatterBuilder()
+            .parseStrict()
+            .parseCaseInsensitive()
+            .appendInstant(3)
+            .toFormatter();
+
     private final Instant timestamp;
     private final T message;
     private final Optional<Throwable> cause;
@@ -19,7 +28,7 @@ class LogicalLogRecord<T extends Enum<T> & LogMessage> {
     }
 
     public String format(StackTraceProcessor processor) throws Exception {
-        StringBuilder result = new StringBuilder(timestamp.toString());
+        StringBuilder result = new StringBuilder(ISO_ALWAYS_WITH_MILLISECONDS.format(timestamp));
         result.append(",");
         result.append(message.getMessageCode());
         result.append(",");
