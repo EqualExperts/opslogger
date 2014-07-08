@@ -1,9 +1,10 @@
 package com.equalexperts.logging;
 
-import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -11,100 +12,96 @@ import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 public class BasicOpsLoggerTest {
 
-    @Rule
-    public TempFileFixture tempFiles = new TempFileFixture();
-
-    @Rule
-    public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
-
-    private final TestPrintStream output = new TestPrintStream();
+    @SuppressWarnings("unchecked") private final BasicOpsLogger.Destination<TestMessages> mockDestination = (BasicOpsLogger.Destination<TestMessages>) mock(BasicOpsLogger.Destination.class);
+    @SuppressWarnings("unchecked") private final Consumer<Throwable> exceptionConsumer = (Consumer<Throwable>) mock(Consumer.class);
     private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    private final SimpleStackTraceProcessor stackTraceProcessor = spy(new SimpleStackTraceProcessor());
-
-    @SuppressWarnings("unchecked")
-    private final Consumer<Throwable> exceptionConsumer = (Consumer<Throwable>) Mockito.mock(Consumer.class);
-    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(output, fixedClock, stackTraceProcessor, exceptionConsumer);
+    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(fixedClock, mockDestination, exceptionConsumer);
 
     @Test
-    public void log_shouldWriteATimestampedCodedLogMessageToThePrintStream_givenALogMessageInstance() throws Exception {
+    public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
+        ArgumentCaptor<LogicalLogRecord<TestMessages>> captor = createLogicalLogRecordArgumentCaptor();
+        doNothing().when(mockDestination).publish(captor.capture());
+
+        logger.log(TestMessages.Bar, 64, "Hello, World");
+
+        verify(mockDestination).publish(any());
+        verifyNoMoreInteractions(mockDestination);
+
+        LogicalLogRecord<TestMessages> record = captor.getValue();
+        assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertEquals(TestMessages.Bar, record.getMessage());
+        assertNotNull(record.getCause());
+        assertFalse(record.getCause().isPresent());
+        assertArrayEquals(new Object[] {64, "Hello, World"}, record.getDetails());
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecord() throws Exception {
+        logger.log(null);
+
+        verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecord() throws Exception {
+        RuntimeException expectedException = new NullPointerException();
+        doThrow(expectedException).when(mockDestination).publish(any());
+
         logger.log(TestMessages.Foo);
 
-        assertEquals("2014-02-01T14:57:12.500Z,CODE-Foo,An event of some kind occurred\n", output.toString());
+        verify(exceptionConsumer).accept(Mockito.same(expectedException));
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenALogMessageInstance() throws Exception {
-        RuntimeException expected = TestMessages.EXPLODE_EXCEPTION;
+    public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
+        ArgumentCaptor<LogicalLogRecord<TestMessages>> captor = createLogicalLogRecordArgumentCaptor();
+        doNothing().when(mockDestination).publish(captor.capture());
+        RuntimeException expectedException = new RuntimeException("expected");
 
-        logger.log(TestMessages.Explode);
+        logger.log(TestMessages.Bar, expectedException, 64, "Hello, World");
 
-        Mockito.verify(exceptionConsumer).accept(expected);
+        verify(mockDestination).publish(any());
+        verifyNoMoreInteractions(mockDestination);
+
+        LogicalLogRecord<TestMessages> record = captor.getValue();
+        assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertEquals(TestMessages.Bar, record.getMessage());
+        assertNotNull(record.getCause());
+        assertSame(expectedException, record.getCause().get());
+        assertArrayEquals(new Object[] {64, "Hello, World"}, record.getDetails());
     }
 
     @Test
-    public void log_shouldWriteATimestampedCodedFormattedLogMessageWithStacktraceToThePrintStream_givenALogMessageInstanceAndAThrowable() throws Exception {
-        RuntimeException theException = new RuntimeException("theException");
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
+        logger.log(TestMessages.Foo, (Throwable) null);
 
-        logger.log(TestMessages.Bar, theException, 1, "silly");
-
-        StringBuilder expectedOutput = new StringBuilder();
-        expectedOutput.append("2014-02-01T14:57:12.500Z,CODE-Bar,An event with 1 silly messages ");
-        stackTraceProcessor.process(theException, expectedOutput);
-        expectedOutput.append("\n");
-
-        assertEquals(expectedOutput.toString(), output.toString());
+        verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenALogMessageInstanceAndAThrowable() throws Exception {
-        RuntimeException expected = new RuntimeException();
-        Mockito.doThrow(expected).when(stackTraceProcessor).process(any(Throwable.class), any(StringBuilder.class));
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecordWithAThrowable() throws Exception {
+        Exception expectedException = new IOException("Couldn't write to the output stream");
+        doThrow(expectedException).when(mockDestination).publish(any());
 
-        logger.log(TestMessages.Foo, new Exception());
+        logger.log(TestMessages.Foo, new NullPointerException());
 
-        Mockito.verify(exceptionConsumer).accept(expected);
+        verify(exceptionConsumer).accept(Mockito.same(expectedException));
     }
 
     @Test
-    public void close_shouldCloseThePrintStream() throws Exception {
+    public void close_shouldCloseTheDestination() throws Exception {
         logger.close();
 
-        assertTrue(output.isClosed());
-    }
-
-    @Test
-    public void close_shouldNotCloseThePrintStream_whenThePrintStreamIsSystemOut() throws Exception {
-        System.setOut(output);
-
-        logger.close();
-
-        assertFalse(output.isClosed());
-    }
-
-    @Test
-    public void close_shouldNotCloseThePrintStream_whenThePrintStreamIsSystemErr() throws Exception {
-        System.setErr(output);
-
-        logger.close();
-
-        assertFalse(output.isClosed());
+        verify(mockDestination).close();
     }
 
     static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred"),
-        Bar("CODE-Bar", "An event with %d %s messages"),
-        Explode("CODE-Exp", "Boom! Threw an exception") {
-            @Override
-            public String getMessageCode() {
-                throw EXPLODE_EXCEPTION;
-            }
-        };
-
-        static final RuntimeException EXPLODE_EXCEPTION = new RuntimeException();
+        Bar("CODE-Bar", "An event with %d %s messages");
 
         //region LogMessage implementation guts
         private final String messageCode;
@@ -125,5 +122,14 @@ public class BasicOpsLoggerTest {
             return messagePattern;
         }
         //endregion
+    }
+
+    /*
+        ArgumentCaptor and generic types DO NOT work well together
+     */
+    private static <T extends Enum<T> & LogMessage> ArgumentCaptor<LogicalLogRecord<T>> createLogicalLogRecordArgumentCaptor() {
+        @SuppressWarnings("unchecked")
+        Class<LogicalLogRecord<T>> clazz = (Class<LogicalLogRecord<T>>)(Class) LogicalLogRecord.class;
+        return ArgumentCaptor.forClass(clazz);
     }
 }

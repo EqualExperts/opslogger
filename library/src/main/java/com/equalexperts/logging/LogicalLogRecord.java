@@ -39,4 +39,20 @@ class LogicalLogRecord<T extends Enum<T> & LogMessage> {
         }
         return result.toString();
     }
+
+    Instant getTimestamp() {
+        return timestamp;
+    }
+
+    T getMessage() {
+        return message;
+    }
+
+    Optional<Throwable> getCause() {
+        return cause;
+    }
+
+    Object[] getDetails() {
+        return details;
+    }
 }

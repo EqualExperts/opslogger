@@ -13,9 +13,13 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Destination<T> destination;
 
     BasicOpsLogger(PrintStream output, Clock clock, StackTraceProcessor stackTraceProcessor, Consumer<Throwable> errorHandler) {
+        this(clock, new BasicOutputStreamDestination<>(output, stackTraceProcessor), errorHandler);
+    }
+
+    BasicOpsLogger(Clock clock, Destination<T> destination, Consumer<Throwable> errorHandler) {
         this.clock = clock;
+        this.destination = destination;
         this.errorHandler = errorHandler;
-        this.destination = new BasicOutputStreamDestination<>(output, stackTraceProcessor);
     }
 
     @Override
