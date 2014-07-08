@@ -2,6 +2,7 @@ package com.equalexperts.logging;
 
 import java.time.Instant;
 import java.util.Formatter;
+import java.util.Objects;
 import java.util.Optional;
 
 class LogicalLogRecord<T extends Enum<T> & LogMessage> {
@@ -11,10 +12,10 @@ class LogicalLogRecord<T extends Enum<T> & LogMessage> {
     private final Object[] details;
 
     LogicalLogRecord(Instant timestamp, T message, Optional<Throwable> cause, Object... details) {
-        this.timestamp = timestamp;
-        this.message = message;
-        this.details = details;
-        this.cause = cause;
+        this.timestamp = Objects.requireNonNull(timestamp, "parameter timestamp must not be null");
+        this.message = Objects.requireNonNull(message, "parameter message must not be null");
+        this.cause = Objects.requireNonNull(cause, "parameter cause must not be null");
+        this.details = Objects.requireNonNull(details, "parameter details must not be null");
     }
 
     public String format(StackTraceProcessor processor) throws Exception {
