@@ -37,7 +37,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertSame(System.out, basicLogger.getOutput());
+        assertSame(System.out, basicLogger.getBasicOutputStreamDestination().getOutput());
         ensureCorrectlyConfigured(basicLogger);
     }
 
@@ -50,7 +50,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertSame(expectedPrintStream, basicLogger.getOutput());
+        assertSame(expectedPrintStream, basicLogger.getBasicOutputStreamDestination().getOutput());
         ensureCorrectlyConfigured(basicLogger);
     }
 
@@ -68,7 +68,7 @@ public class OpsLoggerFactoryTest {
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         ensureCorrectlyConfigured(basicLogger);
 
-        PrintStream loggerOutputStream = basicLogger.getOutput();
+        PrintStream loggerOutputStream = basicLogger.getBasicOutputStreamDestination().getOutput();
         assertEquals(true, getAutoFlush(loggerOutputStream));
 
         OutputStream actualOutputStream = getBackingOutputStream(loggerOutputStream);
@@ -104,7 +104,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+        assertThat(basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     @Test
@@ -113,7 +113,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+        assertThat(basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     @Test
@@ -126,7 +126,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        FilesystemStackTraceProcessor stackTraceProcessor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        FilesystemStackTraceProcessor stackTraceProcessor = (FilesystemStackTraceProcessor) basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor();
 
         assertEquals(parent, stackTraceProcessor.getDestination());
     }
@@ -141,7 +141,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+        assertThat(basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
     @Test
@@ -153,7 +153,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor();
         assertEquals(stackTraceStorage, processor.getDestination());
     }
 
@@ -217,7 +217,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
-        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor();
         assertNotEquals(originalStackTraceDestination, processor.getDestination());
     }
 
@@ -232,7 +232,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
-        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getStackTraceProcessor();
+        FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) basicLogger.getBasicOutputStreamDestination().getStackTraceProcessor();
         assertEquals(parent, processor.getDestination());
     }
 
