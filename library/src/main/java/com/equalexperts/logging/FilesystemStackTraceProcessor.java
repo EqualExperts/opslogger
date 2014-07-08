@@ -9,11 +9,15 @@ import java.nio.file.Path;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
 
-public class FilesystemStackTraceProcessor implements StackTraceProcessor {
+/**
+ * A stack trace processor that stores the stack trace in a uniquely fingerprinted file.
+ * The URI of the file (whether new or existing) is included in the log message.
+ */
+class FilesystemStackTraceProcessor implements StackTraceProcessor {
     private final Path destination;
     private final ThrowableFingerprintCalculator fingerprintCalculator;
 
-    public FilesystemStackTraceProcessor(Path destination, ThrowableFingerprintCalculator fingerprintCalculator) {
+    FilesystemStackTraceProcessor(Path destination, ThrowableFingerprintCalculator fingerprintCalculator) {
         this.destination = destination;
         this.fingerprintCalculator = fingerprintCalculator;
     }
