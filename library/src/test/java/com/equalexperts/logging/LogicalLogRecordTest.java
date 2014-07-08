@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
+import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
+import static org.mutabilitydetector.unittesting.MutabilityMatchers.areImmutable;
 
 public class LogicalLogRecordTest {
 
@@ -86,6 +88,11 @@ public class LogicalLogRecordTest {
         String result = record.format(processor);
 
         assertEquals("2014-04-01T13:37:00.123Z,CODE-Bar,A Bar event occurred, with argument 42 #EXCEPTION_HERE#", result);
+    }
+
+    @Test
+    public void class_shouldBeImmutable() throws Exception {
+        assertInstancesOf(LogicalLogRecord.class, areImmutable());
     }
 
     private static enum TestMessages implements LogMessage {

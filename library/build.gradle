@@ -5,7 +5,7 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 dependencies {
-    testCompile junit, mockito, spring
+    testCompile junit, mockito, spring, mutabilityDetector
 }
 
 group = 'com.equalexperts'
