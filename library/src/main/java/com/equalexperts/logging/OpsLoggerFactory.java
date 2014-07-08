@@ -58,7 +58,8 @@ public class OpsLoggerFactory {
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         PrintStream output = configurePrintStream();
-        return new BasicOpsLogger<>(output, Clock.systemUTC(), stackTraceProcessor, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
+        BasicOpsLogger.Destination<T> destination = new BasicOutputStreamDestination<>(output, stackTraceProcessor);
+        return new BasicOpsLogger<>(Clock.systemUTC(), destination, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
     }
 
     private PrintStream configurePrintStream() throws IOException {

@@ -2,7 +2,6 @@ package com.equalexperts.logging;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -11,10 +10,6 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
-
-    BasicOpsLogger(PrintStream output, Clock clock, StackTraceProcessor stackTraceProcessor, Consumer<Throwable> errorHandler) {
-        this(clock, new BasicOutputStreamDestination<>(output, stackTraceProcessor), errorHandler);
-    }
 
     BasicOpsLogger(Clock clock, Destination<T> destination, Consumer<Throwable> errorHandler) {
         this.clock = clock;
@@ -56,11 +51,6 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     Clock getClock() {
         return clock;
-    }
-
-    @Deprecated
-    BasicOutputStreamDestination<T> getBasicOutputStreamDestination() {
-        return (BasicOutputStreamDestination<T>) getDestination();
     }
 
     Destination<T> getDestination() {
