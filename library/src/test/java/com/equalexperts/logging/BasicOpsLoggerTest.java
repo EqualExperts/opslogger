@@ -1,8 +1,8 @@
 package com.equalexperts.logging;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.mockito.*;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -15,15 +15,21 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class BasicOpsLoggerTest {
+    private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
+    @Mock private BasicOpsLogger.Destination<TestMessages> mockDestination;
+    @Mock private Consumer<Throwable> exceptionConsumer;
+    @Captor private ArgumentCaptor<LogicalLogRecord<TestMessages>> captor;
 
-    @SuppressWarnings("unchecked") private final BasicOpsLogger.Destination<TestMessages> mockDestination = (BasicOpsLogger.Destination<TestMessages>) mock(BasicOpsLogger.Destination.class);
-    @SuppressWarnings("unchecked") private final Consumer<Throwable> exceptionConsumer = (Consumer<Throwable>) mock(Consumer.class);
-    private final Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    private final OpsLogger<TestMessages> logger = new BasicOpsLogger<>(fixedClock, mockDestination, exceptionConsumer);
+    private OpsLogger<TestMessages> logger;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        logger = new BasicOpsLogger<>(fixedClock, mockDestination, exceptionConsumer);
+    }
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
-        ArgumentCaptor<LogicalLogRecord<TestMessages>> captor = createLogicalLogRecordArgumentCaptor();
         doNothing().when(mockDestination).publish(captor.capture());
 
         logger.log(TestMessages.Bar, 64, "Hello, World");
@@ -58,7 +64,6 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
-        ArgumentCaptor<LogicalLogRecord<TestMessages>> captor = createLogicalLogRecordArgumentCaptor();
         doNothing().when(mockDestination).publish(captor.capture());
         RuntimeException expectedException = new RuntimeException("expected");
 
@@ -122,14 +127,5 @@ public class BasicOpsLoggerTest {
             return messagePattern;
         }
         //endregion
-    }
-
-    /*
-        ArgumentCaptor and generic types DO NOT work well together
-     */
-    private static <T extends Enum<T> & LogMessage> ArgumentCaptor<LogicalLogRecord<T>> createLogicalLogRecordArgumentCaptor() {
-        @SuppressWarnings("unchecked")
-        Class<LogicalLogRecord<T>> clazz = (Class<LogicalLogRecord<T>>)(Class) LogicalLogRecord.class;
-        return ArgumentCaptor.forClass(clazz);
     }
 }
