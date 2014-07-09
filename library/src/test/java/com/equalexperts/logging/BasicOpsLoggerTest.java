@@ -59,6 +59,16 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIds() throws Exception {
+        Error expectedThrowable = new Error();
+        when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
+
+        logger.log(TestMessages.Foo);
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecord() throws Exception {
         RuntimeException expectedException = new NullPointerException();
         doThrow(expectedException).when(mockDestination).publish(any());
@@ -105,6 +115,16 @@ public class BasicOpsLoggerTest {
         logger.log(TestMessages.Foo, new NullPointerException());
 
         verify(exceptionConsumer).accept(Mockito.same(expectedException));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
+        Error expectedThrowable = new Error();
+        when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
+
+        logger.log(TestMessages.Foo, new RuntimeException());
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
     }
 
     @Test
