@@ -20,6 +20,7 @@ import java.util.Set;
 
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -27,20 +28,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RefreshableFileChannelProviderTest {
-    static final Set<StandardOpenOption> CREATE_AND_APPEND = EnumSet.of(CREATE, APPEND);
+    private static final Set<StandardOpenOption> CREATE_AND_APPEND = EnumSet.of(CREATE, APPEND);
 
     @Rule
     public TempFileFixture tempFiles = new TempFileFixture();
 
+    private final Path mockPath = createMockPath();
+    private final Duration maximumReuse = Duration.parse("PT5M");
+    private final RefreshableFileChannelProvider provider = new RefreshableFileChannelProvider(mockPath, maximumReuse);
+
     @Test
     public void getChannel_shouldReturnAResultWithAChannelAndAssociatedWriter_whenFirstCalled() throws Exception {
-        Path expectedPath = createMockPath();
-        Duration maximumReuse = Duration.parse("PT5M");
-
-        RefreshableFileChannelProvider provider = new RefreshableFileChannelProvider(expectedPath, maximumReuse);
 
         FileChannel testFileChannel = FileChannel.open(tempFiles.createTempFile(null), CREATE);
-        when(expectedPath.getFileSystem().provider().newFileChannel(same(expectedPath), eq(CREATE_AND_APPEND))).thenReturn(testFileChannel);
+        when(mockPath.getFileSystem().provider().newFileChannel(same(mockPath), eq(CREATE_AND_APPEND))).thenReturn(testFileChannel);
 
         RefreshableFileChannelProvider.Result result = provider.getChannel(Instant.now());
 
@@ -52,14 +53,10 @@ public class RefreshableFileChannelProviderTest {
 
     @Test
     public void getChannel_shouldReuseThePreviousResult_whenThePreviousResultIsNewEnough() throws Exception {
-        Path expectedPath = createMockPath();
-        Duration maximumReuse = Duration.parse("PT5M");
-
-        RefreshableFileChannelProvider provider = new RefreshableFileChannelProvider(expectedPath, maximumReuse);
 
         //set up first call
         FileChannel firstFileChannel = FileChannel.open(tempFiles.createTempFile(null), CREATE);
-        when(expectedPath.getFileSystem().provider().newFileChannel(same(expectedPath), eq(CREATE_AND_APPEND))).thenReturn(firstFileChannel);
+        when(mockPath.getFileSystem().provider().newFileChannel(same(mockPath), eq(CREATE_AND_APPEND))).thenReturn(firstFileChannel);
 
         Instant firstCall = Instant.now().minusSeconds(3600);
         RefreshableFileChannelProvider.Result firstResult = provider.getChannel(firstCall);
@@ -73,15 +70,11 @@ public class RefreshableFileChannelProviderTest {
 
     @Test
     public void getChannel_shouldCloseThePreviousResultAndConstructANewOne_whenThePreviousResultIsTooOld() throws Exception {
-        Path expectedPath = createMockPath();
-        Duration maximumReuse = Duration.parse("PT5M");
-
-        RefreshableFileChannelProvider provider = new RefreshableFileChannelProvider(expectedPath, maximumReuse);
 
         //set up two file channels
         FileChannel firstFileChannel = FileChannel.open(tempFiles.createTempFile(null), CREATE);
         FileChannel secondFileChannel = FileChannel.open(tempFiles.createTempFile(null), CREATE);
-        when(expectedPath.getFileSystem().provider().newFileChannel(same(expectedPath), eq(CREATE_AND_APPEND))).thenReturn(firstFileChannel, secondFileChannel);
+        when(mockPath.getFileSystem().provider().newFileChannel(same(mockPath), eq(CREATE_AND_APPEND))).thenReturn(firstFileChannel, secondFileChannel);
 
         Instant firstCall = Instant.now().minusSeconds(3600);
         RefreshableFileChannelProvider.Result firstResult = provider.getChannel(firstCall);
@@ -97,6 +90,26 @@ public class RefreshableFileChannelProviderTest {
         assertTrue(secondFileChannel.isOpen());
     }
 
+    @Test
+    public void close_shouldDoNothingIfAFileChannelHasNotBeenOpened() throws Exception {
+        assertThat(provider, instanceOf(AutoCloseable.class));
+        
+        provider.close();
+    }
+
+    @Test
+    public void close_shouldCloseTheLastOpenedChannel_whenAChannelHasBeenOpened() throws Exception {
+        assertThat(provider, instanceOf(AutoCloseable.class));
+        FileChannel firstFileChannel = FileChannel.open(tempFiles.createTempFile(null), CREATE);
+        when(mockPath.getFileSystem().provider().newFileChannel(same(mockPath), eq(CREATE_AND_APPEND))).thenReturn(firstFileChannel);
+
+        RefreshableFileChannelProvider.Result firstResult = provider.getChannel(Instant.now());
+
+        provider.close();
+
+        assertFalse(firstResult.channel.isOpen());
+    }
+    
     private void ensureAssociated(Writer writer, FileChannel channel) throws Exception {
         Class<? extends Writer> implementationClass = writer.getClass();
         for (Field field : implementationClass.getDeclaredFields()) {

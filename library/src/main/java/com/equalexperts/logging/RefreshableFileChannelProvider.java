@@ -1,5 +1,6 @@
 package com.equalexperts.logging;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.channels.Channels;
@@ -11,7 +12,7 @@ import java.time.Instant;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
-class RefreshableFileChannelProvider {
+class RefreshableFileChannelProvider implements Closeable {
     private final Path path;
     private final Duration maximumResultLifetime;
 
@@ -28,6 +29,13 @@ class RefreshableFileChannelProvider {
         return result;
     }
 
+    @Override
+    public void close() throws IOException {
+        if (result != null) {
+            result.writer.close();
+        }
+    }
+
     private void createChannelIfNecessary(Instant now) throws IOException {
         if (result == null) {
             FileChannel fileChannel = FileChannel.open(path, CREATE, APPEND);
@@ -40,7 +48,7 @@ class RefreshableFileChannelProvider {
         if (result != null) {
             Duration resultAge = Duration.between(result.created, now);
             if (resultAge.compareTo(maximumResultLifetime) > 0) {
-                result.channel.close();
+                result.writer.close();
                 result = null;
             }
         }
