@@ -22,6 +22,7 @@ public class OpsLoggerFactory {
     private Optional<Boolean> storeStackTracesInFilesystem = Optional.empty();
     private Optional<Path> stackTraceStoragePath = Optional.empty();
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
+    private Optional<Supplier<String[]>> correlationIdSupplier = Optional.empty();
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateParametersForSetDestination(printStream);
@@ -57,11 +58,17 @@ public class OpsLoggerFactory {
         return this;
     }
 
+    public OpsLoggerFactory setCorrelationIdSupplier(Supplier<String[]> supplier) {
+        this.correlationIdSupplier = Optional.ofNullable(supplier);
+        return this;
+    }
+
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         PrintStream output = configurePrintStream();
         BasicOpsLogger.Destination<T> destination = new BasicOutputStreamDestination<>(output, stackTraceProcessor);
-        return new BasicOpsLogger<>(Clock.systemUTC(), EMPTY_CORRELATION_ID_SUPPLIER, destination, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
+        Supplier<String[]> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
+        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
     }
 
     private PrintStream configurePrintStream() throws IOException {

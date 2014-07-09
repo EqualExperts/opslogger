@@ -61,5 +61,9 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return destination;
     }
 
+    Supplier<String[]> getCorrelationIdSupplier() {
+        return correlationIdSupplier;
+    }
+
     Consumer<Throwable> getErrorHandler() { return errorHandler; }
 }

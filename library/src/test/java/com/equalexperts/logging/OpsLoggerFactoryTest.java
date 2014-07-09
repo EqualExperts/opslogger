@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.equalexperts.logging.PrintStreamTestUtils.*;
 import static java.nio.file.StandardOpenOption.*;
@@ -38,6 +39,7 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertThat(basicLogger.getDestination(), instanceOf(BasicOutputStreamDestination.class));
+        assertEquals(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
         BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
@@ -213,6 +215,28 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
         assertSame(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
+    }
+
+    @Test
+    public void build_shouldConstructABasicOpsLoggerWithTheCorrectCorrelationIdSupplier_whenACustomCorrelationIdSupplierHasBeenSet() throws Exception {
+        Supplier<String[]> expectedCorrelationIdSupplier = () -> new String[]{};
+
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setCorrelationIdSupplier(expectedCorrelationIdSupplier)
+                .build();
+
+        BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
+        assertSame(expectedCorrelationIdSupplier, basicLogger.getCorrelationIdSupplier());
+    }
+
+    @Test
+    public void build_shouldConstructABasicOpsLoggerWithTheDefaultCorrelationIdSupplier_whenSetCorrelationIdSupplierIsCalledWithNull() throws Exception {
+        OpsLogger<TestMessages> logger = new OpsLoggerFactory()
+                .setCorrelationIdSupplier(null)
+                .build();
+
+        BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
+        assertSame(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
     }
 
     @Test
