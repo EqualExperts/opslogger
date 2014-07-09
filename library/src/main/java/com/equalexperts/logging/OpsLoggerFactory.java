@@ -7,12 +7,14 @@ import java.time.Clock;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.nio.file.StandardOpenOption.*;
 
 public class OpsLoggerFactory {
     private static final boolean ENABLE_AUTO_FLUSH = true;
     static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
+    static final Supplier<String[]> EMPTY_CORRELATION_ID_SUPPLIER = () -> null;
 
     private Optional<PrintStream> loggerOutput = Optional.empty();
     private Optional<Path> logfilePath = Optional.empty();
@@ -59,7 +61,7 @@ public class OpsLoggerFactory {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         PrintStream output = configurePrintStream();
         BasicOpsLogger.Destination<T> destination = new BasicOutputStreamDestination<>(output, stackTraceProcessor);
-        return new BasicOpsLogger<>(Clock.systemUTC(), destination, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
+        return new BasicOpsLogger<>(Clock.systemUTC(), EMPTY_CORRELATION_ID_SUPPLIER, destination, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
     }
 
     private PrintStream configurePrintStream() throws IOException {

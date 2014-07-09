@@ -5,14 +5,17 @@ import java.io.IOException;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
+    private final Supplier<String[]> correlationIdSupplier;
 
-    BasicOpsLogger(Clock clock, Destination<T> destination, Consumer<Throwable> errorHandler) {
+    BasicOpsLogger(Clock clock, Supplier<String[]> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler) {
         this.clock = clock;
+        this.correlationIdSupplier = correlationIdSupplier;
         this.destination = destination;
         this.errorHandler = errorHandler;
     }
@@ -25,7 +28,7 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     @Override
     public void log(T message, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), null, message, Optional.empty(), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, Optional.empty(), details);
             destination.publish(record);
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -35,14 +38,14 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     @Override
     public void log(T message, Throwable cause, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), null, message, Optional.of(cause), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, Optional.of(cause), details);
             destination.publish(record);
         } catch (Throwable t) {
             errorHandler.accept(t);
         }
     }
 
-    protected static interface Destination<T extends Enum<T> & LogMessage> extends Closeable {
+    static interface Destination<T extends Enum<T> & LogMessage> extends Closeable {
         void publish(LogicalLogRecord<T> record) throws Exception;
     }
 

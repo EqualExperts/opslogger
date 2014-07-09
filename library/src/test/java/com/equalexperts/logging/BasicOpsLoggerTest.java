@@ -9,6 +9,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -18,6 +19,7 @@ public class BasicOpsLoggerTest {
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
     @Mock private BasicOpsLogger.Destination<TestMessages> mockDestination;
     @Mock private Consumer<Throwable> exceptionConsumer;
+    @Mock private Supplier<String[]> correlationIdSupplier;
     @Captor private ArgumentCaptor<LogicalLogRecord<TestMessages>> captor;
 
     private OpsLogger<TestMessages> logger;
@@ -25,20 +27,24 @@ public class BasicOpsLoggerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        logger = new BasicOpsLogger<>(fixedClock, mockDestination, exceptionConsumer);
+        logger = new BasicOpsLogger<>(fixedClock, correlationIdSupplier, mockDestination, exceptionConsumer);
     }
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
+        String[] expectedCorrelationIds = new String[]{"foo", "bar"};
+        when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
         doNothing().when(mockDestination).publish(captor.capture());
 
         logger.log(TestMessages.Bar, 64, "Hello, World");
 
         verify(mockDestination).publish(any());
-        verifyNoMoreInteractions(mockDestination);
+        verify(correlationIdSupplier).get();
+        verifyNoMoreInteractions(mockDestination, correlationIdSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertArrayEquals(expectedCorrelationIds, record.getCorrelationIds());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertFalse(record.getCause().isPresent());
@@ -64,16 +70,20 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
+        String[] expectedCorrelationIds = new String[]{"foo", "bar"};
+        when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
         doNothing().when(mockDestination).publish(captor.capture());
         RuntimeException expectedException = new RuntimeException("expected");
 
         logger.log(TestMessages.Bar, expectedException, 64, "Hello, World");
 
         verify(mockDestination).publish(any());
-        verifyNoMoreInteractions(mockDestination);
+        verify(correlationIdSupplier).get();
+        verifyNoMoreInteractions(mockDestination, correlationIdSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertArrayEquals(expectedCorrelationIds, record.getCorrelationIds());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertSame(expectedException, record.getCause().get());
