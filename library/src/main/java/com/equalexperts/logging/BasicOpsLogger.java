@@ -28,7 +28,7 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     @Override
     public void log(T message, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, Optional.empty(), details);
+            LogicalLogRecord<T> record = constructLogRecord(message, Optional.empty(), details);
             destination.publish(record);
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -38,11 +38,15 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     @Override
     public void log(T message, Throwable cause, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, Optional.of(cause), details);
+            LogicalLogRecord<T> record = constructLogRecord(message, Optional.of(cause), details);
             destination.publish(record);
         } catch (Throwable t) {
             errorHandler.accept(t);
         }
+    }
+
+    private LogicalLogRecord<T> constructLogRecord(T message, Optional<Throwable> o, Object... details) {
+        return new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, o, details);
     }
 
     static interface Destination<T extends Enum<T> & LogMessage> extends Closeable {
