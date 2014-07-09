@@ -21,7 +21,7 @@ public class BasicOutputStreamDestinationTest {
 
     @Test
     public void publish_shouldPublishAFormattedLogRecord() throws Exception {
-        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), TestMessages.Foo, Optional.empty());
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
         String expectedMessage = record.format(processor) + System.getProperty("line.separator");
 
         destination.publish(record);
