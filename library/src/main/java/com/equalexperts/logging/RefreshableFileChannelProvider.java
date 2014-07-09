@@ -23,6 +23,20 @@ class RefreshableFileChannelProvider {
     }
 
     public Result getChannel(Instant now) throws IOException {
+        closeChannelIfItIsTooOld(now);
+        createChannelIfNecessary(now);
+        return result;
+    }
+
+    private void createChannelIfNecessary(Instant now) throws IOException {
+        if (result == null) {
+            FileChannel fileChannel = FileChannel.open(path, CREATE, APPEND);
+            Writer writer = Channels.newWriter(fileChannel, "UTF-8");
+            result = new Result(fileChannel, writer, now);
+        }
+    }
+
+    private void closeChannelIfItIsTooOld(Instant now) throws IOException {
         if (result != null) {
             Duration resultAge = Duration.between(result.created, now);
             if (resultAge.compareTo(maximumResultLifetime) > 0) {
@@ -30,12 +44,6 @@ class RefreshableFileChannelProvider {
                 result = null;
             }
         }
-        if (result == null) {
-            FileChannel fileChannel = FileChannel.open(path, CREATE, APPEND);
-            Writer writer = Channels.newWriter(fileChannel, "UTF-8");
-            result = new Result(fileChannel, writer, now);
-        }
-        return result;
     }
 
     static class Result {
