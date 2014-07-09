@@ -17,9 +17,9 @@ import static org.mockito.Mockito.*;
 
 public class BasicOpsLoggerTest {
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    @Mock private BasicOpsLogger.Destination<TestMessages> mockDestination;
-    @Mock private Consumer<Throwable> exceptionConsumer;
+    @Mock private BasicOpsLogger.Destination<TestMessages> destination;
     @Mock private Supplier<String[]> correlationIdSupplier;
+    @Mock private Consumer<Throwable> exceptionConsumer;
     @Captor private ArgumentCaptor<LogicalLogRecord<TestMessages>> captor;
 
     private OpsLogger<TestMessages> logger;
@@ -27,20 +27,20 @@ public class BasicOpsLoggerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        logger = new BasicOpsLogger<>(fixedClock, correlationIdSupplier, mockDestination, exceptionConsumer);
+        logger = new BasicOpsLogger<>(fixedClock, correlationIdSupplier, destination, exceptionConsumer);
     }
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
         String[] expectedCorrelationIds = new String[]{"foo", "bar"};
         when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
-        doNothing().when(mockDestination).publish(captor.capture());
+        doNothing().when(destination).publish(captor.capture());
 
         logger.log(TestMessages.Bar, 64, "Hello, World");
 
-        verify(mockDestination).publish(any());
+        verify(destination).publish(any());
         verify(correlationIdSupplier).get();
-        verifyNoMoreInteractions(mockDestination, correlationIdSupplier);
+        verifyNoMoreInteractions(destination, correlationIdSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
@@ -71,7 +71,7 @@ public class BasicOpsLoggerTest {
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecord() throws Exception {
         RuntimeException expectedException = new NullPointerException();
-        doThrow(expectedException).when(mockDestination).publish(any());
+        doThrow(expectedException).when(destination).publish(any());
 
         logger.log(TestMessages.Foo);
 
@@ -82,14 +82,14 @@ public class BasicOpsLoggerTest {
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
         String[] expectedCorrelationIds = new String[]{"foo", "bar"};
         when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
-        doNothing().when(mockDestination).publish(captor.capture());
+        doNothing().when(destination).publish(captor.capture());
         RuntimeException expectedException = new RuntimeException("expected");
 
         logger.log(TestMessages.Bar, expectedException, 64, "Hello, World");
 
-        verify(mockDestination).publish(any());
+        verify(destination).publish(any());
         verify(correlationIdSupplier).get();
-        verifyNoMoreInteractions(mockDestination, correlationIdSupplier);
+        verifyNoMoreInteractions(destination, correlationIdSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
@@ -110,7 +110,7 @@ public class BasicOpsLoggerTest {
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecordWithAThrowable() throws Exception {
         Exception expectedException = new IOException("Couldn't write to the output stream");
-        doThrow(expectedException).when(mockDestination).publish(any());
+        doThrow(expectedException).when(destination).publish(any());
 
         logger.log(TestMessages.Foo, new NullPointerException());
 
@@ -131,7 +131,7 @@ public class BasicOpsLoggerTest {
     public void close_shouldCloseTheDestination() throws Exception {
         logger.close();
 
-        verify(mockDestination).close();
+        verify(destination).close();
     }
 
     static enum TestMessages implements LogMessage {
