@@ -64,11 +64,16 @@ public class OpsLoggerFactory {
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+        BasicOpsLogger.Destination<T> destination = configureBasicDestination();
+        Supplier<String[]> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
+        Consumer<Throwable> errorHandler = this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
+        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler);
+    }
+
+    private <T extends Enum<T> & LogMessage> BasicOpsLogger.Destination<T> configureBasicDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         PrintStream output = configurePrintStream();
-        BasicOpsLogger.Destination<T> destination = new BasicOutputStreamDestination<>(output, stackTraceProcessor);
-        Supplier<String[]> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
-        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler.orElse(DEFAULT_ERROR_HANDLER));
+        return new BasicOutputStreamDestination<>(output, stackTraceProcessor);
     }
 
     private PrintStream configurePrintStream() throws IOException {
