@@ -1,6 +1,5 @@
 package com.equalexperts.logging;
 
-import java.io.IOException;
 import java.io.PrintStream;
 
 class BasicOutputStreamDestination<T extends Enum<T> & LogMessage> implements BasicOpsLogger.Destination<T> {
@@ -18,7 +17,7 @@ class BasicOutputStreamDestination<T extends Enum<T> & LogMessage> implements Ba
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws Exception {
         if (!streamIsSpecial()) {
             output.close();
         }

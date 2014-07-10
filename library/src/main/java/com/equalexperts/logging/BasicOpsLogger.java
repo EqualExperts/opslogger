@@ -1,7 +1,5 @@
 package com.equalexperts.logging;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -21,7 +19,7 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws Exception {
         destination.close();
     }
 
@@ -49,7 +47,7 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, o, details);
     }
 
-    static interface Destination<T extends Enum<T> & LogMessage> extends Closeable {
+    static interface Destination<T extends Enum<T> & LogMessage> extends AutoCloseable {
         void publish(LogicalLogRecord<T> record) throws Exception;
     }
 
