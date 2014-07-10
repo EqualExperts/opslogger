@@ -410,7 +410,7 @@ public class OpsLoggerFactoryTest {
         assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
     }
 
-    static enum TestMessages implements LogMessage {
+    private static enum TestMessages implements LogMessage {
         ; //don't actually need any messages for these tests
 
         //region LogMessage implementation guts

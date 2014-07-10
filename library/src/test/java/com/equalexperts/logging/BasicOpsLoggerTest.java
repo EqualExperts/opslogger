@@ -134,7 +134,7 @@ public class BasicOpsLoggerTest {
         verify(destination).close();
     }
 
-    static enum TestMessages implements LogMessage {
+    private static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred"),
         Bar("CODE-Bar", "An event with %d %s messages");
 

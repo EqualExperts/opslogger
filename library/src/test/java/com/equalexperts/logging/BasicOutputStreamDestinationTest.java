@@ -54,7 +54,7 @@ public class BasicOutputStreamDestinationTest {
         assertFalse(output.isClosed());
     }
 
-    static enum TestMessages implements LogMessage {
+    private static enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred");
 
         //region LogMessage implementation guts
