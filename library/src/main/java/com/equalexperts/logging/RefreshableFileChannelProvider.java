@@ -54,6 +54,14 @@ class RefreshableFileChannelProvider implements Closeable {
         }
     }
 
+    Path getPath() {
+        return path;
+    }
+
+    public Duration getMaximumResultLifetime() {
+        return maximumResultLifetime;
+    }
+
     static class Result {
         final FileChannel channel;
         final Writer writer;

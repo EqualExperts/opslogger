@@ -40,4 +40,16 @@ class BasicPathDestination<T extends Enum<T> & LogMessage> implements BasicOpsLo
     public void close() throws Exception {
         fileChannelProvider.close();
     }
+
+    public Lock getLock() {
+        return lock;
+    }
+
+    public RefreshableFileChannelProvider getFileChannelProvider() {
+        return fileChannelProvider;
+    }
+
+    public StackTraceProcessor getStackTraceProcessor() {
+        return stackTraceProcessor;
+    }
 }

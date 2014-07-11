@@ -1,5 +1,6 @@
 package com.equalexperts.logging;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -12,11 +13,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static com.equalexperts.logging.PrintStreamTestUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -62,7 +65,7 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void build_shouldReturnABasicOpsLoggerConfiguredToAutoFlushAndAppendToTheRightFile_whenAPathIsSet() throws Exception {
+    public void build_shouldReturnABasicOpsLoggerConfiguredToWriteToTheSpecifiedPath_whenAPathIsSet() throws Exception {
         Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
         OutputStream expectedOutputStream = mock(OutputStream.class);
         when(Files.newOutputStream(expectedPath, CREATE, APPEND)).thenReturn(expectedOutputStream);
@@ -75,11 +78,13 @@ public class OpsLoggerFactoryTest {
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         ensureCorrectlyConfigured(basicLogger);
 
-        PrintStream loggerOutputStream = ((BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination()).getOutput();
-        assertEquals(true, getAutoFlush(loggerOutputStream));
+        BasicPathDestination<TestMessages> destination = (BasicPathDestination<TestMessages>) basicLogger.getDestination();
+        assertThat(destination.getLock(), CoreMatchers.instanceOf(ReentrantLock.class));
 
-        OutputStream actualOutputStream = getBackingOutputStream(loggerOutputStream);
-        assertSame(expectedOutputStream, actualOutputStream);
+        RefreshableFileChannelProvider provider = destination.getFileChannelProvider();
+        assertSame(expectedPath, provider.getPath());
+        assertEquals(Duration.of(100, ChronoUnit.MILLIS), provider.getMaximumResultLifetime());
+
     }
 
     @Test
@@ -91,7 +96,6 @@ public class OpsLoggerFactoryTest {
         //preconditions
         assertFalse(Files.exists(grandParent));
         assertFalse(Files.exists(parent));
-        assertFalse(Files.exists(logFile));
 
         //execute
         new OpsLoggerFactory()
@@ -101,7 +105,6 @@ public class OpsLoggerFactoryTest {
         //assert
         assertTrue(Files.exists(grandParent));
         assertTrue(Files.exists(parent));
-        assertTrue(Files.exists(logFile));
     }
 
     @Test
@@ -135,7 +138,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        BasicPathDestination<TestMessages> destination = (BasicPathDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor stackTraceProcessor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
 
         assertEquals(parent, stackTraceProcessor.getDestination());
@@ -151,7 +154,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        BasicPathDestination<TestMessages> destination = (BasicPathDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
@@ -251,7 +254,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        BasicPathDestination<TestMessages> destination = (BasicPathDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
         assertNotEquals(originalStackTraceDestination, processor.getDestination());
     }

@@ -4,15 +4,15 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.nio.file.StandardOpenOption.*;
-
 public class OpsLoggerFactory {
-    private static final boolean ENABLE_AUTO_FLUSH = true;
     static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
     static final Supplier<String[]> EMPTY_CORRELATION_ID_SUPPLIER = () -> null;
 
@@ -72,20 +72,12 @@ public class OpsLoggerFactory {
 
     private <T extends Enum<T> & LogMessage> BasicOpsLogger.Destination<T> configureBasicDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-        PrintStream output = configurePrintStream();
-        return new BasicOutputStreamDestination<>(output, stackTraceProcessor);
-    }
-
-    private PrintStream configurePrintStream() throws IOException {
-        if (loggerOutput.isPresent()) {
-            return loggerOutput.get();
-        }
-        if (logfilePath.isPresent()) {
+        if (this.logfilePath.isPresent()) {
             Files.createDirectories(logfilePath.get().getParent());
-            OutputStream outputStream = Files.newOutputStream(logfilePath.get(), CREATE, APPEND);
-            return new PrintStream(outputStream, ENABLE_AUTO_FLUSH);
+            RefreshableFileChannelProvider fileChannelProvider = new RefreshableFileChannelProvider(logfilePath.get(), Duration.of(100, ChronoUnit.MILLIS));
+            return new BasicPathDestination<>(new ReentrantLock(), fileChannelProvider, stackTraceProcessor);
         }
-        return System.out;
+        return new BasicOutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
     }
 
     private StackTraceProcessor configureStackTraceProcessor() throws IOException {
