@@ -25,8 +25,8 @@ class BasicPathDestination<T extends Enum<T> & LogMessage> implements BasicOpsLo
             RefreshableFileChannelProvider.Result result = fileChannelProvider.getChannel(record.getTimestamp());
             FileLock fileLock = result.channel.lock();
             try {
-                result.writer.append(physicalRecord);
-                result.writer.append(LINE_SEPARATOR);
+                //one call avoids a partial flush
+                result.writer.write(physicalRecord + LINE_SEPARATOR);
                 result.writer.flush();
             } finally {
                 fileLock.release();

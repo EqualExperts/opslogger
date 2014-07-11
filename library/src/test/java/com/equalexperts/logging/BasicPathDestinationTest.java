@@ -41,7 +41,7 @@ public class BasicPathDestinationTest {
 
     @Test
     public void publish_shouldFormatTheLogRecordAndWriteItToTheFile() throws Exception {
-        StringWriter sw = new StringWriter();
+        StringWriter sw = spy(new StringWriter());
         constructResult(sw, null);
 
         LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
@@ -50,6 +50,7 @@ public class BasicPathDestinationTest {
         destination.publish(record);
 
         verify(record).format(stackTraceProcessor);
+        verify(sw, times(1)).write(isA(String.class)); //write in one pass to avoid a partial flush
         assertEquals(record.format(stackTraceProcessor) + System.getProperty("line.separator"), sw.toString());
     }
 
@@ -62,8 +63,8 @@ public class BasicPathDestinationTest {
 
         destination.publish(record);
 
+        //flush should be the very last call to the writer
         InOrder inOrder = Mockito.inOrder(writer);
-        inOrder.verify(writer, atLeastOnce()).append(Mockito.isA(String.class));
         inOrder.verify(writer).flush();
         inOrder.verifyNoMoreInteractions();
 
@@ -85,7 +86,7 @@ public class BasicPathDestinationTest {
     public void publish_shouldObtainAThreadAndFileLockWhenWritingToTheFile() throws Exception {
         LogicalLogRecord<TestMessages> record = spy(new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty()));
 
-        Writer writer = mock(Writer.class);
+        Writer writer = spy(new StringWriter()); //use a spy so append/write doesn't matter
         FileChannel channel = mock(FileChannel.class);
         constructResult(writer, channel);
         FileLock fileLock = mock(FileLock.class);
@@ -96,14 +97,14 @@ public class BasicPathDestinationTest {
         /*
             order is important:
                 thread lock, then file lock,
-                then write,
+                then (write/append and) flush,
                 then release file lock, then release thread lock
          */
         InOrder order = inOrder(record, lock, channel, fileLock, writer);
         order.verify(record).format(stackTraceProcessor); //can happen outside the critical section
         order.verify(lock).lock();
         order.verify(channel).lock();
-        order.verify(writer, atLeast(0)).write(isA(String.class));
+        order.verify(writer, atLeastOnce()).write(isA(String.class));
         order.verify(writer).flush();
         order.verify(fileLock).release();
         order.verify(lock).unlock();
@@ -162,6 +163,7 @@ public class BasicPathDestinationTest {
 
         IOException expectedException = new IOException();
         when(writer.append(isA(String.class))).thenThrow(expectedException);
+        doThrow(expectedException).when(writer).write(isA(String.class));
 
         try {
             destination.publish(record);
@@ -170,10 +172,7 @@ public class BasicPathDestinationTest {
             assertSame(expectedException, e);
         }
 
-        InOrder order = inOrder(writer, fileLock, lock);
-        order.verify(writer, atLeastOnce()).append(isA(String.class));
-        order.verify(fileLock).release();
-        order.verify(lock).unlock();
+        verify(lock).unlock();
     }
 
     @Test
