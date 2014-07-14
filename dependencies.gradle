@@ -13,5 +13,5 @@ ext {
     //////////////////////////
     junit = "junit:junit:4.11"
     mockito = "org.mockito:mockito-core:1.9.5"
-    mutabilityDetector = "org.mutabilitydetector:MutabilityDetector:0.9.1"
+    mutabilityDetector = "org.mutabilitydetector:MutabilityDetector:0.9.2"
 }
