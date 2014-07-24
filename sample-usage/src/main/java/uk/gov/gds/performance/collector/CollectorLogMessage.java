@@ -11,7 +11,8 @@ public enum CollectorLogMessage implements LogMessage {
     InvalidConfigurationFile("GDS-000005", "Invalid configuration file format %s"),
     ConfigurationFileNotFound("GDS-000006", "Configuration file %s not found"),
     CouldNotConnectToDatabase("GDS-000007", "Could not connect to the database:"),
-    AllConnectivityChecksPassed("GDS-000008", "All connectivity checks passed");
+    AllConnectivityChecksPassed("GDS-000008", "All connectivity checks passed"),
+    SampleMessage("GDS-000009", "Logging sample message %d");
 
     //region LogMessage implementation
     private final String messageCode;

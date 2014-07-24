@@ -73,7 +73,7 @@ public class OpsLoggerFactory {
     private <T extends Enum<T> & LogMessage> BasicOpsLogger.Destination<T> configureBasicDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         if (this.logfilePath.isPresent()) {
-            Files.createDirectories(logfilePath.get().getParent());
+            Files.createDirectories(logfilePath.get().getParent().toRealPath());
             RefreshableFileChannelProvider fileChannelProvider = new RefreshableFileChannelProvider(logfilePath.get(), Duration.of(100, ChronoUnit.MILLIS));
             return new BasicPathDestination<>(new ReentrantLock(), fileChannelProvider, stackTraceProcessor);
         }
