@@ -108,6 +108,25 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldNotComplain_whenAPathWithParentsThatDoExistIsSet() throws Exception {
+        Path parent = Paths.get(System.getProperty("java.io.tmpdir"));
+        Path logFile = parent.resolve(UUID.randomUUID().toString().replace("-", "") + ".log");
+
+        //preconditions
+        assertTrue(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+
+        //execute
+        new OpsLoggerFactory()
+                .setPath(logFile)
+                .<TestMessages>build();
+
+        //assert
+        assertTrue(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+    }
+
+    @Test
     public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotConfigured() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setDestination(new PrintStream(new ByteArrayOutputStream()))
