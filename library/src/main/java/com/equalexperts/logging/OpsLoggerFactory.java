@@ -73,7 +73,9 @@ public class OpsLoggerFactory {
     private <T extends Enum<T> & LogMessage> BasicOpsLogger.Destination<T> configureBasicDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         if (this.logfilePath.isPresent()) {
-            Files.createDirectories(logfilePath.get().getParent());
+            if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
+                Files.createDirectories(logfilePath.get().getParent());
+            }
             RefreshableFileChannelProvider fileChannelProvider = new RefreshableFileChannelProvider(logfilePath.get(), Duration.of(100, ChronoUnit.MILLIS));
             return new BasicPathDestination<>(new ReentrantLock(), fileChannelProvider, stackTraceProcessor);
         }
@@ -83,7 +85,9 @@ public class OpsLoggerFactory {
     private StackTraceProcessor configureStackTraceProcessor() throws IOException {
         Optional<Path> storagePath = determineStackTraceProcessorPath();
         if (storagePath.isPresent()) {
-            Files.createDirectories(storagePath.get());
+            if (!Files.isSymbolicLink(storagePath.get())) {
+                Files.createDirectories(storagePath.get());
+            }
             return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
         }
         return new SimpleStackTraceProcessor();

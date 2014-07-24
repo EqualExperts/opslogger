@@ -127,6 +127,20 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldNotCreateParentDirectories_whenTheParentOfTheLogFileIsASymlink() throws Exception {
+        Path actualParent = tempFiles.createTempDirectory();
+        Path symLinkPath = tempFiles.createTempDirectoryThatDoesNotExist();
+        Files.createSymbolicLink(symLinkPath, actualParent);
+        Path logFile = symLinkPath.resolve(UUID.randomUUID().toString().replace("-", "") + ".log");
+
+        //execute
+        new OpsLoggerFactory()
+                .setPath(logFile)
+                .setStoreStackTracesInFilesystem(false) //otherwise an error here can cause this test to fail
+                .<TestMessages>build();
+    }
+
+    @Test
     public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotConfigured() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setDestination(new PrintStream(new ByteArrayOutputStream()))
@@ -201,6 +215,18 @@ public class OpsLoggerFactoryTest {
 
         assertTrue(Files.exists(stackTraceStorage));
         assertTrue(Files.isDirectory(stackTraceStorage));
+    }
+
+    @Test
+    public void build_shouldNotCreateDirectories_whenSetStoreStackTraceStoragePathIsCalledWithASymlink() throws Exception {
+        Path actualParent = tempFiles.createTempDirectory();
+        Path symLinkPath = tempFiles.createTempDirectoryThatDoesNotExist();
+        Files.createSymbolicLink(symLinkPath, actualParent);
+
+        //execute
+        new OpsLoggerFactory() //don't log to a path, because that setting could break this
+                .setStackTraceStoragePath(symLinkPath)
+                .<TestMessages>build();
     }
 
     @Test
