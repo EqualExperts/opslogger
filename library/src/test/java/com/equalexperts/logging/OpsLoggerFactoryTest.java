@@ -41,9 +41,9 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getDestination(), instanceOf(BasicOutputStreamDestination.class));
+        assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
         assertEquals(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
         ensureCorrectlyConfigured(basicLogger);
@@ -58,8 +58,8 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getDestination(), instanceOf(BasicOutputStreamDestination.class));
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(expectedPrintStream, destination.getOutput());
         ensureCorrectlyConfigured(basicLogger);
     }
@@ -147,7 +147,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
@@ -157,7 +157,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
@@ -200,7 +200,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
         assertEquals(stackTraceStorage, processor.getDestination());
     }
@@ -315,7 +315,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
         assertEquals(parent, processor.getDestination());
     }

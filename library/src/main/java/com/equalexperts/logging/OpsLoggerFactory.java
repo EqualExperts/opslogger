@@ -79,7 +79,7 @@ public class OpsLoggerFactory {
             RefreshableFileChannelProvider fileChannelProvider = new RefreshableFileChannelProvider(logfilePath.get(), Duration.of(100, ChronoUnit.MILLIS));
             return new BasicPathDestination<>(new ReentrantLock(), fileChannelProvider, stackTraceProcessor);
         }
-        return new BasicOutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
+        return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
     }
 
     private StackTraceProcessor configureStackTraceProcessor() throws IOException {

@@ -10,14 +10,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class BasicOutputStreamDestinationTest {
+public class OutputStreamDestinationTest {
 
     @Rule
     public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
 
     private final TestPrintStream output = new TestPrintStream();
     private final StackTraceProcessor processor = new SimpleStackTraceProcessor();
-    private final BasicOpsLogger.Destination<TestMessages> destination = new BasicOutputStreamDestination<>(output, processor);
+    private final BasicOpsLogger.Destination<TestMessages> destination = new OutputStreamDestination<>(output, processor);
 
     @Test
     public void publish_shouldPublishAFormattedLogRecord() throws Exception {
