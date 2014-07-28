@@ -2,7 +2,7 @@ package com.equalexperts.logging;
 
 import java.io.PrintStream;
 
-class OutputStreamDestination<T extends Enum<T> & LogMessage> implements BasicOpsLogger.Destination<T> {
+class OutputStreamDestination<T extends Enum<T> & LogMessage> implements BasicOpsLogger.Destination<T>, AsyncOpsLogger.Destination<T> {
     private final PrintStream output;
     private final StackTraceProcessor stackTraceProcessor;
 
@@ -12,8 +12,18 @@ class OutputStreamDestination<T extends Enum<T> & LogMessage> implements BasicOp
     }
 
     @Override
+    public void beginBatch() throws Exception {
+
+    }
+
+    @Override
     public void publish(LogicalLogRecord<T> record) throws Exception {
         output.println(record.format(stackTraceProcessor));
+    }
+
+    @Override
+    public void endBatch() throws Exception {
+
     }
 
     @Override
