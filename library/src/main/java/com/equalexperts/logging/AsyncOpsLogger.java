@@ -79,28 +79,29 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
                         .map(Optional::get)
                         .collect(toList());
 
-                if (logRecords.size() != messages.size()) {
-                    run = false; //shutdown signal detected, don't run again
+                if (logRecords.size() < messages.size()) {
+                    run = false; //shutdown signal detected
                 }
-
-                if (!logRecords.isEmpty()) {
-                    destination.beginBatch();
-                    try {
-                        for (LogicalLogRecord<T> record : logRecords) {
-                            try {
-                                destination.publish(record);
-                            } catch (Throwable t) {
-                                errorHandler.accept(t);
-                            }
-                        }
-                    } finally {
-                        destination.endBatch();
-                    }
-                }
+                processBatch(logRecords);
             } catch (Throwable t) {
                 errorHandler.accept(t);
             }
         } while (run);
+    }
+
+    private void processBatch(List<LogicalLogRecord<T>> batch) throws Exception {
+        if (batch.isEmpty()) {
+            return;
+        }
+        destination.beginBatch();
+        for (LogicalLogRecord<T> record : batch) {
+            try {
+                destination.publish(record);
+            } catch (Throwable t) {
+                errorHandler.accept(t);
+            }
+        }
+        destination.endBatch();
     }
 
     private List<Optional<LogicalLogRecord<T>>> waitForNextBatch() throws InterruptedException {
