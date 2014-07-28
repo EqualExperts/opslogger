@@ -73,7 +73,7 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         boolean run = true;
         do {
             try {
-                List<Optional<LogicalLogRecord<T>>> messages = take(MAX_BATCH_SIZE);
+                List<Optional<LogicalLogRecord<T>>> messages = waitForNextBatch();
                 List<LogicalLogRecord<T>> logRecords = messages.stream()
                         .filter(Optional::isPresent)
                         .map(Optional::get)
@@ -103,11 +103,10 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         } while (run);
     }
 
-    private List<Optional<LogicalLogRecord<T>>> take(int maxElements) throws InterruptedException {
-        assert maxElements > 1;
+    private List<Optional<LogicalLogRecord<T>>> waitForNextBatch() throws InterruptedException {
         List<Optional<LogicalLogRecord<T>>> result = new ArrayList<>();
         result.add(transferQueue.take()); //a blocking operation
-        transferQueue.drainTo(result, maxElements - 1);
+        transferQueue.drainTo(result, MAX_BATCH_SIZE - 1);
         return result;
     }
 }
