@@ -110,4 +110,22 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         transferQueue.drainTo(result, MAX_BATCH_SIZE - 1);
         return result;
     }
+
+    Clock getClock() {
+        return clock;
+    }
+
+    Destination<T> getDestination() {
+        return destination;
+    }
+
+    Supplier<String[]> getCorrelationIdSupplier() {
+        return correlationIdSupplier;
+    }
+
+    Consumer<Throwable> getErrorHandler() { return errorHandler; }
+
+    LinkedTransferQueue<Optional<LogicalLogRecord<T>>> getTransferQueue() {
+        return transferQueue;
+    }
 }
