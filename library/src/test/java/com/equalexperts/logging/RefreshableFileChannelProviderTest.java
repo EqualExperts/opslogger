@@ -8,23 +8,21 @@ import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.spi.FileSystemProvider;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static com.equalexperts.logging.MockPathUtils.createMockPath;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RefreshableFileChannelProviderTest {
@@ -135,13 +133,5 @@ public class RefreshableFileChannelProviderTest {
             assertSame(StandardCharsets.UTF_8, field.get(writer));
             return;
         }
-    }
-
-    private Path createMockPath() {
-        Path result = mock(Path.class);
-        FileSystem mockFileSystem = mock(FileSystem.class);
-        when(result.getFileSystem()).thenReturn(mockFileSystem);
-        when(mockFileSystem.provider()).thenReturn(mock(FileSystemProvider.class));
-        return result;
     }
 }

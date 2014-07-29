@@ -33,6 +33,7 @@ class RefreshableFileChannelProvider implements Closeable {
     public void close() throws IOException {
         if (result != null) {
             result.writer.close();
+            result = null;
         }
     }
 
