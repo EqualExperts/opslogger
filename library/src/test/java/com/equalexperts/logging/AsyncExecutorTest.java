@@ -5,45 +5,37 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 
 import java.util.concurrent.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.Mockito.*;
 
 public class AsyncExecutorTest {
-    @Mock private Runnable runnable;
-    @Mock private ThreadFactory factory;
-
-    private AsyncExecutor asyncExecutor;
+    private final ThreadFactory factory = mock(ThreadFactory.class);
+    private final AsyncExecutor asyncExecutor = new AsyncExecutor(factory);
     private Thread createdThread;
 
     @Before
     public void setup() {
-        initMocks(this);
-
         when(factory.newThread(any())).then((InvocationOnMock invocation) -> {
             Runnable r = (Runnable) invocation.getArguments()[0];
             createdThread = new Thread(r);
             return createdThread;
         });
-
-        asyncExecutor = new AsyncExecutor(factory);
     }
 
     @Test
     public void execute_shouldCreateAndStartAThreadWithTheProvidedRunnableAndReturnAFuture() throws Exception {
-        Future<?> result = asyncExecutor.execute(runnable);
+        CountDownLatch latch = new CountDownLatch(1);
 
-        Thread.yield(); //give the new thread a bit of time to run
+        Future<?> result = asyncExecutor.execute(latch::countDown);
+        latch.await(); //wait until the new thread has started to run
 
         verify(factory).newThread(any()); //The provided runnable will be wrapped, not passed directly
-        verify(runnable).run(); //but the runnable will be executed
+        assertEquals(0, latch.getCount()); //but the runnable will be executed
         assertNotNull(result);
         assertNotNull(createdThread);
         assertNotEquals(Thread.State.NEW, createdThread.getState());
