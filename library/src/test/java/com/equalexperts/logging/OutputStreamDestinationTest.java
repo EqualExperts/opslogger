@@ -6,18 +6,16 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-public class BasicOutputStreamDestinationTest {
+public class OutputStreamDestinationTest {
 
     @Rule
     public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
 
     private final TestPrintStream output = new TestPrintStream();
     private final StackTraceProcessor processor = new SimpleStackTraceProcessor();
-    private final BasicOpsLogger.Destination<TestMessages> destination = new BasicOutputStreamDestination<>(output, processor);
+    private final OutputStreamDestination<TestMessages> destination = new OutputStreamDestination<>(output, processor);
 
     @Test
     public void publish_shouldPublishAFormattedLogRecord() throws Exception {
@@ -52,6 +50,32 @@ public class BasicOutputStreamDestinationTest {
         destination.close();
 
         assertFalse(output.isClosed());
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void class_shouldImplementBasicOpsLoggerDestination() throws Exception {
+        assertTrue(destination instanceof BasicOpsLogger.Destination);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void class_shouldImplementAsyncOpsLoggerDestination() throws Exception {
+        assertTrue(destination instanceof AsyncOpsLogger.Destination);
+    }
+
+    @Test
+    public void beginBatch_shouldDoNothing() throws Exception {
+        destination.beginBatch();
+
+        assertEquals("", this.output.toString());
+    }
+
+    @Test
+    public void endBatch_shouldDoNothing() throws Exception {
+        destination.endBatch();
+
+        assertEquals("", this.output.toString());
     }
 
     private static enum TestMessages implements LogMessage {

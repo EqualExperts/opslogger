@@ -1,13 +1,11 @@
 package com.equalexperts.logging;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,15 +14,14 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.nio.file.StandardOpenOption.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.*;
 
 public class OpsLoggerFactoryTest {
@@ -41,9 +38,9 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getDestination(), instanceOf(BasicOutputStreamDestination.class));
+        assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
         assertEquals(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
         ensureCorrectlyConfigured(basicLogger);
@@ -58,8 +55,8 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        assertThat(basicLogger.getDestination(), instanceOf(BasicOutputStreamDestination.class));
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(expectedPrintStream, destination.getOutput());
         ensureCorrectlyConfigured(basicLogger);
     }
@@ -67,9 +64,6 @@ public class OpsLoggerFactoryTest {
     @Test
     public void build_shouldReturnABasicOpsLoggerConfiguredToWriteToTheSpecifiedPath_whenAPathIsSet() throws Exception {
         Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
-        OutputStream expectedOutputStream = mock(OutputStream.class);
-        when(Files.newOutputStream(expectedPath, CREATE, APPEND)).thenReturn(expectedOutputStream);
-        //using a mock so that we can be sure the stream is created with the correct I/O mode
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setPath(expectedPath)
@@ -79,12 +73,11 @@ public class OpsLoggerFactoryTest {
         ensureCorrectlyConfigured(basicLogger);
 
         BasicPathDestination<TestMessages> destination = (BasicPathDestination<TestMessages>) basicLogger.getDestination();
-        assertThat(destination.getLock(), CoreMatchers.instanceOf(ReentrantLock.class));
+        assertThat(destination.getLock(), instanceOf(ReentrantLock.class));
 
         RefreshableFileChannelProvider provider = destination.getFileChannelProvider();
         assertSame(expectedPath, provider.getPath());
         assertEquals(Duration.of(100, ChronoUnit.MILLIS), provider.getMaximumResultLifetime());
-
     }
 
     @Test
@@ -127,13 +120,134 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldReturnACorrectlyConfiguredAsyncOpsLoggerToSystemOut_whenAsyncIsSet() throws Exception {
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setAsync(true)
+                .build();
+
+        AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
+        assertThat(logger.getDestination(), instanceOf(OutputStreamDestination.class));
+        assertEquals(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) logger.getDestination();
+        assertSame(System.out, destination.getOutput());
+        assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+        ensureCorrectlyConfigured(logger);
+    }
+
+    @Test
+    public void build_shouldReturnACorrectlyConfiguredAsyncOpsLoggerToTheCorrectPrintStream_whenAPrintStreamIsSetAndAsyncIsSet() throws Exception {
+        PrintStream expectedPrintStream = new PrintStream(new ByteArrayOutputStream());
+
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setDestination(expectedPrintStream)
+                .setAsync(true)
+                .build();
+
+        AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
+        assertThat(logger.getDestination(), instanceOf(OutputStreamDestination.class));
+        assertEquals(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) logger.getDestination();
+        assertSame(expectedPrintStream, destination.getOutput());
+        assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
+        ensureCorrectlyConfigured(logger);
+
+    }
+
+    @Test
+    public void build_shouldNotCreateParentDirectories_whenTheParentOfTheLogFileIsASymlink() throws Exception {
+        Path actualParent = tempFiles.createTempDirectory();
+        Path symLinkPath = tempFiles.createTempDirectoryThatDoesNotExist();
+        Files.createSymbolicLink(symLinkPath, actualParent);
+        Path logFile = symLinkPath.resolve(UUID.randomUUID().toString().replace("-", "") + ".log");
+
+        //execute
+        new OpsLoggerFactory()
+                .setPath(logFile)
+                .setStoreStackTracesInFilesystem(false) //otherwise an error here can cause this test to fail
+                .<TestMessages>build();
+    }
+
+    @Test
+    public void build_shouldReturnAnAsyncOpsLoggerConfiguredToWriteToTheSpecifiedPath_whenAPathIsSetAndAsyncIsSet() throws Exception {
+        Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
+
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setAsync(true)
+                .setPath(expectedPath)
+                .build();
+
+        AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
+        ensureCorrectlyConfigured(logger);
+
+        AsyncPathDestination<TestMessages> destination = (AsyncPathDestination<TestMessages>) logger.getDestination();
+        FileChannelProvider provider = destination.getProvider();
+        assertSame(expectedPath, provider.getPath());
+    }
+
+    @Test
+    public void build_shouldCreateAllNecessaryParentDirectories_whenAPathWithParentsThatDoNotExistIsSetAndAsyncIsSet() throws Exception {
+        Path grandParent = tempFiles.createTempDirectoryThatDoesNotExist();
+        Path parent = tempFiles.register(grandParent.resolve(UUID.randomUUID().toString()));
+        Path logFile = tempFiles.register(parent.resolve("log.txt"));
+
+        //preconditions
+        assertFalse(Files.exists(grandParent));
+        assertFalse(Files.exists(parent));
+
+        //execute
+        new OpsLoggerFactory()
+                .setAsync(true)
+                .setPath(logFile)
+                .<TestMessages>build();
+
+        //assert
+        assertTrue(Files.exists(grandParent));
+        assertTrue(Files.exists(parent));
+    }
+
+    @Test
+    public void build_shouldNotComplain_whenAPathWithParentsThatDoExistIsSetAndAsyncIsSet() throws Exception {
+        Path parent = Paths.get(System.getProperty("java.io.tmpdir"));
+        Path logFile = parent.resolve(UUID.randomUUID().toString().replace("-", "") + ".log");
+
+        //preconditions
+        assertTrue(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+
+        //execute
+        new OpsLoggerFactory()
+                .setPath(logFile)
+                .setAsync(true)
+                .<TestMessages>build();
+
+        //assert
+        assertTrue(Files.exists(parent));
+        assertFalse(Files.exists(logFile));
+    }
+
+    @Test
+    public void build_shouldNotCreateParentDirectories_whenTheParentOfTheLogFileIsASymlinkAndAsyncIsSet() throws Exception {
+        Path actualParent = tempFiles.createTempDirectory();
+        Path symLinkPath = tempFiles.createTempDirectoryThatDoesNotExist();
+        Files.createSymbolicLink(symLinkPath, actualParent);
+        Path logFile = symLinkPath.resolve(UUID.randomUUID().toString().replace("-", "") + ".log");
+
+        //execute
+        new OpsLoggerFactory()
+                .setAsync(true)
+                .setPath(logFile)
+                .setStoreStackTracesInFilesystem(false) //otherwise an error here can cause this test to fail
+                .<TestMessages>build();
+    }
+
+    @Test
     public void build_shouldSetASimpleStackTraceProcessor_whenAPrintStreamIsSetAndAStackTraceProcessorIsNotConfigured() throws Exception {
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setDestination(new PrintStream(new ByteArrayOutputStream()))
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
@@ -143,7 +257,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
@@ -186,7 +300,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
         assertEquals(stackTraceStorage, processor.getDestination());
     }
@@ -201,6 +315,18 @@ public class OpsLoggerFactoryTest {
 
         assertTrue(Files.exists(stackTraceStorage));
         assertTrue(Files.isDirectory(stackTraceStorage));
+    }
+
+    @Test
+    public void build_shouldNotCreateDirectories_whenSetStoreStackTraceStoragePathIsCalledWithASymlink() throws Exception {
+        Path actualParent = tempFiles.createTempDirectory();
+        Path symLinkPath = tempFiles.createTempDirectoryThatDoesNotExist();
+        Files.createSymbolicLink(symLinkPath, actualParent);
+
+        //execute
+        new OpsLoggerFactory() //don't log to a path, because that setting could break this
+                .setStackTraceStoragePath(symLinkPath)
+                .<TestMessages>build();
     }
 
     @Test
@@ -262,6 +388,54 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldConstructAnAsyncOpsLoggerWithTheCorrectErrorHandler_whenACustomErrorHandlerHasBeenSetAndAsyncIsSet() throws Exception {
+        Consumer<Throwable> expectedErrorHandler = (t) -> {};
+
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setErrorHandler(expectedErrorHandler)
+                .setAsync(true)
+                .build();
+
+        AsyncOpsLogger logger = (AsyncOpsLogger) result;
+        assertSame(expectedErrorHandler, logger.getErrorHandler());
+    }
+
+    @Test
+    public void build_shouldConstructAnAsyncOpsLoggerWithTheDefaultErrorHandler_whenSetErrorHandlerIsCalledWithNullAndAsyncIsSet() throws Exception {
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setAsync(true)
+                .setErrorHandler(null)
+                .build();
+
+        AsyncOpsLogger logger = (AsyncOpsLogger) result;
+        assertSame(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+    }
+
+    @Test
+    public void build_shouldConstructAnAsyncOpsLoggerWithTheCorrectCorrelationIdSupplier_whenACustomCorrelationIdSupplierHasBeenSetAndAsyncIsSet() throws Exception {
+        Supplier<String[]> expectedCorrelationIdSupplier = () -> new String[]{};
+
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setCorrelationIdSupplier(expectedCorrelationIdSupplier)
+                .setAsync(true)
+                .build();
+
+        AsyncOpsLogger logger = (AsyncOpsLogger) result;
+        assertSame(expectedCorrelationIdSupplier, logger.getCorrelationIdSupplier());
+    }
+
+    @Test
+    public void build_shouldConstructAnAsyncOpsLoggerWithTheDefaultCorrelationIdSupplier_whenSetCorrelationIdSupplierIsCalledWithNullAndAsyncIsSet() throws Exception {
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setCorrelationIdSupplier(null)
+                .setAsync(true)
+                .build();
+
+        AsyncOpsLogger logger = (AsyncOpsLogger) result;
+        assertSame(OpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
+    }
+
+    @Test
     public void setStoreStackTracesInFilesystem_shouldClearTheStackTraceStoragePath_givenFalse() throws Exception {
         Path originalStackTraceDestination = tempFiles.createTempDirectoryThatDoesNotExist();
 
@@ -289,7 +463,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        BasicOutputStreamDestination<TestMessages> destination = (BasicOutputStreamDestination<TestMessages>) basicLogger.getDestination();
+        OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
         assertEquals(parent, processor.getDestination());
     }
@@ -427,9 +601,15 @@ public class OpsLoggerFactoryTest {
         assertArrayEquals(expectedSystemErrContents.toByteArray(), actualSystemErrContents.toByteArray());
     }
 
-    void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> basicLogger) {
-        assertEquals(Clock.systemUTC(), basicLogger.getClock());
-        assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
+    void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
+        assertEquals(Clock.systemUTC(), logger.getClock());
+        assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+    }
+
+    void ensureCorrectlyConfigured(AsyncOpsLogger<TestMessages> logger) {
+        assertEquals(Clock.systemUTC(), logger.getClock());
+        assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+        assertThat(logger.getTransferQueue(), instanceOf(LinkedTransferQueue.class));
     }
 
     private static enum TestMessages implements LogMessage {

@@ -1,7 +1,6 @@
 package com.equalexperts.logging;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mock;
@@ -23,10 +22,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.*;
 
 public class BasicPathDestinationTest {
-
-    @Rule
-    public TempFileFixture tempFiles = new TempFileFixture();
-
     @Mock private Lock lock;
     @Mock private RefreshableFileChannelProvider fileChannelProvider;
     @Mock private StackTraceProcessor stackTraceProcessor;
