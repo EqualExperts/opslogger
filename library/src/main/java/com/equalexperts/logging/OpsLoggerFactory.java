@@ -8,6 +8,8 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -19,6 +21,7 @@ public class OpsLoggerFactory {
     private Optional<PrintStream> loggerOutput = Optional.empty();
     private Optional<Path> logfilePath = Optional.empty();
 
+    private boolean async = false;
     private Optional<Boolean> storeStackTracesInFilesystem = Optional.empty();
     private Optional<Path> stackTraceStoragePath = Optional.empty();
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
@@ -63,12 +66,34 @@ public class OpsLoggerFactory {
         return this;
     }
 
+    public OpsLoggerFactory setAsync(boolean async) {
+        this.async = async;
+        return this;
+    }
+
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        BasicOpsLogger.Destination<T> destination = configureBasicDestination();
         Supplier<String[]> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
         Consumer<Throwable> errorHandler = this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
+        if (async) {
+            AsyncOpsLogger.Destination<T> destination = configureAsyncDestination();
+            return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
+        }
+        BasicOpsLogger.Destination<T> destination = configureBasicDestination();
         return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler);
     }
+
+    private <T extends Enum<T> & LogMessage> AsyncOpsLogger.Destination<T> configureAsyncDestination() throws IOException {
+        StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
+        if (this.logfilePath.isPresent()) {
+            if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
+                Files.createDirectories(logfilePath.get().getParent());
+            }
+            FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
+            return new AsyncPathDestination<>(provider, stackTraceProcessor);
+        }
+        return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
+    }
+
 
     private <T extends Enum<T> & LogMessage> BasicOpsLogger.Destination<T> configureBasicDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();

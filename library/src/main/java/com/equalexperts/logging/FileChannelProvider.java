@@ -37,4 +37,8 @@ public class FileChannelProvider {
             this.writer.close();
         }
     }
+
+    Path getPath() {
+        return path;
+    }
 }

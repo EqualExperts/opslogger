@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 public abstract class AbstractFileChannelProviderTest {
     protected static final Set<StandardOpenOption> CREATE_AND_APPEND = EnumSet.of(CREATE, APPEND);
 
-    protected static Path createMockPath() {
+    static Path createMockPath() {
         Path result = mock(Path.class);
         FileSystem mockFileSystem = mock(FileSystem.class);
         when(result.getFileSystem()).thenReturn(mockFileSystem);

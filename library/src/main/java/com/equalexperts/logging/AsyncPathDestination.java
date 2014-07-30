@@ -49,4 +49,8 @@ class AsyncPathDestination<T extends Enum<T> & LogMessage> implements AsyncOpsLo
     public void close() throws Exception {
         closeAnyOpenBatch();
     }
+
+    FileChannelProvider getProvider() {
+        return provider;
+    }
 }
