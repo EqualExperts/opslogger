@@ -32,7 +32,7 @@ public class AsyncExecutorTest {
         CountDownLatch latch = new CountDownLatch(1);
 
         Future<?> result = asyncExecutor.execute(latch::countDown);
-        latch.await(); //wait until the new thread has started to run
+        latch.await(5, TimeUnit.SECONDS); //give the new thread time to start to running
 
         verify(factory).newThread(any()); //The provided runnable will be wrapped, not passed directly
         assertEquals(0, latch.getCount()); //but the runnable will be executed
