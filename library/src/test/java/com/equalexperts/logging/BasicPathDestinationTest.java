@@ -16,14 +16,14 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 
-import static com.equalexperts.logging.RefreshableFileChannelProvider.Result;
+import static com.equalexperts.logging.FileChannelProvider.Result;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.*;
 
 public class BasicPathDestinationTest {
     @Mock private Lock lock;
-    @Mock private RefreshableFileChannelProvider fileChannelProvider;
+    @Mock private FileChannelProvider fileChannelProvider;
     @Mock private StackTraceProcessor stackTraceProcessor;
 
     private BasicOpsLogger.Destination<TestMessages> destination;
@@ -61,29 +61,18 @@ public class BasicPathDestinationTest {
         //flush should be the very last call to the writer
         InOrder inOrder = Mockito.inOrder(writer);
         inOrder.verify(writer).flush();
+        inOrder.verify(writer).close();
         inOrder.verifyNoMoreInteractions();
 
     }
 
     @Test
-    public void publish_shouldUseTheLogRecordTimestampToObtainTheFileChannel() throws Exception {
-        Instant logRecordTimestamp = Instant.parse("2013-12-29T18:15:00.123Z");
-        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(logRecordTimestamp, null, TestMessages.Foo, Optional.empty());
-        constructResult(null, null);
-
-        destination.publish(record);
-
-        verify(fileChannelProvider).getChannel(logRecordTimestamp);
-        verifyNoMoreInteractions(fileChannelProvider);
-    }
-
-    @Test
-    public void publish_shouldObtainAThreadAndFileLockWhenWritingToTheFile() throws Exception {
+    public void publish_shouldObtainAThreadLockFileChannelAndFileLockWhenWritingToTheFile() throws Exception {
         LogicalLogRecord<TestMessages> record = spy(new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty()));
 
         Writer writer = spy(new StringWriter()); //use a spy so append/write doesn't matter
         FileChannel channel = mock(FileChannel.class);
-        constructResult(writer, channel);
+        Result result = constructResult(writer, channel);
         FileLock fileLock = mock(FileLock.class);
         when(channel.lock()).thenReturn(fileLock);
 
@@ -95,13 +84,15 @@ public class BasicPathDestinationTest {
                 then (write/append and) flush,
                 then release file lock, then release thread lock
          */
-        InOrder order = inOrder(record, lock, channel, fileLock, writer);
-        order.verify(record).format(stackTraceProcessor); //can happen outside the critical section
+        InOrder order = inOrder(record, lock, channel, fileLock, writer, result, fileChannelProvider);
+        order.verify(record).format(stackTraceProcessor); //should happen outside the critical section
         order.verify(lock).lock();
+        order.verify(fileChannelProvider).getChannel();
         order.verify(channel).lock();
         order.verify(writer, atLeastOnce()).write(isA(String.class));
         order.verify(writer).flush();
         order.verify(fileLock).release();
+        order.verify(result).close();
         order.verify(lock).unlock();
     }
 
@@ -131,7 +122,7 @@ public class BasicPathDestinationTest {
         LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
 
         IOException expectedException = new IOException();
-        when(fileChannelProvider.getChannel(any())).thenThrow(expectedException);
+        when(fileChannelProvider.getChannel()).thenThrow(expectedException);
 
         try {
             destination.publish(record);
@@ -141,7 +132,7 @@ public class BasicPathDestinationTest {
         }
 
         InOrder order = inOrder(fileChannelProvider, lock);
-        order.verify(fileChannelProvider).getChannel(any());
+        order.verify(fileChannelProvider).getChannel();
         order.verify(lock).unlock();
     }
 
@@ -171,13 +162,13 @@ public class BasicPathDestinationTest {
     }
 
     @Test
-    public void close_shouldCloseTheFileChannelProvider() throws Exception {
+    public void close_shouldDoNothing() throws Exception {
         destination.close();
 
-        verify(fileChannelProvider).close();
+        verifyZeroInteractions(fileChannelProvider);
     }
 
-    private void constructResult(Writer writer, FileChannel channel) throws IOException {
+    private Result constructResult(Writer writer, FileChannel channel) throws IOException {
         if (writer == null) {
             writer = mock(Writer.class);
         }
@@ -185,8 +176,9 @@ public class BasicPathDestinationTest {
             channel = mock(FileChannel.class);
             when(channel.lock()).thenReturn(mock(FileLock.class));
         }
-        Result expectedResult = new Result(channel, writer, Instant.now());
-        when(fileChannelProvider.getChannel(isA(Instant.class))).thenReturn(expectedResult);
+        Result expectedResult = spy(new Result(channel, writer));
+        when(fileChannelProvider.getChannel()).thenReturn(expectedResult);
+        return expectedResult;
     }
 
     private static enum TestMessages implements LogMessage {

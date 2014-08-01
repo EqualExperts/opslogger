@@ -7,11 +7,10 @@ class BasicPathDestination<T extends Enum<T> & LogMessage> implements BasicOpsLo
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private final Lock lock;
-    private final RefreshableFileChannelProvider fileChannelProvider;
+    private final FileChannelProvider fileChannelProvider;
     private final StackTraceProcessor stackTraceProcessor;
 
-    public BasicPathDestination(Lock lock, RefreshableFileChannelProvider fileChannelProvider, StackTraceProcessor stackTraceProcessor) {
-
+    public BasicPathDestination(Lock lock, FileChannelProvider fileChannelProvider, StackTraceProcessor stackTraceProcessor) {
         this.lock = lock;
         this.fileChannelProvider = fileChannelProvider;
         this.stackTraceProcessor = stackTraceProcessor;
@@ -22,14 +21,10 @@ class BasicPathDestination<T extends Enum<T> & LogMessage> implements BasicOpsLo
         String physicalRecord = record.format(stackTraceProcessor);
         lock.lock();
         try {
-            RefreshableFileChannelProvider.Result result = fileChannelProvider.getChannel(record.getTimestamp());
-            FileLock fileLock = result.channel.lock();
-            try {
-                //one call avoids a partial flush
+            try (FileChannelProvider.Result result = fileChannelProvider.getChannel();
+                 FileLock ignore = result.channel.lock()) {
                 result.writer.write(physicalRecord + LINE_SEPARATOR);
                 result.writer.flush();
-            } finally {
-                fileLock.release();
             }
         } finally {
             lock.unlock();
@@ -38,14 +33,13 @@ class BasicPathDestination<T extends Enum<T> & LogMessage> implements BasicOpsLo
 
     @Override
     public void close() throws Exception {
-        fileChannelProvider.close();
     }
 
     public Lock getLock() {
         return lock;
     }
 
-    public RefreshableFileChannelProvider getFileChannelProvider() {
+    public FileChannelProvider getFileChannelProvider() {
         return fileChannelProvider;
     }
 
