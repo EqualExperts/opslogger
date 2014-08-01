@@ -14,16 +14,25 @@ public class Main {
 //        Path path = Paths.get(System.getProperty("java.io.tmpdir"), "test.log");
         //Path path = Paths.get("/private/tmp/test.log");
         Path path = Paths.get("/tmp/test.log");
-        System.out.printf("Logging to %s", path.toString());
+        System.out.printf("Logging to %s%n", path.toString());
         OpsLogger<CollectorLogMessage> logger = new OpsLoggerFactory()
                 .setPath(path)
-                .setStoreStackTracesInFilesystem(false)
+                //.setStoreStackTracesInFilesystem(false)
+                .setStackTraceStoragePath(Paths.get("/tmp/stacktraces"))
+                .setAsync(false)
                 .build();
 
-        for(int i = 0; i < Integer.MAX_VALUE; i++) {
-            Thread.sleep(10L);
-            logger.log(CollectorLogMessage.SampleMessage, i);
+        int count = Integer.MAX_VALUE;
+//        int count = 10000;
+//        long startTime = System.nanoTime();
+        for(int i = 0; i < count; i++) {
+            //Thread.sleep(10L);
+            logger.log(CollectorLogMessage.SampleMessage, new RuntimeException(String.valueOf(i)), i);
         }
+//        double timePerInvocation = (System.nanoTime() - startTime) / (double) count;
+//        logger.close();
+//        System.out.printf("%s nanoseconds per invocation%n", timePerInvocation);
+
 
 //        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:/applicationContext.xml");
 //        ClassThatLogs classThatLogs = context.getBean("classThatLogs", ClassThatLogs.class);
