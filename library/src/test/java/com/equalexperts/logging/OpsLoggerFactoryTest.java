@@ -11,8 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -75,9 +73,8 @@ public class OpsLoggerFactoryTest {
         BasicPathDestination<TestMessages> destination = (BasicPathDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getLock(), instanceOf(ReentrantLock.class));
 
-        RefreshableFileChannelProvider provider = destination.getFileChannelProvider();
+        FileChannelProvider provider = destination.getFileChannelProvider();
         assertSame(expectedPath, provider.getPath());
-        assertEquals(Duration.of(100, ChronoUnit.MILLIS), provider.getMaximumResultLifetime());
     }
 
     @Test

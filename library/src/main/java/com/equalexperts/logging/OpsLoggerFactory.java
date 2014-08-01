@@ -1,11 +1,10 @@
 package com.equalexperts.logging;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -101,7 +100,7 @@ public class OpsLoggerFactory {
             if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
                 Files.createDirectories(logfilePath.get().getParent());
             }
-            RefreshableFileChannelProvider fileChannelProvider = new RefreshableFileChannelProvider(logfilePath.get(), Duration.of(100, ChronoUnit.MILLIS));
+            FileChannelProvider fileChannelProvider = new FileChannelProvider(logfilePath.get());
             return new BasicPathDestination<>(new ReentrantLock(), fileChannelProvider, stackTraceProcessor);
         }
         return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
