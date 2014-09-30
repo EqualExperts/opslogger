@@ -1,6 +1,7 @@
 package com.equalexperts.logging;
 
 import java.time.Clock;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -9,9 +10,9 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
-    private final Supplier<String[]> correlationIdSupplier;
+    private final Supplier<Map<String,String>> correlationIdSupplier;
 
-    BasicOpsLogger(Clock clock, Supplier<String[]> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler) {
+    BasicOpsLogger(Clock clock, Supplier<Map<String,String>> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler) {
         this.clock = clock;
         this.correlationIdSupplier = correlationIdSupplier;
         this.destination = destination;
@@ -59,7 +60,7 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return destination;
     }
 
-    Supplier<String[]> getCorrelationIdSupplier() {
+    Supplier<Map<String, String>> getCorrelationIdSupplier() {
         return correlationIdSupplier;
     }
 

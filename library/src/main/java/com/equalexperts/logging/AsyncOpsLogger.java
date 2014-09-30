@@ -3,6 +3,7 @@ package com.equalexperts.logging;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
@@ -17,11 +18,11 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Future<?> processingThread;
     private final LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue;
     private final Clock clock;
-    private final Supplier<String[]> correlationIdSupplier;
+    private final Supplier<Map<String,String>> correlationIdSupplier;
     private final Destination<T> destination;
     private final Consumer<Throwable> errorHandler;
 
-    public AsyncOpsLogger(Clock clock, Supplier<String[]> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
+    public AsyncOpsLogger(Clock clock, Supplier<Map<String,String>> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
         this.clock = clock;
         this.correlationIdSupplier = correlationIdSupplier;
         this.destination = destination;
@@ -119,7 +120,7 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return destination;
     }
 
-    Supplier<String[]> getCorrelationIdSupplier() {
+    Supplier<Map<String,String>> getCorrelationIdSupplier() {
         return correlationIdSupplier;
     }
 

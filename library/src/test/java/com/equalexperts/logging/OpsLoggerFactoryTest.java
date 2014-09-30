@@ -11,6 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -364,7 +367,7 @@ public class OpsLoggerFactoryTest {
 
     @Test
     public void build_shouldConstructABasicOpsLoggerWithTheCorrectCorrelationIdSupplier_whenACustomCorrelationIdSupplierHasBeenSet() throws Exception {
-        Supplier<String[]> expectedCorrelationIdSupplier = () -> new String[]{};
+        Supplier<Map<String, String>> expectedCorrelationIdSupplier = HashMap::new;
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setCorrelationIdSupplier(expectedCorrelationIdSupplier)
@@ -410,7 +413,7 @@ public class OpsLoggerFactoryTest {
 
     @Test
     public void build_shouldConstructAnAsyncOpsLoggerWithTheCorrectCorrelationIdSupplier_whenACustomCorrelationIdSupplierHasBeenSetAndAsyncIsSet() throws Exception {
-        Supplier<String[]> expectedCorrelationIdSupplier = () -> new String[]{};
+        Supplier<Map<String,String>> expectedCorrelationIdSupplier = TreeMap::new;
 
         OpsLogger<TestMessages> result = new OpsLoggerFactory()
                 .setCorrelationIdSupplier(expectedCorrelationIdSupplier)

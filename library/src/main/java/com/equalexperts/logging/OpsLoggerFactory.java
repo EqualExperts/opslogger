@@ -5,6 +5,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -15,7 +17,7 @@ import java.util.function.Supplier;
 
 public class OpsLoggerFactory {
     static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
-    static final Supplier<String[]> EMPTY_CORRELATION_ID_SUPPLIER = () -> null;
+    static final Supplier<Map<String, String>> EMPTY_CORRELATION_ID_SUPPLIER = Collections::emptyMap;
 
     private Optional<PrintStream> loggerOutput = Optional.empty();
     private Optional<Path> logfilePath = Optional.empty();
@@ -24,7 +26,7 @@ public class OpsLoggerFactory {
     private Optional<Boolean> storeStackTracesInFilesystem = Optional.empty();
     private Optional<Path> stackTraceStoragePath = Optional.empty();
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
-    private Optional<Supplier<String[]>> correlationIdSupplier = Optional.empty();
+    private Optional<Supplier<Map<String,String>>> correlationIdSupplier = Optional.empty();
 
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateParametersForSetDestination(printStream);
@@ -60,7 +62,7 @@ public class OpsLoggerFactory {
         return this;
     }
 
-    public OpsLoggerFactory setCorrelationIdSupplier(Supplier<String[]> supplier) {
+    public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
         this.correlationIdSupplier = Optional.ofNullable(supplier);
         return this;
     }
@@ -71,7 +73,7 @@ public class OpsLoggerFactory {
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        Supplier<String[]> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
+        Supplier<Map<String,String>> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
         Consumer<Throwable> errorHandler = this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
         if (async) {
             AsyncOpsLogger.Destination<T> destination = configureAsyncDestination();

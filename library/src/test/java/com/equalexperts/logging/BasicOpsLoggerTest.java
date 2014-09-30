@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -18,7 +20,7 @@ import static org.mockito.Mockito.*;
 public class BasicOpsLoggerTest {
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
     @Mock private BasicOpsLogger.Destination<TestMessages> destination;
-    @Mock private Supplier<String[]> correlationIdSupplier;
+    @Mock private Supplier<Map<String,String>> correlationIdSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Captor private ArgumentCaptor<LogicalLogRecord<TestMessages>> captor;
 
@@ -32,7 +34,7 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
-        String[] expectedCorrelationIds = new String[]{"foo", "bar"};
+        Map<String,String> expectedCorrelationIds = generateCorrelationIds();
         when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
         doNothing().when(destination).publish(captor.capture());
 
@@ -44,7 +46,7 @@ public class BasicOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertArrayEquals(expectedCorrelationIds, record.getCorrelationIds());
+        assertEquals(expectedCorrelationIds, record.getCorrelationIds());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertFalse(record.getCause().isPresent());
@@ -80,7 +82,7 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
-        String[] expectedCorrelationIds = new String[]{"foo", "bar"};
+        Map<String, String> expectedCorrelationIds = generateCorrelationIds();
         when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
         doNothing().when(destination).publish(captor.capture());
         RuntimeException expectedException = new RuntimeException("expected");
@@ -93,7 +95,7 @@ public class BasicOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertArrayEquals(expectedCorrelationIds, record.getCorrelationIds());
+        assertEquals(expectedCorrelationIds, record.getCorrelationIds());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertSame(expectedException, record.getCause().get());
@@ -132,6 +134,13 @@ public class BasicOpsLoggerTest {
         logger.close();
 
         verify(destination).close();
+    }
+
+    private Map<String, String> generateCorrelationIds() {
+        Map<String, String> result = new HashMap<>();
+        result.put("foo", "fooValue");
+        result.put("bar", "barValue");
+        return result;
     }
 
     private static enum TestMessages implements LogMessage {

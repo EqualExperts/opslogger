@@ -13,15 +13,14 @@ import org.mockito.stubbing.OngoingStubbing;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -35,7 +34,7 @@ public class AsyncOpsLoggerTest {
     public static final int EXPECTED_MAX_BATCH_SIZE = AsyncOpsLogger.MAX_BATCH_SIZE;
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
     @Mock private AsyncOpsLogger.Destination<TestMessages> destination;
-    @Mock private Supplier<String[]> correlationIdSupplier;
+    @Mock private Supplier<Map<String,String>> correlationIdSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Mock private LinkedTransferQueue<Optional<LogicalLogRecord<TestMessages>>> transferQueue;
     @Mock private AsyncExecutor executor;
@@ -63,7 +62,7 @@ public class AsyncOpsLoggerTest {
 
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstance() throws Exception {
-        String[] expectedCorrelationIds = new String[]{"foo", "bar"};
+        Map<String,String> expectedCorrelationIds = generateCorrelationIds();
         when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
         doNothing().when(transferQueue).put(captor.capture());
 
@@ -73,7 +72,7 @@ public class AsyncOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue().get();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertArrayEquals(expectedCorrelationIds, record.getCorrelationIds());
+        assertEquals(expectedCorrelationIds, record.getCorrelationIds());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertFalse(record.getCause().isPresent());
@@ -110,7 +109,7 @@ public class AsyncOpsLoggerTest {
 
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowable() throws Exception {
-        String[] expectedCorrelationIds = new String[]{"foo", "bar"};
+        Map<String, String> expectedCorrelationIds = generateCorrelationIds();
         when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
 
         Throwable expectedCause = new RuntimeException();
@@ -123,7 +122,7 @@ public class AsyncOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue().get();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertArrayEquals(expectedCorrelationIds, record.getCorrelationIds());
+        assertEquals(expectedCorrelationIds, record.getCorrelationIds());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertTrue(record.getCause().isPresent());
@@ -366,7 +365,14 @@ public class AsyncOpsLoggerTest {
     }
 
     private LogicalLogRecord<TestMessages> constructLogicalLogMessage(TestMessages message, Object... args) {
-        return new LogicalLogRecord<>(Instant.now(), new String[] {}, message, Optional.empty(), args);
+        return new LogicalLogRecord<>(Instant.now(), emptyMap(), message, Optional.empty(), args);
+    }
+
+    private Map<String, String> generateCorrelationIds() {
+        Map<String, String> result = new HashMap<>();
+        result.put("foo", "fooValue");
+        result.put("bar", "barValue");
+        return result;
     }
 
     private static <T> Matcher<Optional<T>> isEmpty() {

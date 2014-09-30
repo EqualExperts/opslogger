@@ -3,10 +3,8 @@ package com.equalexperts.logging;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.util.Formatter;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class LogicalLogRecord<T extends Enum<T> & LogMessage> {
 
@@ -20,11 +18,11 @@ class LogicalLogRecord<T extends Enum<T> & LogMessage> {
     private final T message;
     private final Optional<Throwable> cause;
     private final Object[] details;
-    private final String[] correlationIds;
+    private final Map<String,String> correlationIds;
 
-    LogicalLogRecord(Instant timestamp, String[] correlationIds, T message, Optional<Throwable> cause, Object... details) {
+    LogicalLogRecord(Instant timestamp, Map<String,String> correlationIds, T message, Optional<Throwable> cause, Object... details) {
         this.timestamp = Objects.requireNonNull(timestamp, "parameter timestamp must not be null");
-        this.correlationIds = correlationIds;
+        this.correlationIds = makeSafeCopy(correlationIds);
         this.message = Objects.requireNonNull(message, "parameter message must not be null");
         this.cause = Objects.requireNonNull(cause, "parameter cause must not be null");
         this.details = Objects.requireNonNull(details, "parameter details must not be null");
@@ -46,24 +44,31 @@ class LogicalLogRecord<T extends Enum<T> & LogMessage> {
     }
 
     private void formatCorrelationIds(StringBuilder result) {
-        String[] correlationIds = Optional.ofNullable(this.correlationIds).orElse(new String[]{});
-        Stream.of(correlationIds)
-                .map(this::convertNullCorrelationIdsToDashes)
-                .map(s -> s + ",")
-                .forEach(result::append);
+        String formattedCorrelationIds = correlationIds.entrySet().stream()
+                .filter(e -> e.getValue() != null)
+                .filter(e -> !e.getValue().isEmpty())
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.joining(";"));
+        result.append(formattedCorrelationIds);
+        if (!formattedCorrelationIds.isEmpty()) {
+            result.append(",");
+        }
     }
 
-    private String convertNullCorrelationIdsToDashes(String correlationId) {
-        return Optional.ofNullable(correlationId)
-                .filter(s -> !s.isEmpty())
-                .orElse("-");
+    private static Map<String, String> makeSafeCopy(Map<String, String> correlationIds) {
+        Optional<Map<String, String>> optional = Optional.ofNullable(correlationIds);
+        //copy into a new map to prevent mutation after the fact
+        //use a LinkedHashMap to preserve order
+        optional = optional.map(LinkedHashMap::new);
+        optional = optional.map(Collections::unmodifiableMap);
+        return optional.orElse(Collections.emptyMap()); //emptyMap is immutable
     }
 
     Instant getTimestamp() {
         return timestamp;
     }
 
-    String[] getCorrelationIds() {
+    Map<String,String> getCorrelationIds() {
         return correlationIds;
     }
 
