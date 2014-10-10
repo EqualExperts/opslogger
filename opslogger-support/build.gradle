@@ -5,7 +5,7 @@ targetCompatibility = "1.8"
 
 dependencies {
     compile junit, mutabilityDetector
-    compile project(":library")
+    compile project(":opslogger")
 }
 
 group = 'com.equalexperts'

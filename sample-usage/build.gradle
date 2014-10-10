@@ -5,8 +5,8 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 dependencies {
-    compile project(":library"), spring
-    testCompile project(":support"), junit, mockito
+    compile project(":opslogger"), spring
+    testCompile project(":opslogger-support"), junit, mockito
 }
 
 group = 'com.equalexperts'
