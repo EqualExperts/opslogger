@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/EqualExperts/opslogger.svg?branch=master)](https://travis-ci.org/EqualExperts/opslogger)
-[ ![Download](https://api.bintray.com/packages/equalexperts/open-source/opslogger-support/images/download.svg) ](https://bintray.com/equalexperts/open-source/opslogger-support/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/equalexperts/open-source/opslogger/images/download.svg) ](https://bintray.com/equalexperts/open-source/opslogger/_latestVersion)
 
 ##Getting started
 
