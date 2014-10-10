@@ -39,7 +39,6 @@ bintray {
     if (project.hasProperty('bintrayKey')) {
         key = bintrayKey
     }
-    dryRun = true
     configurations = ['archives']
     pkg {
         repo = 'open-source'
