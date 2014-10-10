@@ -14,7 +14,7 @@ task sourcesJar(type: Jar) {
 configurations { archives }
 
 artifacts {
-    archives sourcesJar, javadocJar, file("$buildDir/pom.xml")
+    archives sourcesJar, javadocJar
 }
 
 task createPom << {
@@ -39,6 +39,7 @@ bintray {
     if (project.hasProperty('bintrayKey')) {
         key = bintrayKey
     }
+    dryRun = true
     configurations = ['archives']
     pkg {
         repo = 'open-source'
