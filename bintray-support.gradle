@@ -19,6 +19,7 @@ artifacts {
 
 task createPom << {
     pom {
+        artifactId = project.archivesBaseName
         project {
             licenses {
                 license {
