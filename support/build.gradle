@@ -8,6 +8,7 @@ dependencies {
     compile project(":library")
 }
 
+group = 'com.equalexperts'
 archivesBaseName = "opslogger-support"
 version = rootProject.version
 
