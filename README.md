@@ -3,19 +3,20 @@
 
 ##How to get it
 
-The project is available as a gradle dependency via Jcenter:
+This library is available as a gradle dependency via Jcenter:
 
-```"com.equalexperts:opslogger:0.1.0-rc1"```
+    "com.equalexperts:opslogger:0.1.0-rc1"
 
 A support library is also available, which has extra features for testing your code that uses logging, and a tool
 to generate documentation. Production code should not depend on the support library.
 
-```"com.equalexperts:opslogger-support:0.1.0-rc1"```
+    "com.equalexperts:opslogger-support:0.1.0-rc1"
 
 
 ###Using Maven?
 
 If you use maven, here are the dependency declarations you should use:
+
 
 ```xml
 <dependency>
@@ -23,9 +24,7 @@ If you use maven, here are the dependency declarations you should use:
 	<artifactId>opslogger</artifactId>
 	<version>0.1.0-rc1</version>
 </dependency>
-```
 
-```xml
 <dependency>
 	<groupId>com.equalexperts</groupId>
 	<artifactId>opslogger-support</artifactId>
@@ -47,7 +46,7 @@ repositories {
 
 ##Getting started with the source code
 
-This project is built with [Gradle] (http://www.gradle.org/). We use a feature called the "gradle wrapper" that will automatically install
+This project is built with [Gradle](http://www.gradle.org/). We use a feature called the "gradle wrapper" that will automatically install
 Gradle if you don't have it already. You can generate an IDE template by typing `./gradlew cleanIdea idea` from the command line. This
 will generate project files for [Intellij IDEA](http://www.jetbrains.com/idea/). Build the project and run all unit tests by typing
 `./gradlew ci`.You can get information on other tasks by typing `./gradlew tasks`.
