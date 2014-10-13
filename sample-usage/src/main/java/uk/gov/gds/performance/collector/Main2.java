@@ -1,0 +1,19 @@
+package uk.gov.gds.performance.collector;
+
+import com.equalexperts.logging.OpsLogger;
+import com.equalexperts.logging.OpsLoggerFactory;
+
+import java.nio.file.Paths;
+
+public class Main2 {
+    public static void main(String... args) throws Exception {
+        OpsLogger<CollectorLogMessage> logger = new OpsLoggerFactory()
+                .setDestination(System.out)
+                .setStackTraceStoragePath(Paths.get("/tmp/stacktraces"))
+                .build();
+
+        ClassThatLogs cls = new ClassThatLogs(logger);
+        cls.foo();
+        cls.bar();
+    }
+}
