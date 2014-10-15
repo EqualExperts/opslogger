@@ -14,6 +14,5 @@ public class Main2 {
 
         ClassThatLogs cls = new ClassThatLogs(logger);
         cls.foo();
-        cls.bar();
     }
 }
