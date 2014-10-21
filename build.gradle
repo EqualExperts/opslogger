@@ -1,5 +1,6 @@
 apply from: 'ide-support.gradle'
 apply from: 'dependencies.gradle'
+apply plugin: 'maven'
 
 task ci(type: GradleBuild) {
     description = 'Everything you need to run for continuous integration'
