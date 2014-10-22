@@ -9,3 +9,9 @@ out
 *.ipr
 *.iml
 *.iws
+/bin/
+.idea/
+.settings/
+.classpath
+.project
+
