@@ -10,6 +10,8 @@ import java.util.Base64;
 class ThrowableFingerprintCalculator {
     private final Base64.Encoder base64Encoder = Base64.getUrlEncoder().withoutPadding();
 
+    /* Return the Base64 representation of the MD5 hash for the printed stack trace of <code>t</code>. */
+
     public String calculateFingerprint(Throwable t) {
         MessageDigest md5 = getMD5Instance();
         PrintStream ps = new PrintStream(new DigestOutputStream(new DoNothingOutputStream(), md5));
