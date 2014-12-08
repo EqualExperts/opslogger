@@ -9,3 +9,7 @@ out
 *.ipr
 *.iml
 *.iws
+.idea
+
+.classpath
+.project
