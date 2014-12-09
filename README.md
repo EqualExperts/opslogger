@@ -4,12 +4,12 @@
 ##How to get it
 This library is available as a gradle dependency via Jcenter:
 
-    "com.equalexperts:opslogger:0.1.0-rc1"
+    "com.equalexperts:opslogger:0.1.1"
 
 A support library is also available, which has extra features for testing your code that uses logging, and a tool
 to generate documentation. Production code should not depend on the support library.
 
-    "com.equalexperts:opslogger-support:0.1.0-rc1"
+    "com.equalexperts:opslogger-support:0.1.1"
 
 
 ###Using Maven?
@@ -19,13 +19,13 @@ If you use maven, here are the dependency declarations you should use:
 <dependency>
 	<groupId>com.equalexperts</groupId>
 	<artifactId>opslogger</artifactId>
-	<version>0.1.0-rc1</version>
+	<version>0.1.1</version>
 </dependency>
 
 <dependency>
 	<groupId>com.equalexperts</groupId>
 	<artifactId>opslogger-support</artifactId>
-	<version>0.1.0-rc1</version>
+	<version>0.1.1</version>
 </dependency>
 ```
 

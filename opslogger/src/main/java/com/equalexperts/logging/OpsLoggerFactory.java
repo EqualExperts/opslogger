@@ -48,7 +48,7 @@ public class OpsLoggerFactory {
      */
     public OpsLoggerFactory setPath(Path path) {
         validateParametersForSetPath(path);
-        logfilePath = Optional.of(path);
+        logfilePath = Optional.of(path).map(Path::toAbsolutePath);
         loggerOutput = Optional.empty();
         return this;
     }
@@ -148,7 +148,7 @@ public class OpsLoggerFactory {
 
     private <T extends Enum<T> & LogMessage> AsyncOpsLogger.Destination<T> configureAsyncDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-        if (this.logfilePath.isPresent()) {
+        if (logfilePath.isPresent()) {
             if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
                 Files.createDirectories(logfilePath.get().getParent());
             }
