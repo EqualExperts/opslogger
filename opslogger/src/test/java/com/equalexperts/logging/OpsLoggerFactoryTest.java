@@ -65,6 +65,7 @@ public class OpsLoggerFactoryTest {
     @Test
     public void build_shouldReturnABasicOpsLoggerConfiguredToWriteToTheSpecifiedPath_whenAPathIsSet() throws Exception {
         Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
+        when(expectedPath.toAbsolutePath()).thenReturn(expectedPath);
 
         OpsLogger<TestMessages> logger = new OpsLoggerFactory()
                 .setPath(expectedPath)
@@ -170,6 +171,7 @@ public class OpsLoggerFactoryTest {
     @Test
     public void build_shouldReturnAnAsyncOpsLoggerConfiguredToWriteToTheSpecifiedPath_whenAPathIsSetAndAsyncIsSet() throws Exception {
         Path expectedPath = mock(Path.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
+        when(expectedPath.toAbsolutePath()).thenReturn(expectedPath);
 
         OpsLogger<TestMessages> result = new OpsLoggerFactory()
                 .setAsync(true)
@@ -237,6 +239,30 @@ public class OpsLoggerFactoryTest {
                 .setAsync(true)
                 .setPath(logFile)
                 .setStoreStackTracesInFilesystem(false) //otherwise an error here can cause this test to fail
+                .<TestMessages>build();
+    }
+
+    @Test
+    public void build_shouldNotComplain_whenThePathIsRelativeToTheCurrentDirectoryForAnAsyncLogger() throws Exception {
+        //setup
+        Path relativeToCurrentDirectory = tempFiles.register(Paths.get("test.log"));
+
+        //execute
+        new OpsLoggerFactory()
+                .setAsync(true)
+                .setPath(relativeToCurrentDirectory)
+                .<TestMessages>build();
+    }
+
+    @Test
+    public void build_shouldNotComplain_whenThePathIsRelativeToTheCurrentDirectoryForASynchronousLogger() throws Exception {
+        //setup
+        Path relativeToCurrentDirectory = tempFiles.register(Paths.get("test.log"));
+
+        //execute
+        new OpsLoggerFactory()
+                .setAsync(false)
+                .setPath(relativeToCurrentDirectory)
                 .<TestMessages>build();
     }
 
