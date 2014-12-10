@@ -12,17 +12,24 @@ import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toList;
 
+/**
+ * Asynchronous OpsLogger which puts the record to be logged in a transferQueue and
+ * returns immediately which allows for better performance at the expense of not
+ * necessarily having everything logged if the JVM shuts down unexpectedly.
+ * A background thread is responsible for emptying the transferQueue.
+ */
+
 class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     static final int MAX_BATCH_SIZE = 100;
     private final Future<?> processingThread;
     private final LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue;
     private final Clock clock;
-    private final Supplier<Map<String,String>> correlationIdSupplier;
+    private final Supplier<Map<String, String>> correlationIdSupplier;
     private final Destination<T> destination;
     private final Consumer<Throwable> errorHandler;
 
-    public AsyncOpsLogger(Clock clock, Supplier<Map<String,String>> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
+    public AsyncOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
         this.clock = clock;
         this.correlationIdSupplier = correlationIdSupplier;
         this.destination = destination;
@@ -63,7 +70,9 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     static interface Destination<T extends Enum<T> & LogMessage> extends AutoCloseable {
         void beginBatch() throws Exception;
+
         void publish(LogicalLogRecord<T> record) throws Exception;
+
         void endBatch() throws Exception;
     }
 
@@ -120,11 +129,13 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return destination;
     }
 
-    Supplier<Map<String,String>> getCorrelationIdSupplier() {
+    Supplier<Map<String, String>> getCorrelationIdSupplier() {
         return correlationIdSupplier;
     }
 
-    Consumer<Throwable> getErrorHandler() { return errorHandler; }
+    Consumer<Throwable> getErrorHandler() {
+        return errorHandler;
+    }
 
     LinkedTransferQueue<Optional<LogicalLogRecord<T>>> getTransferQueue() {
         return transferQueue;

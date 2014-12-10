@@ -1,5 +1,6 @@
 apply from: 'ide-support.gradle'
 apply from: 'dependencies.gradle'
+apply plugin: 'maven'
 
 task ci(type: GradleBuild) {
     description = 'Everything you need to run for continuous integration'
@@ -7,7 +8,7 @@ task ci(type: GradleBuild) {
     tasks = ['clean', 'build', 'jacocoTestReport']
 }
 
-version = "0.1.1"
+version = "0.1.2-SNAPSHOT"
 
 buildscript {
     repositories {

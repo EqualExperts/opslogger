@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/** OpsLogger which writes each entry directly to the Destination */
+
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
