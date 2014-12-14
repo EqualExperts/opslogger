@@ -33,7 +33,7 @@ public class AsyncOpsLoggerTest {
 
     public static final int EXPECTED_MAX_BATCH_SIZE = AsyncOpsLogger.MAX_BATCH_SIZE;
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    @Mock private AsyncOpsLogger.Destination<TestMessages> destination;
+    @Mock private Destination<TestMessages> destination;
     @Mock private Supplier<Map<String,String>> correlationIdSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Mock private LinkedTransferQueue<Optional<LogicalLogRecord<TestMessages>>> transferQueue;

@@ -68,14 +68,6 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         }
     }
 
-    static interface Destination<T extends Enum<T> & LogMessage> extends AutoCloseable {
-        void beginBatch() throws Exception;
-
-        void publish(LogicalLogRecord<T> record) throws Exception;
-
-        void endBatch() throws Exception;
-    }
-
     private void process() {
         /*
             An empty optional on the queue is the shutdown signal

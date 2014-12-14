@@ -55,7 +55,7 @@ public class OutputStreamDestinationTest {
     @SuppressWarnings("ConstantConditions")
     @Test
     public void class_shouldImplementAsyncOpsLoggerDestination() throws Exception {
-        assertTrue(destination instanceof AsyncOpsLogger.Destination);
+        assertTrue(destination instanceof Destination);
     }
 
     @Test

@@ -23,7 +23,7 @@ public class AsyncPathDestinationTest {
     private FileLock lock = mock(FileLock.class);
     private FileChannelProvider provider = mock(FileChannelProvider.class);
     private StackTraceProcessor processor = mock(StackTraceProcessor.class);
-    private AsyncOpsLogger.Destination<TestMessages> destination = new AsyncPathDestination<>(provider, processor);
+    private Destination<TestMessages> destination = new AsyncPathDestination<>(provider, processor);
 
     @Before
     public void setup() throws Exception {

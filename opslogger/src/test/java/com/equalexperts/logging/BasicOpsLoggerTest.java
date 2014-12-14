@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 public class BasicOpsLoggerTest {
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    @Mock private AsyncOpsLogger.Destination<TestMessages> destination;
+    @Mock private Destination<TestMessages> destination;
     @Mock private Supplier<Map<String,String>> correlationIdSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Mock private Lock lock;

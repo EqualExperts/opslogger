@@ -7,7 +7,7 @@ import java.nio.channels.FileLock;
  * and released afterwards.  This allows external log rotation to work.
  * @param <T>
  */
-class AsyncPathDestination<T extends Enum<T> & LogMessage> implements AsyncOpsLogger.Destination<T> {
+class AsyncPathDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private final FileChannelProvider provider;
