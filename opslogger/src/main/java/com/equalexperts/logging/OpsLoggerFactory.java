@@ -94,7 +94,7 @@ public class OpsLoggerFactory {
         return this;
     }
 
-    /** <p>Set the supplier of the map to print for each log entry.</p>
+    /**<p>Set the supplier of the map to print for each log entry.</p>
      * <p>The correlation id map is printed out as part of the message logged:</p>
      *<p>Example code: (where <code>setCorrelationIdSupplier(()-&gt;map)</code> has been invoked in the OpsLoggerFactory
      * invocation, and Failure has the message code "FOO-012345")</p>
@@ -133,7 +133,7 @@ public class OpsLoggerFactory {
      *
      * @param <T> LogMessage enum of all possible logger objects.
      * @return ready to use OpsLogger
-     * @throws IOException FIXME: not currently thrown, may be for future OpsLogger back ends.
+     * @throws IOException if a problem occurs creating parent directories for log files and/or stack traces
      */
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         Supplier<Map<String,String>> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
