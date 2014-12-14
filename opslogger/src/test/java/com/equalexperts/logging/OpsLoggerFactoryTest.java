@@ -630,6 +630,7 @@ public class OpsLoggerFactoryTest {
     void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
         assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+        assertThat(logger.getLock(), instanceOf(ReentrantLock.class));
     }
 
     void ensureCorrectlyConfigured(AsyncOpsLogger<TestMessages> logger) {

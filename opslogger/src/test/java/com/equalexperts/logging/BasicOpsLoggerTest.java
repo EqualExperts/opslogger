@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -22,6 +23,7 @@ public class BasicOpsLoggerTest {
     @Mock private BasicOpsLogger.Destination<TestMessages> destination;
     @Mock private Supplier<Map<String,String>> correlationIdSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
+    @Mock private Lock lock;
     @Captor private ArgumentCaptor<LogicalLogRecord<TestMessages>> captor;
 
     private OpsLogger<TestMessages> logger;
@@ -29,7 +31,7 @@ public class BasicOpsLoggerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        logger = new BasicOpsLogger<>(fixedClock, correlationIdSupplier, destination, exceptionConsumer);
+        logger = new BasicOpsLogger<>(fixedClock, correlationIdSupplier, destination, lock, exceptionConsumer);
     }
 
     @Test
@@ -54,10 +56,27 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
+    public void log_shouldObtainAndReleaseALock_givenALogMessageInstance() throws Exception {
+        logger.log(TestMessages.Foo);
+
+        InOrder inOrder = inOrder(lock, destination);
+        inOrder.verify(lock).lock();
+        inOrder.verify(destination).publish(any());
+        inOrder.verify(lock).unlock();
+    }
+
+    @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecord() throws Exception {
         logger.log(null);
 
         verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
+    }
+
+    @Test
+    public void log_shouldNotAcquireALock_givenAProblemCreatingTheLogRecord() throws Exception {
+        logger.log(null);
+
+        verifyZeroInteractions(lock);
     }
 
     @Test
@@ -71,6 +90,15 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
+    public void log_shouldNotAcquireALock_givenAProblemObtainingCorrelationIds() throws Exception {
+        when(correlationIdSupplier.get()).thenThrow(new RuntimeException());
+
+        logger.log(TestMessages.Foo);
+
+        verifyZeroInteractions(lock);
+    }
+
+    @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecord() throws Exception {
         RuntimeException expectedException = new NullPointerException();
         doThrow(expectedException).when(destination).publish(any());
@@ -78,6 +106,18 @@ public class BasicOpsLoggerTest {
         logger.log(TestMessages.Foo);
 
         verify(exceptionConsumer).accept(Mockito.same(expectedException));
+    }
+
+    @Test
+    public void log_shouldReleaseTheLock_givenAProblemPublishingALogRecord() throws Exception {
+        doThrow(new RuntimeException()).when(destination).publish(any());
+
+        logger.log(TestMessages.Foo);
+
+        InOrder inOrder = inOrder(lock, destination);
+        inOrder.verify(lock).lock();
+        inOrder.verify(destination).publish(any());
+        inOrder.verify(lock).unlock();
     }
 
     @Test
@@ -103,10 +143,27 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
+    public void log_shouldObtainAndReleaseALock_givenALogMessageInstanceAndAThrowable() throws Exception {
+        logger.log(TestMessages.Foo, new RuntimeException());
+
+        InOrder inOrder = inOrder(lock, destination);
+        inOrder.verify(lock).lock();
+        inOrder.verify(destination).publish(any());
+        inOrder.verify(lock).unlock();
+    }
+
+    @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
         logger.log(TestMessages.Foo, (Throwable) null);
 
         verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
+    }
+
+    @Test
+    public void log_shouldNotObtainALock_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
+        logger.log(null, new Throwable());
+
+        verifyZeroInteractions(lock);
     }
 
     @Test
@@ -120,6 +177,18 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
+    public void log_shouldReleaseTheLock_givenAProblemPublishingTheLogRecordWithAThrowable() throws Exception {
+        doThrow(new RuntimeException()).when(destination).publish(any());
+
+        logger.log(TestMessages.Foo, new Error());
+
+        InOrder inOrder = inOrder(lock, destination);
+        inOrder.verify(lock).lock();
+        inOrder.verify(destination).publish(any());
+        inOrder.verify(lock).unlock();
+    }
+
+    @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
         Error expectedThrowable = new Error();
         when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
@@ -127,6 +196,15 @@ public class BasicOpsLoggerTest {
         logger.log(TestMessages.Foo, new RuntimeException());
 
         verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    @Test
+    public void log_shouldNotObtainALock_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
+        when(correlationIdSupplier.get()).thenThrow(new RuntimeException());
+
+        logger.log(TestMessages.Foo, new Exception());
+
+        verifyZeroInteractions(lock);
     }
 
     @Test

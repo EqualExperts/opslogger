@@ -143,7 +143,7 @@ public class OpsLoggerFactory {
             return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
         }
         BasicOpsLogger.Destination<T> destination = configureBasicDestination();
-        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler);
+        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
     }
 
     private <T extends Enum<T> & LogMessage> AsyncOpsLogger.Destination<T> configureAsyncDestination() throws IOException {
