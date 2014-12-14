@@ -67,10 +67,6 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         }
     }
 
-    static interface Destination<T extends Enum<T> & LogMessage> extends AutoCloseable {
-        void publish(LogicalLogRecord<T> record) throws Exception;
-    }
-
     Clock getClock() {
         return clock;
     }

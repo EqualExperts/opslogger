@@ -6,7 +6,7 @@ import java.io.PrintStream;
  * A Destination which formats LogicalLogRecords with the provided stackTraceProcessor and prints it to <code>output</code>.  Also knows that if output is System.out or System.err, it should not be closed when done.
  */
 
-class OutputStreamDestination<T extends Enum<T> & LogMessage> implements BasicOpsLogger.Destination<T>, AsyncOpsLogger.Destination<T> {
+class OutputStreamDestination<T extends Enum<T> & LogMessage> implements AsyncOpsLogger.Destination<T> {
     private final PrintStream output;
     private final StackTraceProcessor stackTraceProcessor;
 
