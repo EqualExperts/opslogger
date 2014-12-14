@@ -149,15 +149,14 @@ public class OpsLoggerFactory {
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         Supplier<Map<String,String>> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
         Consumer<Throwable> errorHandler = this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
+        Destination<T> destination = configureDestination();
         if (async) {
-            Destination<T> destination = configureAsyncDestination();
             return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
         }
-        Destination<T> destination = configureAsyncDestination();
         return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
     }
 
-    private <T extends Enum<T> & LogMessage> Destination<T> configureAsyncDestination() throws IOException {
+    private <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         if (logfilePath.isPresent()) {
             if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
