@@ -74,7 +74,7 @@ public class OpsLoggerFactoryTest {
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         ensureCorrectlyConfigured(basicLogger);
 
-        AsyncPathDestination<TestMessages> destination = (AsyncPathDestination<TestMessages>) basicLogger.getDestination();
+        PathDestination<TestMessages> destination = (PathDestination<TestMessages>) basicLogger.getDestination();
         FileChannelProvider provider = destination.getProvider();
         assertSame(expectedPath, provider.getPath());
     }
@@ -179,7 +179,7 @@ public class OpsLoggerFactoryTest {
         AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
         ensureCorrectlyConfigured(logger);
 
-        AsyncPathDestination<TestMessages> destination = (AsyncPathDestination<TestMessages>) logger.getDestination();
+        PathDestination<TestMessages> destination = (PathDestination<TestMessages>) logger.getDestination();
         FileChannelProvider provider = destination.getProvider();
         assertSame(expectedPath, provider.getPath());
     }
@@ -295,7 +295,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        AsyncPathDestination<TestMessages> destination = (AsyncPathDestination<TestMessages>) basicLogger.getDestination();
+        PathDestination<TestMessages> destination = (PathDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor stackTraceProcessor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
 
         assertEquals(parent, stackTraceProcessor.getDestination());
@@ -311,7 +311,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        AsyncPathDestination<TestMessages> destination = (AsyncPathDestination<TestMessages>) basicLogger.getDestination();
+        PathDestination<TestMessages> destination = (PathDestination<TestMessages>) basicLogger.getDestination();
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
     }
 
@@ -471,7 +471,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
-        AsyncPathDestination<TestMessages> destination = (AsyncPathDestination<TestMessages>) basicLogger.getDestination();
+        PathDestination<TestMessages> destination = (PathDestination<TestMessages>) basicLogger.getDestination();
         FilesystemStackTraceProcessor processor = (FilesystemStackTraceProcessor) destination.getStackTraceProcessor();
         assertNotEquals(originalStackTraceDestination, processor.getDestination());
     }

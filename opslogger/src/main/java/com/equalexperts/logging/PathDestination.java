@@ -3,11 +3,14 @@ package com.equalexperts.logging;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 
-/** AsyncPathDestination handles batches of log records.  A lock is acquired and held during the batch
- * and released afterwards.  This allows external log rotation to work.
+/**
+ * Writes batches of log records to a path.
+ *
+ * A file lock is acquired and held during the batch and released afterwards.
+ * This allows external log rotation to work.
  * @param <T>
  */
-class AsyncPathDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
+class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private final FileChannelProvider provider;
@@ -15,7 +18,7 @@ class AsyncPathDestination<T extends Enum<T> & LogMessage> implements Destinatio
     private FileChannelProvider.Result currentChannel;
     private FileLock currentLock;
 
-    public AsyncPathDestination(FileChannelProvider provider, StackTraceProcessor processor) {
+    public PathDestination(FileChannelProvider provider, StackTraceProcessor processor) {
 
         this.provider = provider;
         this.processor = processor;

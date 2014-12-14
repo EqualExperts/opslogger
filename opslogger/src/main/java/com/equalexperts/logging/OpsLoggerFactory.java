@@ -164,7 +164,7 @@ public class OpsLoggerFactory {
                 Files.createDirectories(logfilePath.get().getParent());
             }
             FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
-            return new AsyncPathDestination<>(provider, stackTraceProcessor);
+            return new PathDestination<>(provider, stackTraceProcessor);
         }
         return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
     }

@@ -16,14 +16,14 @@ import static com.equalexperts.logging.FileChannelProvider.Result;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class AsyncPathDestinationTest {
+public class PathDestinationTest {
 
     private StringWriter writer = spy(new StringWriter());
     private FileChannel channel = mock(FileChannel.class);
     private FileLock lock = mock(FileLock.class);
     private FileChannelProvider provider = mock(FileChannelProvider.class);
     private StackTraceProcessor processor = mock(StackTraceProcessor.class);
-    private Destination<TestMessages> destination = new AsyncPathDestination<>(provider, processor);
+    private Destination<TestMessages> destination = new PathDestination<>(provider, processor);
 
     @Before
     public void setup() throws Exception {
