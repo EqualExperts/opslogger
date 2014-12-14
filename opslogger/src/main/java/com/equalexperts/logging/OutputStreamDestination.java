@@ -3,7 +3,8 @@ package com.equalexperts.logging;
 import java.io.PrintStream;
 
 /**
- * A Destination which formats LogicalLogRecords with the provided stackTraceProcessor and prints it to <code>output</code>.  Also knows that if output is System.out or System.err, it should not be closed when done.
+ * A Destination which formats LogicalLogRecords with the provided stackTraceProcessor and prints it to <code>output</code>.
+ * Also knows that if output is System.out or System.err, it should not be closed when done.
  */
 
 class OutputStreamDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
