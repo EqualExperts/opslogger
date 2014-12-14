@@ -153,7 +153,7 @@ public class OpsLoggerFactory {
             AsyncOpsLogger.Destination<T> destination = configureAsyncDestination();
             return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
         }
-        BasicOpsLogger.Destination<T> destination = configureBasicDestination();
+        AsyncOpsLogger.Destination<T> destination = configureAsyncDestination();
         return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
     }
 
@@ -165,19 +165,6 @@ public class OpsLoggerFactory {
             }
             FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
             return new AsyncPathDestination<>(provider, stackTraceProcessor);
-        }
-        return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
-    }
-
-
-    private <T extends Enum<T> & LogMessage> BasicOpsLogger.Destination<T> configureBasicDestination() throws IOException {
-        StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-        if (this.logfilePath.isPresent()) {
-            if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
-                Files.createDirectories(logfilePath.get().getParent());
-            }
-            FileChannelProvider fileChannelProvider = new FileChannelProvider(logfilePath.get());
-            return new BasicPathDestination<>(new ReentrantLock(), fileChannelProvider, stackTraceProcessor);
         }
         return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
     }

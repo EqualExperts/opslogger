@@ -12,11 +12,11 @@ import java.util.function.Supplier;
 class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
-    private final Destination<T> destination;
+    private final AsyncOpsLogger.Destination<T> destination;
     private final Lock lock;
     private final Supplier<Map<String,String>> correlationIdSupplier;
 
-    BasicOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
+    BasicOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, AsyncOpsLogger.Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
         this.clock = clock;
         this.correlationIdSupplier = correlationIdSupplier;
         this.destination = destination;
@@ -56,7 +56,12 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private void publish(LogicalLogRecord<T> record) throws Exception {
         lock.lock();
         try {
-            destination.publish(record);
+            destination.beginBatch();
+            try {
+                destination.publish(record);
+            } finally {
+                destination.endBatch();
+            }
         } finally {
             lock.unlock();
         }
@@ -70,7 +75,7 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return clock;
     }
 
-    Destination<T> getDestination() {
+    AsyncOpsLogger.Destination<T> getDestination() {
         return destination;
     }
 

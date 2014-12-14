@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 public class BasicOpsLoggerTest {
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
-    @Mock private BasicOpsLogger.Destination<TestMessages> destination;
+    @Mock private AsyncOpsLogger.Destination<TestMessages> destination;
     @Mock private Supplier<Map<String,String>> correlationIdSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Mock private Lock lock;
@@ -42,9 +42,9 @@ public class BasicOpsLoggerTest {
 
         logger.log(TestMessages.Bar, 64, "Hello, World");
 
-        verify(destination).publish(any());
+        verify(destination, times(1)).publish(any());
         verify(correlationIdSupplier).get();
-        verifyNoMoreInteractions(destination, correlationIdSupplier);
+        verifyNoMoreInteractions(correlationIdSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
@@ -56,12 +56,14 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldObtainAndReleaseALock_givenALogMessageInstance() throws Exception {
+    public void log_shouldObtainAndReleaseALockAndBeginAndEndADestinationBatch_givenALogMessageInstance() throws Exception {
         logger.log(TestMessages.Foo);
 
         InOrder inOrder = inOrder(lock, destination);
         inOrder.verify(lock).lock();
+        inOrder.verify(destination).beginBatch();
         inOrder.verify(destination).publish(any());
+        inOrder.verify(destination).endBatch();
         inOrder.verify(lock).unlock();
     }
 
@@ -73,10 +75,10 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldNotAcquireALock_givenAProblemCreatingTheLogRecord() throws Exception {
+    public void log_shouldNotAcquireALockOrInteractWithTheDestination_givenAProblemCreatingTheLogRecord() throws Exception {
         logger.log(null);
 
-        verifyZeroInteractions(lock);
+        verifyZeroInteractions(lock, destination);
     }
 
     @Test
@@ -90,12 +92,12 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldNotAcquireALock_givenAProblemObtainingCorrelationIds() throws Exception {
+    public void log_shouldNotAcquireALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIds() throws Exception {
         when(correlationIdSupplier.get()).thenThrow(new RuntimeException());
 
         logger.log(TestMessages.Foo);
 
-        verifyZeroInteractions(lock);
+        verifyZeroInteractions(lock, destination);
     }
 
     @Test
@@ -109,14 +111,16 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldReleaseTheLock_givenAProblemPublishingALogRecord() throws Exception {
+    public void log_shouldEndTheBatchAndReleaseTheLock_givenAProblemPublishingALogRecord() throws Exception {
         doThrow(new RuntimeException()).when(destination).publish(any());
 
         logger.log(TestMessages.Foo);
 
         InOrder inOrder = inOrder(lock, destination);
         inOrder.verify(lock).lock();
+        inOrder.verify(destination).beginBatch();
         inOrder.verify(destination).publish(any());
+        inOrder.verify(destination).endBatch();
         inOrder.verify(lock).unlock();
     }
 
@@ -129,9 +133,9 @@ public class BasicOpsLoggerTest {
 
         logger.log(TestMessages.Bar, expectedException, 64, "Hello, World");
 
-        verify(destination).publish(any());
+        verify(destination, times(1)).publish(any());
         verify(correlationIdSupplier).get();
-        verifyNoMoreInteractions(destination, correlationIdSupplier);
+        verifyNoMoreInteractions(correlationIdSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
@@ -143,12 +147,14 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldObtainAndReleaseALock_givenALogMessageInstanceAndAThrowable() throws Exception {
+    public void log_shouldObtainAndReleaseALockAndBeginAndEndADestinationBatch_givenALogMessageInstanceAndAThrowable() throws Exception {
         logger.log(TestMessages.Foo, new RuntimeException());
 
         InOrder inOrder = inOrder(lock, destination);
         inOrder.verify(lock).lock();
+        inOrder.verify(destination).beginBatch();
         inOrder.verify(destination).publish(any());
+        inOrder.verify(destination).endBatch();
         inOrder.verify(lock).unlock();
     }
 
@@ -160,10 +166,10 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldNotObtainALock_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
+    public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
         logger.log(null, new Throwable());
 
-        verifyZeroInteractions(lock);
+        verifyZeroInteractions(lock, destination);
     }
 
     @Test
@@ -177,14 +183,16 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldReleaseTheLock_givenAProblemPublishingTheLogRecordWithAThrowable() throws Exception {
+    public void log_shouldEndTheBatchAndReleaseTheLock_givenAProblemPublishingTheLogRecordWithAThrowable() throws Exception {
         doThrow(new RuntimeException()).when(destination).publish(any());
 
         logger.log(TestMessages.Foo, new Error());
 
         InOrder inOrder = inOrder(lock, destination);
         inOrder.verify(lock).lock();
+        inOrder.verify(destination).beginBatch();
         inOrder.verify(destination).publish(any());
+        inOrder.verify(destination).endBatch();
         inOrder.verify(lock).unlock();
     }
 
@@ -199,12 +207,12 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldNotObtainALock_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
+    public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
         when(correlationIdSupplier.get()).thenThrow(new RuntimeException());
 
         logger.log(TestMessages.Foo, new Exception());
 
-        verifyZeroInteractions(lock);
+        verifyZeroInteractions(lock, destination);
     }
 
     @Test

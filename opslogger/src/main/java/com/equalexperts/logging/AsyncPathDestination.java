@@ -57,4 +57,8 @@ class AsyncPathDestination<T extends Enum<T> & LogMessage> implements AsyncOpsLo
     FileChannelProvider getProvider() {
         return provider;
     }
+
+    StackTraceProcessor getStackTraceProcessor() {
+        return processor;
+    }
 }
