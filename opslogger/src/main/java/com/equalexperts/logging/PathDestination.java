@@ -2,6 +2,7 @@ package com.equalexperts.logging;
 
 import java.io.IOException;
 import java.nio.channels.FileLock;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Writes batches of log records to a path.
@@ -10,16 +11,16 @@ import java.nio.channels.FileLock;
  * This allows external log rotation to work.
  * @param <T>
  */
-class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
+class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>, ActiveRotationSupport {
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private final FileChannelProvider provider;
     private final StackTraceProcessor processor;
     private FileChannelProvider.Result currentChannel;
     private FileLock currentLock;
+    private volatile CountDownLatch latch = new CountDownLatch(0);
 
     public PathDestination(FileChannelProvider provider, StackTraceProcessor processor) {
-
         this.provider = provider;
         this.processor = processor;
     }
@@ -27,6 +28,7 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T> 
     @Override
     public void beginBatch() throws Exception {
         closeAnyOpenBatch();
+        latch = new CountDownLatch(1);
         currentChannel = provider.getChannel();
         currentLock = currentChannel.channel.lock();
     }
@@ -43,6 +45,7 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T> 
     }
 
     private void closeAnyOpenBatch() throws IOException {
+        latch.countDown();
         if (currentChannel != null) {
             currentChannel.writer.flush();
             currentLock.release();
@@ -55,6 +58,11 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T> 
     @Override
     public void close() throws Exception {
         closeAnyOpenBatch();
+    }
+
+    @Override
+    public void postRotate() throws InterruptedException {
+        latch.await();
     }
 
     FileChannelProvider getProvider() {

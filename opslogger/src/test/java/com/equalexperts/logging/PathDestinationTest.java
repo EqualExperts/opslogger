@@ -11,9 +11,12 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.equalexperts.logging.FileChannelProvider.Result;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class PathDestinationTest {
@@ -23,7 +26,7 @@ public class PathDestinationTest {
     private FileLock lock = mock(FileLock.class);
     private FileChannelProvider provider = mock(FileChannelProvider.class);
     private StackTraceProcessor processor = mock(StackTraceProcessor.class);
-    private Destination<TestMessages> destination = new PathDestination<>(provider, processor);
+    private PathDestination<TestMessages> destination = new PathDestination<>(provider, processor);
 
     @Before
     public void setup() throws Exception {
@@ -110,6 +113,72 @@ public class PathDestinationTest {
     @Test
     public void close_shouldDoNothing_whenABatchIsNotOpen() throws Exception {
         destination.close();
+    }
+
+    @Test
+    public void class_shouldImplementDestination() throws Exception {
+        assertThat(destination, instanceOf(Destination.class));
+    }
+
+    @Test
+    public void class_shouldImplementActiveRotationSupport() throws Exception {
+        assertThat(destination, instanceOf(ActiveRotationSupport.class));
+    }
+
+    @Test
+    public void postRotate_shouldReturnImmediately_whenTheDestinationHasNeverBeenUsed() throws Exception {
+        ActiveRotationSupport ars = destination;
+
+        ars.postRotate();
+    }
+
+    @Test
+    public void postRotate_shouldReturnImmediately_whenTheDestinationIsNotCurrentlyInUse() throws Exception {
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
+        destination.beginBatch();
+        destination.publish(record);
+        destination.endBatch();
+        ActiveRotationSupport ars = destination;
+
+        ars.postRotate();
+    }
+
+    @Test
+    public void postRotate_shouldBlockUntilABatchIsClosed_givenAnOpenBatch() throws Exception {
+        destination.beginBatch();
+        AtomicBoolean callReturned = new AtomicBoolean(false);
+
+        CountDownLatch startupLatch = new CountDownLatch(1);
+        Thread rotationThread = new Thread(() -> {
+            startupLatch.countDown();
+            ActiveRotationSupport ars = destination;
+            try {
+                ars.postRotate();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            callReturned.set(true);
+        });
+        rotationThread.setDaemon(true);
+        rotationThread.start();
+        startupLatch.await(); //wait until the thread has started
+
+        try {
+            //the call to postRotate should not have returned
+            Thread.sleep(100L);
+            assertFalse(callReturned.get());
+
+            destination.endBatch();
+
+            rotationThread.join(100L); //now the call should return
+            assertTrue(callReturned.get());
+        } finally {
+            if (rotationThread.isAlive()) {
+                //need to call this to violently abort the thread if the thread is still alive at the end of the test
+                //noinspection deprecation
+                rotationThread.stop();
+            }
+        }
     }
 
     private void constructResult(Writer writer, FileChannel channel) throws IOException {
