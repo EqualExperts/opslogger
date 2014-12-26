@@ -13,7 +13,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 /** Provide a convenience method to get a file channel pointing to a previously opened
  * writable file in UTF-8 corresponding to a given Path.
  */
-public class FileChannelProvider {
+class FileChannelProvider {
     private final Path path;
 
     public FileChannelProvider(Path path) {
