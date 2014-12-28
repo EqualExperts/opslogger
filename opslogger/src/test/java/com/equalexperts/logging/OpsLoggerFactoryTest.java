@@ -669,13 +669,13 @@ public class OpsLoggerFactoryTest {
         assertArrayEquals(expectedSystemErrContents.toByteArray(), actualSystemErrContents.toByteArray());
     }
 
-    void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
+    private void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
         assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
         assertThat(logger.getLock(), instanceOf(ReentrantLock.class));
     }
 
-    void ensureCorrectlyConfigured(AsyncOpsLogger<TestMessages> logger) {
+    private void ensureCorrectlyConfigured(AsyncOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
         assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
         assertThat(logger.getTransferQueue(), instanceOf(LinkedTransferQueue.class));
