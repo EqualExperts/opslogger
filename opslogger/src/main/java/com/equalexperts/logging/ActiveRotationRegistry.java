@@ -7,7 +7,7 @@ class ActiveRotationRegistry {
 
     private final Set<ActiveRotationSupport> registeredInstances = ConcurrentHashMap.newKeySet();
 
-    public ActiveRotationSupport add(ActiveRotationSupport instance) {
+    public <T extends ActiveRotationSupport> T add(T instance) {
         registeredInstances.add(instance);
         return instance;
     }
@@ -20,8 +20,8 @@ class ActiveRotationRegistry {
         return registeredInstances.contains(instance);
     }
 
-    public Runnable getPostRotateEvent() {
-        return () -> registeredInstances.forEach(ActiveRotationRegistry::safelyCallPostRotate);
+    public void postRotate() {
+        registeredInstances.forEach(ActiveRotationRegistry::safelyCallPostRotate);
     }
 
     private static void safelyCallPostRotate(ActiveRotationSupport instance) {
