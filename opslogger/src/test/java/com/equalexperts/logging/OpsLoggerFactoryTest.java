@@ -669,6 +669,16 @@ public class OpsLoggerFactoryTest {
         assertArrayEquals(expectedSystemErrContents.toByteArray(), actualSystemErrContents.toByteArray());
     }
 
+    @Test
+    public void refreshFileHandles_shouldRefreshFileHandlesOnAllRegisteredDestinationsThatSupportActiveRotation() throws Exception {
+        ActiveRotationRegistry registry = spy(new ActiveRotationRegistry());
+        OpsLoggerFactory.setRegistry(registry);
+
+        OpsLoggerFactory.refreshFileHandles();
+
+        verify(registry).postRotate();
+    }
+
     private void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
         assertEquals(OpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());

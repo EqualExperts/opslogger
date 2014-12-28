@@ -158,6 +158,19 @@ public class OpsLoggerFactory {
         return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
     }
 
+    /**
+     * Refreshes file handles for all log files, providing active rotation support.
+     * This method should be called between rotating the original file, and manipulating (archiving, compressing, etc)
+     * it. The <code>postRotate</code> block in logRotate is an excellent example of when to use this method.
+     *
+     * This method will not return until all writing to old file handles has completed.
+     *
+     * Exposing this method via JMX or an administrative API some kind is the intended use case.
+     */
+    public static void refreshFileHandles() {
+        registry.postRotate();
+    }
+
     private <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
         StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
         if (logfilePath.isPresent()) {
