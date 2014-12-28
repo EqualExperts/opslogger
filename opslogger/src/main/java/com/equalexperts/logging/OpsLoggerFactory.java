@@ -168,7 +168,7 @@ public class OpsLoggerFactory {
      * Exposing this method via JMX or an administrative API some kind is the intended use case.
      */
     public static void refreshFileHandles() {
-        registry.postRotate();
+        registry.refreshFileHandles();
     }
 
     private <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {

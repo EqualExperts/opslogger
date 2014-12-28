@@ -676,7 +676,7 @@ public class OpsLoggerFactoryTest {
 
         OpsLoggerFactory.refreshFileHandles();
 
-        verify(registry).postRotate();
+        verify(registry).refreshFileHandles();
     }
 
     private void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {

@@ -20,7 +20,7 @@ class ActiveRotationRegistry {
         return registeredInstances.contains(instance);
     }
 
-    public void postRotate() {
+    public void refreshFileHandles() {
         registeredInstances.forEach(ActiveRotationRegistry::safelyCallPostRotate);
     }
 
