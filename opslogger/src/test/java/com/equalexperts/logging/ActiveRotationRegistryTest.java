@@ -2,8 +2,7 @@ package com.equalexperts.logging;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class ActiveRotationRegistryTest {
@@ -44,6 +43,32 @@ public class ActiveRotationRegistryTest {
         ActiveRotationSupport ars = mock(ActiveRotationSupport.class);
 
         registry.remove(ars);
+    }
+
+    @Test
+    public void contains_shouldReturnTrue_givenAnAddedInstance() throws Exception {
+        ActiveRotationSupport ars = mock(ActiveRotationSupport.class);
+
+        registry.add(ars);
+
+        assertTrue(registry.contains(ars));
+    }
+
+    @Test
+    public void contains_shouldReturnFalse_givenAnInstanceThatHasNotBeenAdded() throws Exception {
+        ActiveRotationSupport ars = mock(ActiveRotationSupport.class);
+
+        assertFalse(registry.contains(ars));
+    }
+
+    @Test
+    public void contains_shouldReturnFalse_givenAnInstanceThatHasBeenAddedAndRemoved() throws Exception {
+        ActiveRotationSupport ars = mock(ActiveRotationSupport.class);
+
+        registry.add(ars);
+        registry.remove(ars);
+
+        assertFalse(registry.contains(ars));
     }
 
     @Test

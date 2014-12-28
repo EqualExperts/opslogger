@@ -16,6 +16,10 @@ class ActiveRotationRegistry {
         registeredInstances.remove(instance);
     }
 
+    public boolean contains(ActiveRotationSupport instance) {
+        return registeredInstances.contains(instance);
+    }
+
     public Runnable getPostRotateEvent() {
         return () -> registeredInstances.forEach(ActiveRotationRegistry::safelyCallPostRotate);
     }
