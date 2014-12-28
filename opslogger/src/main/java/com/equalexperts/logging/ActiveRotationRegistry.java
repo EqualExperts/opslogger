@@ -26,7 +26,7 @@ class ActiveRotationRegistry {
 
     private static void safelyCallPostRotate(ActiveRotationSupport instance) {
         try {
-            instance.postRotate();
+            instance.refreshFileHandles();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

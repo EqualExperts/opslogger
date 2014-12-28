@@ -64,7 +64,7 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>,
     }
 
     @Override
-    public void postRotate() throws InterruptedException {
+    public void refreshFileHandles() throws InterruptedException {
         latch.await();
     }
 

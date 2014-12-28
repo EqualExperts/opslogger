@@ -134,25 +134,25 @@ public class PathDestinationTest {
     }
 
     @Test
-    public void postRotate_shouldReturnImmediately_whenTheDestinationHasNeverBeenUsed() throws Exception {
+    public void refreshFileHandles_shouldReturnImmediately_whenTheDestinationHasNeverBeenUsed() throws Exception {
         ActiveRotationSupport ars = destination;
 
-        ars.postRotate();
+        ars.refreshFileHandles();
     }
 
     @Test
-    public void postRotate_shouldReturnImmediately_whenTheDestinationIsNotCurrentlyInUse() throws Exception {
+    public void refreshFileHandles_shouldReturnImmediately_whenTheDestinationIsNotCurrentlyInUse() throws Exception {
         LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
         destination.beginBatch();
         destination.publish(record);
         destination.endBatch();
         ActiveRotationSupport ars = destination;
 
-        ars.postRotate();
+        ars.refreshFileHandles();
     }
 
     @Test
-    public void postRotate_shouldBlockUntilABatchIsClosed_givenAnOpenBatch() throws Exception {
+    public void refreshFileHandles_shouldBlockUntilABatchIsClosed_givenAnOpenBatch() throws Exception {
         destination.beginBatch();
         AtomicBoolean callReturned = new AtomicBoolean(false);
 
@@ -161,7 +161,7 @@ public class PathDestinationTest {
             startupLatch.countDown();
             ActiveRotationSupport ars = destination;
             try {
-                ars.postRotate();
+                ars.refreshFileHandles();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -172,7 +172,7 @@ public class PathDestinationTest {
         startupLatch.await(); //wait until the thread has started
 
         try {
-            //the call to postRotate should not have returned
+            //the call to refreshFileHandles should not have returned
             Thread.sleep(100L);
             assertFalse(callReturned.get());
 

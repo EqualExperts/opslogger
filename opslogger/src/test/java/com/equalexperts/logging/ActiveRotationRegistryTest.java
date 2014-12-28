@@ -25,7 +25,7 @@ public class ActiveRotationRegistryTest {
         registry.add(ars);
 
         registry.refreshFileHandles();
-        verify(ars).postRotate();
+        verify(ars).refreshFileHandles();
     }
 
     @Test
@@ -78,21 +78,21 @@ public class ActiveRotationRegistryTest {
     }
 
     @Test
-    public void refreshFileHandles_shouldCallPostRotateOnEveryRegisteredActiveRotationSupportInstance() throws Exception {
+    public void refreshFileHandles_shouldRefreshFileHandlesOnEveryRegisteredActiveRotationSupportInstance() throws Exception {
         ActiveRotationSupport ars = registry.add(mock(ActiveRotationSupport.class));
         ActiveRotationSupport anotherArs = registry.add(mock(ActiveRotationSupport.class));
 
         registry.refreshFileHandles();
 
-        verify(ars).postRotate();
-        verify(anotherArs).postRotate();
+        verify(ars).refreshFileHandles();
+        verify(anotherArs).refreshFileHandles();
     }
 
     @Test
     public void refreshFileHandles_shouldThrowARuntimeException_whenAnInstanceThrowsAnInterruptedException() throws Exception {
         InterruptedException expectedException = new InterruptedException();
         ActiveRotationSupport ars = registry.add(mock(ActiveRotationSupport.class));
-        doThrow(expectedException).when(ars).postRotate();
+        doThrow(expectedException).when(ars).refreshFileHandles();
 
         try {
             registry.refreshFileHandles();
@@ -103,7 +103,7 @@ public class ActiveRotationRegistryTest {
     }
 
     @Test
-    public void refreshFileHandles_shouldNotCallPostRotateOnAnInstanceThatHasNotBeenAdded() throws Exception {
+    public void refreshFileHandles_shouldNotRefreshFileHandlesOnAnInstanceThatHasNotBeenAdded() throws Exception {
         ActiveRotationSupport ars = mock(ActiveRotationSupport.class);
 
         registry.refreshFileHandles();
@@ -112,7 +112,7 @@ public class ActiveRotationRegistryTest {
     }
 
     @Test
-    public void refreshFileHandles_shouldNotCallPostRotateOnAnInstanceThatHasBeenRemoved() throws Exception {
+    public void refreshFileHandles_shouldNotRefreshFileHandlesOnAnInstanceThatHasBeenRemoved() throws Exception {
         ActiveRotationSupport ars = mock(ActiveRotationSupport.class);
         registry.add(ars);
         registry.remove(ars);
@@ -124,7 +124,7 @@ public class ActiveRotationRegistryTest {
 
     private static class Foo implements ActiveRotationSupport {
         @Override
-        public void postRotate() throws InterruptedException {
+        public void refreshFileHandles() throws InterruptedException {
             //not relevant for this test
         }
     }
