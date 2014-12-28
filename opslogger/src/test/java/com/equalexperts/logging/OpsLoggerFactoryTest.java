@@ -1,5 +1,7 @@
 package com.equalexperts.logging;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -32,6 +34,19 @@ public class OpsLoggerFactoryTest {
 
     @Rule
     public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
+
+    private ActiveRotationRegistry oldRegistry;
+
+    @Before
+    public void replaceActiveRotationRegistry() {
+        oldRegistry = OpsLoggerFactory.getRegistry();
+        OpsLoggerFactory.setRegistry(new ActiveRotationRegistry());
+    }
+
+    @After
+    public void restoreActiveRotationRegistry() {
+     OpsLoggerFactory.setRegistry(oldRegistry);
+    }
 
     @Test
     public void build_shouldReturnACorrectlyConfiguredBasicOpsLoggerToSystemOut_whenNoConfigurationIsPerformed() throws Exception {
@@ -116,6 +131,35 @@ public class OpsLoggerFactoryTest {
         //assert
         assertTrue(Files.exists(parent));
         assertFalse(Files.exists(logFile));
+    }
+
+    @Test
+    public void build_shouldRegisterTheCreatedPathDestinationWithTheRegistry_whenAPathIsSet() throws Exception {
+        Path logFile = tempFiles.createTempFile(".log");
+
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setPath(logFile)
+                .build();
+
+        BasicOpsLogger<TestMessages> logger = (BasicOpsLogger<TestMessages>) result;
+        assertThat(logger.getDestination(), instanceOf(PathDestination.class));
+        PathDestination<TestMessages> pd = (PathDestination<TestMessages>) logger.getDestination();
+        assertTrue(OpsLoggerFactory.getRegistry().contains(pd));
+    }
+
+    @Test
+    public void build_shouldRegisterTheCreatedPathDestinationWithTheRegistry_whenAPathIsSetAndAsyncIsSet() throws Exception {
+        Path logFile = tempFiles.createTempFile(".log");
+
+        OpsLogger<TestMessages> result = new OpsLoggerFactory()
+                .setPath(logFile)
+                .setAsync(true)
+                .build();
+
+        AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
+        assertThat(logger.getDestination(), instanceOf(PathDestination.class));
+        PathDestination<TestMessages> pd = (PathDestination<TestMessages>) logger.getDestination();
+        assertTrue(OpsLoggerFactory.getRegistry().contains(pd));
     }
 
     @Test

@@ -16,13 +16,15 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>,
 
     private final FileChannelProvider provider;
     private final StackTraceProcessor processor;
+    private final ActiveRotationRegistry registry;
     private FileChannelProvider.Result currentChannel;
     private FileLock currentLock;
     private volatile CountDownLatch latch = new CountDownLatch(0);
 
-    public PathDestination(FileChannelProvider provider, StackTraceProcessor processor) {
+    public PathDestination(FileChannelProvider provider, StackTraceProcessor processor, ActiveRotationRegistry registry) {
         this.provider = provider;
         this.processor = processor;
+        this.registry = registry;
     }
 
     @Override
@@ -58,6 +60,7 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>,
     @Override
     public void close() throws Exception {
         closeAnyOpenBatch();
+        registry.remove(this);
     }
 
     @Override

@@ -26,7 +26,8 @@ public class PathDestinationTest {
     private FileLock lock = mock(FileLock.class);
     private FileChannelProvider provider = mock(FileChannelProvider.class);
     private StackTraceProcessor processor = mock(StackTraceProcessor.class);
-    private PathDestination<TestMessages> destination = new PathDestination<>(provider, processor);
+    private ActiveRotationRegistry registry = mock(ActiveRotationRegistry.class);
+    private PathDestination<TestMessages> destination = new PathDestination<>(provider, processor, registry);
 
     @Before
     public void setup() throws Exception {
@@ -111,8 +112,15 @@ public class PathDestinationTest {
     }
 
     @Test
-    public void close_shouldDoNothing_whenABatchIsNotOpen() throws Exception {
+    public void close_shouldNotManipulateABatch_whenABatchIsNotOpen() throws Exception {
         destination.close();
+    }
+
+    @Test
+    public void close_shouldRemoveThePathDestinationFromTheActiveRotationRegistry() throws Exception {
+        destination.close();
+
+        verify(registry).remove(destination);
     }
 
     @Test
