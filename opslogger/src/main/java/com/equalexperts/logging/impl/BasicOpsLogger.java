@@ -1,4 +1,7 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
+
+import com.equalexperts.logging.LogMessage;
+import com.equalexperts.logging.OpsLogger;
 
 import java.time.Clock;
 import java.util.Map;
@@ -9,14 +12,14 @@ import java.util.function.Supplier;
 
 /** OpsLogger which writes each entry directly to the Destination */
 
-class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
+public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
     private final Lock lock;
     private final Supplier<Map<String,String>> correlationIdSupplier;
 
-    BasicOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
+    public BasicOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
         this.clock = clock;
         this.correlationIdSupplier = correlationIdSupplier;
         this.destination = destination;
@@ -67,21 +70,21 @@ class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         }
     }
 
-    Clock getClock() {
+    public Clock getClock() {
         return clock;
     }
 
-    Destination<T> getDestination() {
+    public Destination<T> getDestination() {
         return destination;
     }
 
-    Supplier<Map<String, String>> getCorrelationIdSupplier() {
+    public Supplier<Map<String, String>> getCorrelationIdSupplier() {
         return correlationIdSupplier;
     }
 
-    Lock getLock() {
+    public Lock getLock() {
         return lock;
     }
 
-    Consumer<Throwable> getErrorHandler() { return errorHandler; }
+    public Consumer<Throwable> getErrorHandler() { return errorHandler; }
 }

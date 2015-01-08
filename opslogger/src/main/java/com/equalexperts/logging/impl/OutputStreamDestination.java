@@ -1,4 +1,6 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
+
+import com.equalexperts.logging.LogMessage;
 
 import java.io.PrintStream;
 
@@ -7,11 +9,11 @@ import java.io.PrintStream;
  * Also knows that if output is System.out or System.err, it should not be closed when done.
  */
 
-class OutputStreamDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
+public class OutputStreamDestination<T extends Enum<T> & LogMessage> implements Destination<T> {
     private final PrintStream output;
     private final StackTraceProcessor stackTraceProcessor;
 
-    OutputStreamDestination(PrintStream output, StackTraceProcessor stackTraceProcessor) {
+    public OutputStreamDestination(PrintStream output, StackTraceProcessor stackTraceProcessor) {
         this.output = output;
         this.stackTraceProcessor = stackTraceProcessor;
     }
@@ -42,11 +44,11 @@ class OutputStreamDestination<T extends Enum<T> & LogMessage> implements Destina
         return (output == System.out) || (output == System.err);
     }
 
-    PrintStream getOutput() {
+    public PrintStream getOutput() {
         return output;
     }
 
-    StackTraceProcessor getStackTraceProcessor() {
+    public StackTraceProcessor getStackTraceProcessor() {
         return stackTraceProcessor;
     }
 }

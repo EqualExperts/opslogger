@@ -1,5 +1,7 @@
 package com.equalexperts.logging;
 
+import com.equalexperts.logging.impl.*;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;

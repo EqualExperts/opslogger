@@ -1,5 +1,7 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.LogMessage;
+import com.equalexperts.logging.OpsLogger;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;

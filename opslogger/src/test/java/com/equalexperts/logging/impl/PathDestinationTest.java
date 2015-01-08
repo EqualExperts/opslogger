@@ -1,5 +1,6 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.LogMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.equalexperts.logging.FileChannelProvider.Result;
+import static com.equalexperts.logging.impl.FileChannelProvider.Result;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;

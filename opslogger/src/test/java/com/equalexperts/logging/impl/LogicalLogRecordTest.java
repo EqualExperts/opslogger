@@ -1,5 +1,6 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.LogMessage;
 import org.junit.Test;
 
 import java.time.Instant;

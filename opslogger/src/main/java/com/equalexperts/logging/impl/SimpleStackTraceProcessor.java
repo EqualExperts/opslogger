@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -7,7 +7,7 @@ import java.io.StringWriter;
  * A StackTraceProcessor implementation that just includes the entire
  * stack trace as a multi-line string.
  */
-class SimpleStackTraceProcessor implements StackTraceProcessor {
+public class SimpleStackTraceProcessor implements StackTraceProcessor {
     @Override
     public void process(Throwable throwable, StringBuilder out) {
         StringWriter sw = new StringWriter();

@@ -1,4 +1,7 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
+
+import com.equalexperts.logging.LogMessage;
+import com.equalexperts.logging.OpsLogger;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -19,7 +22,7 @@ import static java.util.stream.Collectors.toList;
  * A background thread is responsible for emptying the transferQueue.
  */
 
-class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
+public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
     static final int MAX_BATCH_SIZE = 100;
     private final Future<?> processingThread;
@@ -113,23 +116,23 @@ class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
         return result;
     }
 
-    Clock getClock() {
+    public Clock getClock() {
         return clock;
     }
 
-    Destination<T> getDestination() {
+    public Destination<T> getDestination() {
         return destination;
     }
 
-    Supplier<Map<String, String>> getCorrelationIdSupplier() {
+    public Supplier<Map<String, String>> getCorrelationIdSupplier() {
         return correlationIdSupplier;
     }
 
-    Consumer<Throwable> getErrorHandler() {
+    public Consumer<Throwable> getErrorHandler() {
         return errorHandler;
     }
 
-    LinkedTransferQueue<Optional<LogicalLogRecord<T>>> getTransferQueue() {
+    public LinkedTransferQueue<Optional<LogicalLogRecord<T>>> getTransferQueue() {
         return transferQueue;
     }
 }

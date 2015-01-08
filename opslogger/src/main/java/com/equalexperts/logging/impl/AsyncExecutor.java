@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -20,10 +20,10 @@ import java.util.concurrent.ThreadFactory;
  * @see java.util.concurrent.Executor
  * @see java.util.concurrent.Future
  */
-class AsyncExecutor {
+public class AsyncExecutor {
     private final ThreadFactory factory;
 
-    AsyncExecutor(ThreadFactory factory) {
+    public AsyncExecutor(ThreadFactory factory) {
         this.factory = factory;
     }
 

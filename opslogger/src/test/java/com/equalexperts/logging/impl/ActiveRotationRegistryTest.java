@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import org.junit.Test;
 
