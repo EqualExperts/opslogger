@@ -1,9 +1,9 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-class ActiveRotationRegistry {
+public class ActiveRotationRegistry {
 
     private final Set<ActiveRotationSupport> registeredInstances = ConcurrentHashMap.newKeySet();
 

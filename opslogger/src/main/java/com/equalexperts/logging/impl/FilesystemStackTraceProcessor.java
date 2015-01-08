@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -13,11 +13,11 @@ import static java.nio.file.StandardOpenOption.WRITE;
  * A stack trace processor that stores the stack trace in a uniquely fingerprinted file in a given destination.
  * The URI of the file (whether new or existing) is included in the log message.
  */
-class FilesystemStackTraceProcessor implements StackTraceProcessor {
+public class FilesystemStackTraceProcessor implements StackTraceProcessor {
     private final Path destination;
     private final ThrowableFingerprintCalculator fingerprintCalculator;
 
-    FilesystemStackTraceProcessor(Path destination, ThrowableFingerprintCalculator fingerprintCalculator) {
+    public FilesystemStackTraceProcessor(Path destination, ThrowableFingerprintCalculator fingerprintCalculator) {
         this.destination = destination;
         this.fingerprintCalculator = fingerprintCalculator;
     }
@@ -29,7 +29,7 @@ class FilesystemStackTraceProcessor implements StackTraceProcessor {
         printSubstituteMessage(output, throwable, stackTraceFile);
     }
 
-    Path getDestination() {
+    public Path getDestination() {
         return destination;
     }
 

@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

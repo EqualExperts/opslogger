@@ -1,4 +1,6 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
+
+import com.equalexperts.logging.LogMessage;
 
 import java.io.IOException;
 import java.nio.channels.FileLock;
@@ -11,7 +13,7 @@ import java.util.concurrent.CountDownLatch;
  * This allows external log rotation to work.
  * @param <T>
  */
-class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>, ActiveRotationSupport {
+public class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>, ActiveRotationSupport {
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private final FileChannelProvider provider;
@@ -68,11 +70,11 @@ class PathDestination<T extends Enum<T> & LogMessage> implements Destination<T>,
         latch.await();
     }
 
-    FileChannelProvider getProvider() {
+    public FileChannelProvider getProvider() {
         return provider;
     }
 
-    StackTraceProcessor getStackTraceProcessor() {
+    public StackTraceProcessor getStackTraceProcessor() {
         return processor;
     }
 }

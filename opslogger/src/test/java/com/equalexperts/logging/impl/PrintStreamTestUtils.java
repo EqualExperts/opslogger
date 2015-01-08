@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.io.FilterOutputStream;
 import java.io.OutputStream;

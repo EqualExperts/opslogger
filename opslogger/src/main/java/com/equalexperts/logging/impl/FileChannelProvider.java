@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 /** Provide a convenience method to get a file channel pointing to a previously opened
  * writable file in UTF-8 corresponding to a given Path.
  */
-class FileChannelProvider {
+public class FileChannelProvider {
     private final Path path;
 
     public FileChannelProvider(Path path) {
@@ -41,7 +41,7 @@ class FileChannelProvider {
         }
     }
 
-    Path getPath() {
+    public Path getPath() {
         return path;
     }
 }

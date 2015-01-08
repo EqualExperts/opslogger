@@ -1,5 +1,6 @@
 package com.equalexperts.logging;
 
+import com.equalexperts.logging.impl.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

@@ -1,4 +1,4 @@
-package com.equalexperts.logging;
+package com.equalexperts.logging.impl;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-class ThrowableFingerprintCalculator {
+public class ThrowableFingerprintCalculator {
     private final Base64.Encoder base64Encoder = Base64.getUrlEncoder().withoutPadding();
 
     /* Return the Base64 representation of the MD5 hash for the printed stack trace of <code>t</code>. */
