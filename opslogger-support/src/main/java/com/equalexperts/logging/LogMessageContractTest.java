@@ -8,10 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.equalexperts.logging.EnumContractRunner.EnumField;
 import static java.util.Arrays.stream;
+import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -81,12 +83,11 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
     }
 
     private int getMostCommonLength(T[] constants) {
+
         //calculate a histogram of messageCodeLengths
-        Map<Integer, LongAdder> codeLengthHistogram = new HashMap<>();
-        for (T t : constants) {
-            int length = t.getMessageCode().length();
-            codeLengthHistogram.computeIfAbsent(length, i -> new LongAdder()).increment();
-        }
+        Map<Integer, Long> codeLengthHistogram = stream(constants)
+                .map(c -> c.getMessageCode().length())
+                .collect(Collectors.groupingBy(identity(), Collectors.counting()));
 
         //most common count
         return codeLengthHistogram.entrySet().stream()
