@@ -3,11 +3,16 @@ package com.equalexperts.logging;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
 import static com.equalexperts.logging.EnumContractRunner.EnumField;
 import static java.util.Arrays.stream;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
@@ -67,6 +72,27 @@ public abstract class LogMessageContractTest<T extends Enum<T> & LogMessage> {
     @Test
     public void enumInstance_shouldBeImmutable() throws Exception {
         assertInstancesOf(enumValue.getClass(), areImmutable());
+    }
+    
+    @Test
+    public void messageCodes_shouldAllBeTheSameLength() throws Exception {
+        int mostCommonLength = getMostCommonLength(enumValue.getDeclaringClass().getEnumConstants());
+        assertEquals(enumValue.name() + " has a different length than " + mostCommonLength + ", the most common length", mostCommonLength, enumValue.getMessageCode().length());
+    }
+
+    private int getMostCommonLength(T[] constants) {
+        //calculate a histogram of messageCodeLengths
+        Map<Integer, LongAdder> codeLengthHistogram = new HashMap<>();
+        for (T t : constants) {
+            int length = t.getMessageCode().length();
+            codeLengthHistogram.computeIfAbsent(length, i -> new LongAdder()).increment();
+        }
+
+        //most common count
+        return codeLengthHistogram.entrySet().stream()
+                .max(Comparator.comparingInt(e -> e.getValue().intValue()))
+                .map(Map.Entry::getKey)
+                .get();
     }
 
     private String formatForErrorMessage(T value) {
