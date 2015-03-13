@@ -9,10 +9,12 @@ import org.mutabilitydetector.locations.Dotted;
 import java.io.IOException;
 import java.util.*;
 
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mutabilitydetector.unittesting.MutabilityAssert.assertInstancesOf;
 import static org.mutabilitydetector.unittesting.MutabilityMatchers.areEffectivelyImmutable;
+import static org.mutabilitydetector.unittesting.MutabilityMatchers.areImmutable;
 
 /**
  * An OpsLogger implementation that validates arguments, but doesn't actually
@@ -73,7 +75,7 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
         for (Object o : details) {
             Class<?> aClass = o.getClass();
             if (!IMMUTABLE_CLASSES_FROM_THE_JDK.contains(aClass)) {
-                assertInstancesOf(aClass, areEffectivelyImmutable());
+                assertInstancesOf(aClass, anyOf(areEffectivelyImmutable(), areImmutable()));
             }
         }
     }

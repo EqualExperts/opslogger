@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mutabilitydetector.unittesting.MutabilityAssertionError;
 
 import java.util.IllegalFormatException;
+import java.util.UUID;
 
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
@@ -50,6 +51,11 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldCorrectlyAllowLogMessagesWithTwoOrMoreFormatStringArguments() throws Exception {
         logger.log(TestMessages.MessageWithMultipleArguments, "Foo", "Bar");
+    }
+
+    @Test
+    public void log_shouldAllowALogMessageWithAUUIDAsAnArgument() throws Exception {
+        logger.log(TestMessages.Bar, UUID.randomUUID());
     }
 
     @Test
@@ -239,7 +245,7 @@ public class OpsLoggerTestDoubleTest {
         }
     }
 
-    static enum TestMessages implements LogMessage {
+    enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "No Fields"),
         Bar("CODE-Bar", "One Field: %s"),
         BadFormatString("CODE-BFS", "%++d"),
