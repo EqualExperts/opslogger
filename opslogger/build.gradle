@@ -15,3 +15,7 @@ version = rootProject.version
 apply from: rootProject.file("bintray-support.gradle")
 
 idea.springFacets << 'src/test/resources/applicationContext.xml'
+
+javadoc {
+    exclude "com/equalexperts/logging/impl/*"
+}
