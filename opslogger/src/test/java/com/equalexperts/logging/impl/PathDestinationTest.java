@@ -195,7 +195,7 @@ public class PathDestinationTest {
         when(provider.getChannel()).thenReturn(expectedResult);
     }
 
-    private static enum TestMessages implements LogMessage {
+    private enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred");
 
         //region LogMessage implementation guts
