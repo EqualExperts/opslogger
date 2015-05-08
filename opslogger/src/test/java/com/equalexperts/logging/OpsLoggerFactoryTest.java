@@ -505,6 +505,20 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldConstructMultipleDifferentInstances_whenCalledTwice() throws Exception {
+        OpsLoggerFactory factory = new OpsLoggerFactory()
+                .setDestination(System.out);
+
+        OpsLogger<TestMessages> asyncLogger = factory.setAsync(true).build();
+
+        OpsLogger<TestMessages> syncLogger = factory.setAsync(false).build();
+
+        assertNotSame(asyncLogger, syncLogger);
+        assertThat(asyncLogger, instanceOf(AsyncOpsLogger.class));
+        assertThat(syncLogger, instanceOf(BasicOpsLogger.class));
+    }
+
+    @Test
     public void setStoreStackTracesInFilesystem_shouldClearTheStackTraceStoragePath_givenFalse() throws Exception {
         Path originalStackTraceDestination = tempFiles.createTempDirectoryThatDoesNotExist();
 
@@ -692,7 +706,7 @@ public class OpsLoggerFactoryTest {
         assertThat(logger.getTransferQueue(), instanceOf(LinkedTransferQueue.class));
     }
 
-    private static enum TestMessages implements LogMessage {
+    private enum TestMessages implements LogMessage {
         ; //don't actually need any messages for these tests
 
         //region LogMessage implementation guts
