@@ -5,7 +5,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveRotationRegistry {
 
+    private static ActiveRotationRegistry singletonInstance = new ActiveRotationRegistry();
+
     private final Set<ActiveRotationSupport> registeredInstances = ConcurrentHashMap.newKeySet();
+
+    public static ActiveRotationRegistry getSingletonInstance() {
+        return singletonInstance;
+    }
+
+    public static void setSingletonInstance(ActiveRotationRegistry newRegistry) {
+        singletonInstance = newRegistry;
+    }
 
     public <T extends ActiveRotationSupport> T add(T instance) {
         registeredInstances.add(instance);

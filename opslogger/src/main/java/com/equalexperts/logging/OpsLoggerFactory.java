@@ -21,8 +21,6 @@ public class OpsLoggerFactory {
     static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
     static final Supplier<Map<String, String>> EMPTY_CORRELATION_ID_SUPPLIER = Collections::emptyMap;
 
-    private static ActiveRotationRegistry registry = new ActiveRotationRegistry();
-
     private Optional<PrintStream> loggerOutput = Optional.empty();
     private Optional<Path> logfilePath = Optional.empty();
 
@@ -165,6 +163,7 @@ public class OpsLoggerFactory {
                     Files.createDirectories(logfilePath.get().getParent());
                 }
                 FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
+                ActiveRotationRegistry registry = ActiveRotationRegistry.getSingletonInstance();
                 return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
             }
             return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
@@ -241,7 +240,7 @@ public class OpsLoggerFactory {
      * Exposing this method via JMX or an administrative API some kind is the intended use case.
      */
     public static void refreshFileHandles() {
-        registry.refreshFileHandles();
+        ActiveRotationRegistry.getSingletonInstance().refreshFileHandles();
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
@@ -262,11 +261,4 @@ public class OpsLoggerFactory {
         }
     }
 
-    static ActiveRotationRegistry getRegistry() {
-        return registry;
-    }
-
-    static void setRegistry(ActiveRotationRegistry newRegistry) {
-        registry = newRegistry;
-    }
 }

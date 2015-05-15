@@ -40,13 +40,13 @@ public class OpsLoggerFactoryTest {
 
     @Before
     public void replaceActiveRotationRegistry() {
-        oldRegistry = OpsLoggerFactory.getRegistry();
-        OpsLoggerFactory.setRegistry(new ActiveRotationRegistry());
+        oldRegistry = ActiveRotationRegistry.getSingletonInstance();
+        ActiveRotationRegistry.setSingletonInstance(new ActiveRotationRegistry());
     }
 
     @After
     public void restoreActiveRotationRegistry() {
-     OpsLoggerFactory.setRegistry(oldRegistry);
+     ActiveRotationRegistry.setSingletonInstance(oldRegistry);
     }
 
     @Test
@@ -145,7 +145,7 @@ public class OpsLoggerFactoryTest {
         BasicOpsLogger<TestMessages> logger = (BasicOpsLogger<TestMessages>) result;
         assertThat(logger.getDestination(), instanceOf(PathDestination.class));
         PathDestination<TestMessages> pd = (PathDestination<TestMessages>) logger.getDestination();
-        assertTrue(OpsLoggerFactory.getRegistry().contains(pd));
+        assertTrue(ActiveRotationRegistry.getSingletonInstance().contains(pd));
     }
 
     @Test
@@ -160,7 +160,7 @@ public class OpsLoggerFactoryTest {
         AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
         assertThat(logger.getDestination(), instanceOf(PathDestination.class));
         PathDestination<TestMessages> pd = (PathDestination<TestMessages>) logger.getDestination();
-        assertTrue(OpsLoggerFactory.getRegistry().contains(pd));
+        assertTrue(ActiveRotationRegistry.getSingletonInstance().contains(pd));
     }
 
     @Test
@@ -687,7 +687,7 @@ public class OpsLoggerFactoryTest {
     @Test
     public void refreshFileHandles_shouldRefreshFileHandlesOnAllRegisteredDestinationsThatSupportActiveRotation() throws Exception {
         ActiveRotationRegistry registry = spy(new ActiveRotationRegistry());
-        OpsLoggerFactory.setRegistry(registry);
+        ActiveRotationRegistry.setSingletonInstance(registry);
 
         OpsLoggerFactory.refreshFileHandles();
 
