@@ -151,13 +151,84 @@ public class OpsLoggerFactory {
      * @throws IOException if a problem occurs creating parent directories for log files and/or stack traces
      */
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        Supplier<Map<String,String>> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
-        Consumer<Throwable> errorHandler = this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
-        Destination<T> destination = configureDestination();
         if (async) {
+            return new AsyncOpsLoggerFactory().build();
+        }
+        return new BasicOpsLoggerFactory().build();
+    }
+
+    private class AbstractOpsLoggerFactory {
+        protected <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
+            StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
+            if (logfilePath.isPresent()) {
+                if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
+                    Files.createDirectories(logfilePath.get().getParent());
+                }
+                FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
+                return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
+            }
+            return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
+        }
+
+        private StackTraceProcessor configureStackTraceProcessor() throws IOException {
+            Optional<Path> storagePath = determineStackTraceProcessorPath();
+            if (storagePath.isPresent()) {
+                if (!Files.isSymbolicLink(storagePath.get())) {
+                    Files.createDirectories(storagePath.get());
+                }
+                return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
+            }
+            return new SimpleStackTraceProcessor();
+        }
+
+        private Optional<Path> determineStackTraceProcessorPath() {
+            if (storeStackTracesInFilesystem.isPresent()) {
+                //storing stack traces in the filesystem has been explicitly configured
+
+                if (!storeStackTracesInFilesystem.get()) {
+                    return Optional.empty(); //explicitly disabled
+                }
+
+                if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
+                    throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
+                }
+
+                if (stackTraceStoragePath.isPresent()) {
+                    //use the explicitly provided location
+                    return stackTraceStoragePath;
+                }
+            }
+
+            //No explicit path provided. Store stack traces in the same directory as the log file, if one is specified.
+            return logfilePath.map(Path::getParent);
+        }
+
+        protected Supplier<Map<String, String>> configureCorrelationIdSupplier() {
+            return correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
+        }
+
+        protected Consumer<Throwable> configureErrorHandler() {
+            return OpsLoggerFactory.this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
+        }
+    }
+
+    private class BasicOpsLoggerFactory extends AbstractOpsLoggerFactory {
+        private <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+            Supplier<Map<String,String>> correlationIdSupplier = configureCorrelationIdSupplier();
+            Consumer<Throwable> errorHandler = configureErrorHandler();
+            Destination<T> destination = configureDestination();
+            return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
+        }
+
+    }
+
+    private class AsyncOpsLoggerFactory extends AbstractOpsLoggerFactory {
+        private <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+            Supplier<Map<String,String>> correlationIdSupplier = configureCorrelationIdSupplier();
+            Consumer<Throwable> errorHandler = configureErrorHandler();
+            Destination<T> destination = configureDestination();
             return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
         }
-        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
     }
 
     /**
@@ -171,51 +242,6 @@ public class OpsLoggerFactory {
      */
     public static void refreshFileHandles() {
         registry.refreshFileHandles();
-    }
-
-    private <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
-        StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-        if (logfilePath.isPresent()) {
-            if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
-                Files.createDirectories(logfilePath.get().getParent());
-            }
-            FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
-            return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
-        }
-        return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
-    }
-
-    private StackTraceProcessor configureStackTraceProcessor() throws IOException {
-        Optional<Path> storagePath = determineStackTraceProcessorPath();
-        if (storagePath.isPresent()) {
-            if (!Files.isSymbolicLink(storagePath.get())) {
-                Files.createDirectories(storagePath.get());
-            }
-            return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
-        }
-        return new SimpleStackTraceProcessor();
-    }
-
-    private Optional<Path> determineStackTraceProcessorPath() {
-        if (storeStackTracesInFilesystem.isPresent()) {
-            //storing stack traces in the filesystem has been explicitly configured
-
-            if (!storeStackTracesInFilesystem.get()) {
-                return Optional.empty(); //explicitly disabled
-            }
-
-            if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
-                throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
-            }
-
-            if (stackTraceStoragePath.isPresent()) {
-                //use the explicitly provided location
-                return stackTraceStoragePath;
-            }
-        }
-
-        //No explicit path provided. Store stack traces in the same directory as the log file, if one is specified.
-        return logfilePath.map(Path::getParent);
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
