@@ -6,20 +6,13 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class OpsLoggerFactory {
-    static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
-    static final Supplier<Map<String, String>> EMPTY_CORRELATION_ID_SUPPLIER = Collections::emptyMap;
 
     private Optional<PrintStream> loggerOutput = Optional.empty();
     private Optional<Path> logfilePath = Optional.empty();
@@ -150,84 +143,9 @@ public class OpsLoggerFactory {
      */
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         if (async) {
-            return new AsyncOpsLoggerFactory().build();
+            return new AsyncOpsLoggerFactory(new ConfigurationInfo(OpsLoggerFactory.this.logfilePath, OpsLoggerFactory.this.loggerOutput, OpsLoggerFactory.this.storeStackTracesInFilesystem, OpsLoggerFactory.this.stackTraceStoragePath, OpsLoggerFactory.this.correlationIdSupplier, OpsLoggerFactory.this.errorHandler)).build();
         }
-        return new BasicOpsLoggerFactory().build();
-    }
-
-    private class AbstractOpsLoggerFactory {
-        protected <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
-            StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-            if (logfilePath.isPresent()) {
-                if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
-                    Files.createDirectories(logfilePath.get().getParent());
-                }
-                FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
-                ActiveRotationRegistry registry = ActiveRotationRegistry.getSingletonInstance();
-                return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
-            }
-            return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
-        }
-
-        private StackTraceProcessor configureStackTraceProcessor() throws IOException {
-            Optional<Path> storagePath = determineStackTraceProcessorPath();
-            if (storagePath.isPresent()) {
-                if (!Files.isSymbolicLink(storagePath.get())) {
-                    Files.createDirectories(storagePath.get());
-                }
-                return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
-            }
-            return new SimpleStackTraceProcessor();
-        }
-
-        private Optional<Path> determineStackTraceProcessorPath() {
-            if (storeStackTracesInFilesystem.isPresent()) {
-                //storing stack traces in the filesystem has been explicitly configured
-
-                if (!storeStackTracesInFilesystem.get()) {
-                    return Optional.empty(); //explicitly disabled
-                }
-
-                if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
-                    throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
-                }
-
-                if (stackTraceStoragePath.isPresent()) {
-                    //use the explicitly provided location
-                    return stackTraceStoragePath;
-                }
-            }
-
-            //No explicit path provided. Store stack traces in the same directory as the log file, if one is specified.
-            return logfilePath.map(Path::getParent);
-        }
-
-        protected Supplier<Map<String, String>> configureCorrelationIdSupplier() {
-            return correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
-        }
-
-        protected Consumer<Throwable> configureErrorHandler() {
-            return OpsLoggerFactory.this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
-        }
-    }
-
-    private class BasicOpsLoggerFactory extends AbstractOpsLoggerFactory {
-        private <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-            Supplier<Map<String,String>> correlationIdSupplier = configureCorrelationIdSupplier();
-            Consumer<Throwable> errorHandler = configureErrorHandler();
-            Destination<T> destination = configureDestination();
-            return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
-        }
-
-    }
-
-    private class AsyncOpsLoggerFactory extends AbstractOpsLoggerFactory {
-        private <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-            Supplier<Map<String,String>> correlationIdSupplier = configureCorrelationIdSupplier();
-            Consumer<Throwable> errorHandler = configureErrorHandler();
-            Destination<T> destination = configureDestination();
-            return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
-        }
+        return new BasicOpsLoggerFactory(new ConfigurationInfo(OpsLoggerFactory.this.logfilePath, OpsLoggerFactory.this.loggerOutput, OpsLoggerFactory.this.storeStackTracesInFilesystem, OpsLoggerFactory.this.stackTraceStoragePath, OpsLoggerFactory.this.correlationIdSupplier, OpsLoggerFactory.this.errorHandler)).build();
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
