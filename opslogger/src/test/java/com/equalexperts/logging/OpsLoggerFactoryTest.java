@@ -1,8 +1,6 @@
 package com.equalexperts.logging;
 
 import com.equalexperts.logging.impl.*;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -36,18 +34,8 @@ public class OpsLoggerFactoryTest {
     @Rule
     public RestoreSystemStreamsFixture systemStreamsFixture =  new RestoreSystemStreamsFixture();
 
-    private ActiveRotationRegistry oldRegistry;
-
-    @Before
-    public void replaceActiveRotationRegistry() {
-        oldRegistry = ActiveRotationRegistry.getSingletonInstance();
-        ActiveRotationRegistry.setSingletonInstance(new ActiveRotationRegistry());
-    }
-
-    @After
-    public void restoreActiveRotationRegistry() {
-     ActiveRotationRegistry.setSingletonInstance(oldRegistry);
-    }
+    @Rule
+    public RestoreActiveRotationRegistryFixture registryFixture = new RestoreActiveRotationRegistryFixture();
 
     @Test
     public void build_shouldReturnACorrectlyConfiguredBasicOpsLoggerToSystemOut_whenNoConfigurationIsPerformed() throws Exception {
@@ -682,16 +670,6 @@ public class OpsLoggerFactoryTest {
         expected.printStackTrace(new PrintStream(expectedSystemErrContents));
 
         assertArrayEquals(expectedSystemErrContents.toByteArray(), actualSystemErrContents.toByteArray());
-    }
-
-    @Test
-    public void refreshFileHandles_shouldRefreshFileHandlesOnAllRegisteredDestinationsThatSupportActiveRotation() throws Exception {
-        ActiveRotationRegistry registry = spy(new ActiveRotationRegistry());
-        ActiveRotationRegistry.setSingletonInstance(registry);
-
-        OpsLoggerFactory.refreshFileHandles();
-
-        verify(registry).refreshFileHandles();
     }
 
     private void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {

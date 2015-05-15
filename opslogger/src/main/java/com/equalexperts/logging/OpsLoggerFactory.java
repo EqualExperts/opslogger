@@ -230,19 +230,6 @@ public class OpsLoggerFactory {
         }
     }
 
-    /**
-     * Refreshes file handles for all log files, providing active rotation support.
-     * This method should be called between rotating the original file, and manipulating (archiving, compressing, etc)
-     * it. The <code>postRotate</code> block in logRotate is an excellent example of when to use this method.
-     *
-     * This method will not return until all writing to old file handles has completed.
-     *
-     * Exposing this method via JMX or an administrative API some kind is the intended use case.
-     */
-    public static void refreshFileHandles() {
-        ActiveRotationRegistry.getSingletonInstance().refreshFileHandles();
-    }
-
     private void validateParametersForSetDestination(PrintStream destination) {
         Objects.requireNonNull(destination, "Destination must not be null");
     }
