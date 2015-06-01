@@ -12,16 +12,16 @@ import java.util.function.Supplier;
 
 public class BasicOpsLoggerFactory {
 
-    private final ConfigurationInfo configurationInfo;
+    private final InfrastructureFactory infrastructureFactory;
 
-    public BasicOpsLoggerFactory(ConfigurationInfo configurationInfo) {
-        this.configurationInfo = configurationInfo;
+    public BasicOpsLoggerFactory(InfrastructureFactory infrastructureFactory) {
+        this.infrastructureFactory = infrastructureFactory;
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        Supplier<Map<String,String>> correlationIdSupplier = configurationInfo.configureCorrelationIdSupplier();
-        Consumer<Throwable> errorHandler = configurationInfo.configureErrorHandler();
-        Destination<T> destination = configurationInfo.configureDestination();
+        Supplier<Map<String,String>> correlationIdSupplier = infrastructureFactory.configureCorrelationIdSupplier();
+        Consumer<Throwable> errorHandler = infrastructureFactory.configureErrorHandler();
+        Destination<T> destination = infrastructureFactory.configureDestination();
         return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
     }
 }

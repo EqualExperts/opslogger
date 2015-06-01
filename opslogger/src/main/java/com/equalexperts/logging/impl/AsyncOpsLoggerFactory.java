@@ -13,16 +13,16 @@ import java.util.function.Supplier;
 
 public class AsyncOpsLoggerFactory {
 
-    private final ConfigurationInfo configurationInfo;
+    private final InfrastructureFactory infrastructureFactory;
 
-    public AsyncOpsLoggerFactory(ConfigurationInfo configurationInfo) {
-        this.configurationInfo = configurationInfo;
+    public AsyncOpsLoggerFactory(InfrastructureFactory infrastructureFactory) {
+        this.infrastructureFactory = infrastructureFactory;
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        Supplier<Map<String,String>> correlationIdSupplier = configurationInfo.configureCorrelationIdSupplier();
-        Consumer<Throwable> errorHandler = configurationInfo.configureErrorHandler();
-        Destination<T> destination = configurationInfo.configureDestination();
+        Supplier<Map<String,String>> correlationIdSupplier = infrastructureFactory.configureCorrelationIdSupplier();
+        Consumer<Throwable> errorHandler = infrastructureFactory.configureErrorHandler();
+        Destination<T> destination = infrastructureFactory.configureDestination();
         return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
     }
 }

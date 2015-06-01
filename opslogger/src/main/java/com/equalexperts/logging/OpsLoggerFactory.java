@@ -142,11 +142,11 @@ public class OpsLoggerFactory {
      * @throws IOException if a problem occurs creating parent directories for log files and/or stack traces
      */
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        ConfigurationInfo configurationInfo = new ConfigurationInfo(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
+        InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
         if (async) {
-            return new AsyncOpsLoggerFactory(configurationInfo).build();
+            return new AsyncOpsLoggerFactory(infrastructureFactory).build();
         }
-        return new BasicOpsLoggerFactory(configurationInfo).build();
+        return new BasicOpsLoggerFactory(infrastructureFactory).build();
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
