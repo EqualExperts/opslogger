@@ -11,16 +11,18 @@ import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class AsyncOpsLoggerFactory extends AbstractOpsLoggerFactory {
+public class AsyncOpsLoggerFactory {
+
+    private final ConfigurationInfo configurationInfo;
 
     public AsyncOpsLoggerFactory(ConfigurationInfo configurationInfo) {
-        super(configurationInfo);
+        this.configurationInfo = configurationInfo;
     }
 
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        Supplier<Map<String,String>> correlationIdSupplier = configureCorrelationIdSupplier();
-        Consumer<Throwable> errorHandler = configureErrorHandler();
-        Destination<T> destination = configureDestination();
+        Supplier<Map<String,String>> correlationIdSupplier = configurationInfo.configureCorrelationIdSupplier();
+        Consumer<Throwable> errorHandler = configurationInfo.configureErrorHandler();
+        Destination<T> destination = configurationInfo.configureDestination();
         return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
     }
 }

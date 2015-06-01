@@ -44,7 +44,7 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
-        assertEquals(AbstractOpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
+        assertEquals(ConfigurationInfo.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
         OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
@@ -159,7 +159,7 @@ public class OpsLoggerFactoryTest {
 
         AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
         assertThat(logger.getDestination(), instanceOf(OutputStreamDestination.class));
-        assertEquals(AbstractOpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
+        assertEquals(ConfigurationInfo.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
         OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) logger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
@@ -177,7 +177,7 @@ public class OpsLoggerFactoryTest {
 
         AsyncOpsLogger<TestMessages> logger = (AsyncOpsLogger<TestMessages>) result;
         assertThat(logger.getDestination(), instanceOf(OutputStreamDestination.class));
-        assertEquals(AbstractOpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
+        assertEquals(ConfigurationInfo.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
         OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) logger.getDestination();
         assertSame(expectedPrintStream, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
@@ -419,7 +419,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
-        assertSame(AbstractOpsLoggerFactory.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
+        assertSame(ConfigurationInfo.DEFAULT_ERROR_HANDLER, basicLogger.getErrorHandler());
     }
 
     @Test
@@ -441,7 +441,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         BasicOpsLogger basicLogger = (BasicOpsLogger) logger;
-        assertSame(AbstractOpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
+        assertSame(ConfigurationInfo.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
     }
 
     @Test
@@ -465,7 +465,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         AsyncOpsLogger logger = (AsyncOpsLogger) result;
-        assertSame(AbstractOpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+        assertSame(ConfigurationInfo.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
     }
 
     @Test
@@ -489,7 +489,7 @@ public class OpsLoggerFactoryTest {
                 .build();
 
         AsyncOpsLogger logger = (AsyncOpsLogger) result;
-        assertSame(AbstractOpsLoggerFactory.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
+        assertSame(ConfigurationInfo.EMPTY_CORRELATION_ID_SUPPLIER, logger.getCorrelationIdSupplier());
     }
 
     @Test
@@ -664,7 +664,7 @@ public class OpsLoggerFactoryTest {
         System.setErr(new PrintStream(actualSystemErrContents));
         Throwable expected = new RuntimeException().fillInStackTrace();
 
-        AbstractOpsLoggerFactory.DEFAULT_ERROR_HANDLER.accept(expected);
+        ConfigurationInfo.DEFAULT_ERROR_HANDLER.accept(expected);
 
         ByteArrayOutputStream expectedSystemErrContents = new ByteArrayOutputStream();
         expected.printStackTrace(new PrintStream(expectedSystemErrContents));
@@ -674,13 +674,13 @@ public class OpsLoggerFactoryTest {
 
     private void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
-        assertEquals(AbstractOpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+        assertEquals(ConfigurationInfo.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
         assertThat(logger.getLock(), instanceOf(ReentrantLock.class));
     }
 
     private void ensureCorrectlyConfigured(AsyncOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
-        assertEquals(AbstractOpsLoggerFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
+        assertEquals(ConfigurationInfo.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
         assertThat(logger.getTransferQueue(), instanceOf(LinkedTransferQueue.class));
     }
 
