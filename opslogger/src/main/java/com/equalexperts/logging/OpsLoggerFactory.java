@@ -144,7 +144,7 @@ public class OpsLoggerFactory {
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
         if (async) {
-            return new AsyncOpsLoggerFactory(infrastructureFactory).build();
+            return new AsyncOpsLoggerFactory().build(infrastructureFactory);
         }
         return new BasicOpsLoggerFactory().build(infrastructureFactory);
     }
