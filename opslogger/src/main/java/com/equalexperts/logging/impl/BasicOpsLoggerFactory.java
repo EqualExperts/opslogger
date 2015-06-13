@@ -1,7 +1,6 @@
 package com.equalexperts.logging.impl;
 
 import com.equalexperts.logging.LogMessage;
-import com.equalexperts.logging.OpsLogger;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -12,13 +11,7 @@ import java.util.function.Supplier;
 
 public class BasicOpsLoggerFactory {
 
-    private final InfrastructureFactory infrastructureFactory;
-
-    public BasicOpsLoggerFactory(InfrastructureFactory infrastructureFactory) {
-        this.infrastructureFactory = infrastructureFactory;
-    }
-
-    public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+    public <T extends Enum<T> & LogMessage> BasicOpsLogger<T> build(InfrastructureFactory infrastructureFactory) throws IOException {
         Supplier<Map<String,String>> correlationIdSupplier = infrastructureFactory.configureCorrelationIdSupplier();
         Consumer<Throwable> errorHandler = infrastructureFactory.configureErrorHandler();
         Destination<T> destination = infrastructureFactory.configureDestination();

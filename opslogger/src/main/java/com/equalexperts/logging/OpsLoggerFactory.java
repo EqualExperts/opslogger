@@ -146,7 +146,7 @@ public class OpsLoggerFactory {
         if (async) {
             return new AsyncOpsLoggerFactory(infrastructureFactory).build();
         }
-        return new BasicOpsLoggerFactory(infrastructureFactory).build();
+        return new BasicOpsLoggerFactory().build(infrastructureFactory);
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
