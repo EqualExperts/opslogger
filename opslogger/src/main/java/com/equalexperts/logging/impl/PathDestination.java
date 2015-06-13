@@ -74,7 +74,12 @@ public class PathDestination<T extends Enum<T> & LogMessage> implements Destinat
         return provider;
     }
 
+    @Override
     public StackTraceProcessor getStackTraceProcessor() {
         return processor;
+    }
+
+    public ActiveRotationRegistry getActiveRotationRegistry() {
+        return registry;
     }
 }

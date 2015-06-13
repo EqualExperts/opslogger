@@ -8,4 +8,6 @@ public interface Destination<T extends Enum<T> & LogMessage> extends AutoCloseab
     void publish(LogicalLogRecord<T> record) throws Exception;
 
     void endBatch() throws Exception;
+
+    StackTraceProcessor getStackTraceProcessor();
 }
