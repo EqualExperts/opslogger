@@ -331,17 +331,33 @@ public class InfrastructureFactoryTest {
         InfrastructureFactory factory = new InfrastructureFactory(
                 Optional.of(logFile),
                 Optional.empty(),
-                Optional.of(false),
-                Optional.empty(),
+                SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM,
+                SAMPLE_STACK_TRACE_STORAGE_PATH,
                 SAMPLE_CORRELATION_ID_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         Destination<TestMessages> destination = factory.configureDestination();
         assertThat(destination, instanceOf(PathDestination.class));
 
-        PathDestination psd = (PathDestination) destination;
+        PathDestination<TestMessages> psd = (PathDestination<TestMessages>) destination;
         FileChannelProvider provider = psd.getProvider();
         assertSame(logFile, provider.getPath());
+    }
+
+    @Test
+    public void configureDestination_shouldRegisterTheCreatedDestinationWithTheRegistry_whenLoggingToAPath() throws Exception {
+        Path logFile = tempFiles.createTempFile(".log");
+
+        InfrastructureFactory factory = new InfrastructureFactory(
+                Optional.of(logFile),
+                Optional.empty(),
+                SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM,
+                SAMPLE_STACK_TRACE_STORAGE_PATH,
+                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_ERROR_HANDLER);
+
+        PathDestination<TestMessages> psd = (PathDestination<TestMessages>) factory.<TestMessages>configureDestination();
+
         assertSame(ActiveRotationRegistry.getSingletonInstance(), psd.getActiveRotationRegistry());
     }
 
