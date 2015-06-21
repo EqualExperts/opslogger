@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +50,10 @@ public class OpsLoggerFactoryTest {
     public void setup() throws Exception {
         factory.setBasicOpsLoggerFactory(basicOpsLoggerFactoryMock);
         factory.setAsyncOpsLoggerFactory(asyncOpsLoggerFactoryMock);
+
+        //new instances every time the mocks are called
+        when(basicOpsLoggerFactoryMock.build(Mockito.any())).thenAnswer(invocation -> createMockBasicOpsLogger());
+        when(asyncOpsLoggerFactoryMock.build(Mockito.any())).thenAnswer(invocation -> createMockAsyncOpsLogger());
     }
 
     @Test
@@ -200,6 +205,103 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
+    public void build_shouldReuseInstances_whenNoChangesHaveBeenMade() throws Exception {
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+
+        assertSame(first, second);
+    }
+
+    @Test
+    public void setDestination_shouldClearTheCachedInstance() throws Exception {
+        PrintStream destination = new PrintStream(new ByteArrayOutputStream());
+        factory.setDestination(destination);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setDestination(destination).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
+    public void setPath_shouldClearTheCachedInstance() throws Exception {
+        Path logFile = tempFiles.createTempFile(".log");
+        factory.setPath(logFile);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setPath(logFile).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
+    public void setStoreStackTracesInFilesystem_shouldClearTheCachedInstance() throws Exception {
+        factory.setStoreStackTracesInFilesystem(false);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setStoreStackTracesInFilesystem(false).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
+    public void setStackTraceStoragePath_shouldClearTheCachedInstance() throws Exception {
+        Path directory = tempFiles.createTempDirectory();
+        factory.setStackTraceStoragePath(directory);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setStackTraceStoragePath(directory).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
+    public void setErrorHandler_shouldClearTheCachedInstance() throws Exception {
+        Consumer<Throwable> errorHandler = t -> {};
+        factory.setErrorHandler(errorHandler);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setErrorHandler(errorHandler).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
+    public void setCorrelationIdSupplier_shouldClearTheCachedInstance() throws Exception {
+        Supplier<Map<String, String>> correlationIdSupplier = Collections::emptyMap;
+        factory.setCorrelationIdSupplier(correlationIdSupplier);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setCorrelationIdSupplier(correlationIdSupplier).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
+    public void setAsync_shouldClearTheCachedInstance() throws Exception {
+        factory.setAsync(false);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setAsync(false).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @Test
     public void setStoreStackTracesInFilesystem_shouldClearTheStackTraceStoragePath_givenFalse() throws Exception {
         Path originalStackTraceDestination = tempFiles.createTempDirectoryThatDoesNotExist();
 
@@ -214,7 +316,7 @@ public class OpsLoggerFactoryTest {
 
         assertNotEquals(originalStackTraceDestination, capturedFactory.getStackTraceStoragePath());
     }
-
+    
     @Test
     public void setStoreStackTracesInFileSystem_shouldWorkIfItIsCalledBeforeAPathIsSet() throws Exception {
         Path parent = tempFiles.createTempDirectoryThatDoesNotExist();

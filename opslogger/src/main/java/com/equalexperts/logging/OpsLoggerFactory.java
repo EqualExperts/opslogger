@@ -23,6 +23,8 @@ public class OpsLoggerFactory {
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
     private Optional<Supplier<Map<String,String>>> correlationIdSupplier = Optional.empty();
 
+    private Optional<OpsLogger<?>> cachedInstance = Optional.empty();
+
     private AsyncOpsLoggerFactory asyncOpsLoggerFactory = new AsyncOpsLoggerFactory();
     private BasicOpsLoggerFactory basicOpsLoggerFactory = new BasicOpsLoggerFactory();
 
@@ -33,6 +35,7 @@ public class OpsLoggerFactory {
      */
     public OpsLoggerFactory setDestination(PrintStream printStream) {
         validateParametersForSetDestination(printStream);
+        clearCachedInstance();
         loggerOutput = Optional.of(printStream);
         logfilePath = Optional.empty();
         return this;
@@ -46,6 +49,7 @@ public class OpsLoggerFactory {
      */
     public OpsLoggerFactory setPath(Path path) {
         validateParametersForSetPath(path);
+        clearCachedInstance();
         logfilePath = Optional.of(path).map(Path::toAbsolutePath);
         loggerOutput = Optional.empty();
         return this;
@@ -59,6 +63,7 @@ public class OpsLoggerFactory {
      * @return <code>this</code> for further configuration
      */
     public OpsLoggerFactory setStoreStackTracesInFilesystem(boolean store) {
+        clearCachedInstance();
         storeStackTracesInFilesystem = Optional.of(store);
         if (!store) {
             stackTraceStoragePath = Optional.empty();
@@ -76,6 +81,7 @@ public class OpsLoggerFactory {
      */
     public OpsLoggerFactory setStackTraceStoragePath(Path directory) {
         validateParametersForSetStackTraceStoragePath(directory);
+        clearCachedInstance();
         setStoreStackTracesInFilesystem(true);
         stackTraceStoragePath = Optional.of(directory);
         return this;
@@ -91,6 +97,7 @@ public class OpsLoggerFactory {
      * @return <code>this</code> for further configuration
      */
     public OpsLoggerFactory setErrorHandler(Consumer<Throwable> handler) {
+        clearCachedInstance();
         errorHandler = Optional.ofNullable(handler);
         return this;
     }
@@ -112,6 +119,7 @@ public class OpsLoggerFactory {
      * @return <code>this</code> for further configuration
      */
     public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
+        clearCachedInstance();
         this.correlationIdSupplier = Optional.ofNullable(supplier);
         return this;
     }
@@ -133,6 +141,7 @@ public class OpsLoggerFactory {
      * @return <code>this</code> for further configuration
      */
     public OpsLoggerFactory setAsync(boolean async) {
+        clearCachedInstance();
         this.async = async;
         return this;
     }
@@ -144,12 +153,24 @@ public class OpsLoggerFactory {
      * @return ready to use OpsLogger
      * @throws IOException if a problem occurs creating parent directories for log files and/or stack traces
      */
+    @SuppressWarnings("unchecked")
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+        if (!cachedInstance.isPresent()) {
+            cachedInstance = Optional.of(buildNewInstance());
+        }
+        return (OpsLogger<T>) cachedInstance.get();
+    }
+
+    private <T extends Enum<T> & LogMessage> OpsLogger<T> buildNewInstance() throws IOException {
         InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
         if (async) {
             return asyncOpsLoggerFactory.build(infrastructureFactory);
         }
         return basicOpsLoggerFactory.build(infrastructureFactory);
+    }
+
+    private void clearCachedInstance() {
+        cachedInstance = Optional.empty();
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
