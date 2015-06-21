@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.TempFileFixture;
 import org.junit.Rule;
 import org.junit.Test;
 

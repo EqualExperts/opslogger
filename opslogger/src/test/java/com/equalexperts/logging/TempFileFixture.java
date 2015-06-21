@@ -1,4 +1,4 @@
-package com.equalexperts.logging.impl;
+package com.equalexperts.logging;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -53,7 +53,7 @@ public class TempFileFixture implements TestRule {
      */
 
     @FunctionalInterface
-    private static interface StatementClosure {
+    private interface StatementClosure {
         void evaluate() throws Throwable;
     }
 

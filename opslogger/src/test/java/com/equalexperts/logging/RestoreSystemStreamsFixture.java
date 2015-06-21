@@ -1,4 +1,4 @@
-package com.equalexperts.logging.impl;
+package com.equalexperts.logging;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;

@@ -6,22 +6,13 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class OpsLoggerFactory {
-    static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
-    static final Supplier<Map<String, String>> EMPTY_CORRELATION_ID_SUPPLIER = Collections::emptyMap;
-
-    private static ActiveRotationRegistry registry = new ActiveRotationRegistry();
 
     private Optional<PrintStream> loggerOutput = Optional.empty();
     private Optional<Path> logfilePath = Optional.empty();
@@ -31,6 +22,9 @@ public class OpsLoggerFactory {
     private Optional<Path> stackTraceStoragePath = Optional.empty();
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
     private Optional<Supplier<Map<String,String>>> correlationIdSupplier = Optional.empty();
+
+    private AsyncOpsLoggerFactory asyncOpsLoggerFactory = new AsyncOpsLoggerFactory();
+    private BasicOpsLoggerFactory basicOpsLoggerFactory = new BasicOpsLoggerFactory();
 
     /**
      * The destination for the log strings. A typical value is System.out.
@@ -151,71 +145,11 @@ public class OpsLoggerFactory {
      * @throws IOException if a problem occurs creating parent directories for log files and/or stack traces
      */
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
-        Supplier<Map<String,String>> correlationIdSupplier = this.correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
-        Consumer<Throwable> errorHandler = this.errorHandler.orElse(DEFAULT_ERROR_HANDLER);
-        Destination<T> destination = configureDestination();
+        InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
         if (async) {
-            return new AsyncOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, errorHandler, new LinkedTransferQueue<>(), new AsyncExecutor(Executors.defaultThreadFactory()));
+            return asyncOpsLoggerFactory.build(infrastructureFactory);
         }
-        return new BasicOpsLogger<>(Clock.systemUTC(), correlationIdSupplier, destination, new ReentrantLock(), errorHandler);
-    }
-
-    /**
-     * Refreshes file handles for all log files, providing active rotation support.
-     * This method should be called between rotating the original file, and manipulating (archiving, compressing, etc)
-     * it. The <code>postRotate</code> block in logRotate is an excellent example of when to use this method.
-     *
-     * This method will not return until all writing to old file handles has completed.
-     *
-     * Exposing this method via JMX or an administrative API some kind is the intended use case.
-     */
-    public static void refreshFileHandles() {
-        registry.refreshFileHandles();
-    }
-
-    private <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
-        StackTraceProcessor stackTraceProcessor = configureStackTraceProcessor();
-        if (logfilePath.isPresent()) {
-            if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
-                Files.createDirectories(logfilePath.get().getParent());
-            }
-            FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
-            return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
-        }
-        return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
-    }
-
-    private StackTraceProcessor configureStackTraceProcessor() throws IOException {
-        Optional<Path> storagePath = determineStackTraceProcessorPath();
-        if (storagePath.isPresent()) {
-            if (!Files.isSymbolicLink(storagePath.get())) {
-                Files.createDirectories(storagePath.get());
-            }
-            return new FilesystemStackTraceProcessor(storagePath.get(), new ThrowableFingerprintCalculator());
-        }
-        return new SimpleStackTraceProcessor();
-    }
-
-    private Optional<Path> determineStackTraceProcessorPath() {
-        if (storeStackTracesInFilesystem.isPresent()) {
-            //storing stack traces in the filesystem has been explicitly configured
-
-            if (!storeStackTracesInFilesystem.get()) {
-                return Optional.empty(); //explicitly disabled
-            }
-
-            if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
-                throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
-            }
-
-            if (stackTraceStoragePath.isPresent()) {
-                //use the explicitly provided location
-                return stackTraceStoragePath;
-            }
-        }
-
-        //No explicit path provided. Store stack traces in the same directory as the log file, if one is specified.
-        return logfilePath.map(Path::getParent);
+        return basicOpsLoggerFactory.build(infrastructureFactory);
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
@@ -236,11 +170,15 @@ public class OpsLoggerFactory {
         }
     }
 
-    static ActiveRotationRegistry getRegistry() {
-        return registry;
+    //region test hooks for spying on internal factories
+
+    void setAsyncOpsLoggerFactory(AsyncOpsLoggerFactory asyncOpsLoggerFactory) {
+        this.asyncOpsLoggerFactory = asyncOpsLoggerFactory;
     }
 
-    static void setRegistry(ActiveRotationRegistry newRegistry) {
-        registry = newRegistry;
+    void setBasicOpsLoggerFactory(BasicOpsLoggerFactory basicOpsLoggerFactory) {
+        this.basicOpsLoggerFactory = basicOpsLoggerFactory;
     }
+
+    //endregion
 }

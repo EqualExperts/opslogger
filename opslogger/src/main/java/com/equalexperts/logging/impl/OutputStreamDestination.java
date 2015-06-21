@@ -48,6 +48,7 @@ public class OutputStreamDestination<T extends Enum<T> & LogMessage> implements 
         return output;
     }
 
+    @Override
     public StackTraceProcessor getStackTraceProcessor() {
         return stackTraceProcessor;
     }

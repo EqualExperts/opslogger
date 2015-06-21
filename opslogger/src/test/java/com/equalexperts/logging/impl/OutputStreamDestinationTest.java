@@ -1,6 +1,7 @@
 package com.equalexperts.logging.impl;
 
 import com.equalexperts.logging.LogMessage;
+import com.equalexperts.logging.RestoreSystemStreamsFixture;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -73,7 +74,7 @@ public class OutputStreamDestinationTest {
         assertEquals("", this.output.toString());
     }
 
-    private static enum TestMessages implements LogMessage {
+    private enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred");
 
         //region LogMessage implementation guts
