@@ -23,6 +23,9 @@ public class OpsLoggerFactory {
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
     private Optional<Supplier<Map<String,String>>> correlationIdSupplier = Optional.empty();
 
+    private AsyncOpsLoggerFactory asyncOpsLoggerFactory = new AsyncOpsLoggerFactory();
+    private BasicOpsLoggerFactory basicOpsLoggerFactory = new BasicOpsLoggerFactory();
+
     /**
      * The destination for the log strings. A typical value is System.out.
      * @param printStream destination
@@ -144,9 +147,9 @@ public class OpsLoggerFactory {
     public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
         InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
         if (async) {
-            return new AsyncOpsLoggerFactory().build(infrastructureFactory);
+            return asyncOpsLoggerFactory.build(infrastructureFactory);
         }
-        return new BasicOpsLoggerFactory().build(infrastructureFactory);
+        return basicOpsLoggerFactory.build(infrastructureFactory);
     }
 
     private void validateParametersForSetDestination(PrintStream destination) {
@@ -167,4 +170,23 @@ public class OpsLoggerFactory {
         }
     }
 
+    //region test hooks for spying on internal factories
+
+    AsyncOpsLoggerFactory getAsyncOpsLoggerFactory() {
+        return asyncOpsLoggerFactory;
+    }
+
+    void setAsyncOpsLoggerFactory(AsyncOpsLoggerFactory asyncOpsLoggerFactory) {
+        this.asyncOpsLoggerFactory = asyncOpsLoggerFactory;
+    }
+
+    BasicOpsLoggerFactory getBasicOpsLoggerFactory() {
+        return basicOpsLoggerFactory;
+    }
+
+    void setBasicOpsLoggerFactory(BasicOpsLoggerFactory basicOpsLoggerFactory) {
+        this.basicOpsLoggerFactory = basicOpsLoggerFactory;
+    }
+
+    //endregion
 }

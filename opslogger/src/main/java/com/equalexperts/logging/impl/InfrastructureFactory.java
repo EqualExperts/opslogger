@@ -88,4 +88,30 @@ public class InfrastructureFactory {
         //No explicit path provided. Store stack traces in the same directory as the log file, if one is specified.
         return logfilePath.map(Path::getParent);
     }
+
+    //region test hooks: allow tests to determine the values passed into the constructor
+    public Optional<Path> getLogfilePath() {
+        return logfilePath;
+    }
+
+    public Optional<PrintStream> getLoggerOutput() {
+        return loggerOutput;
+    }
+
+    public Optional<Boolean> getStoreStackTracesInFilesystem() {
+        return storeStackTracesInFilesystem;
+    }
+
+    public Optional<Path> getStackTraceStoragePath() {
+        return stackTraceStoragePath;
+    }
+
+    public Optional<Supplier<Map<String, String>>> getCorrelationIdSupplier() {
+        return correlationIdSupplier;
+    }
+
+    public Optional<Consumer<Throwable>> getErrorHandler() {
+        return errorHandler;
+    }
+    //endregion
 }
