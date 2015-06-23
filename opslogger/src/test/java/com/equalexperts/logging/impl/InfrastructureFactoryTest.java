@@ -206,6 +206,24 @@ public class InfrastructureFactoryTest {
     }
 
     @Test
+    public void configureDestination_shouldStoreStackTracesInTheSameDirectoryAsTheLogFile_whenLoggingToAPathAndStoringStackTracesHasBeenExplicitlyEnabledButNoLocationHasBeenProvided() throws Exception {
+        Path logFile = tempFiles.createTempFile(".log");
+        InfrastructureFactory factory = new InfrastructureFactory(
+                Optional.of(logFile),
+                Optional.empty(),
+                Optional.of(true),
+                Optional.empty(),
+                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_ERROR_HANDLER);
+
+        StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
+
+        assertThat(stackTraceProcessor, instanceOf(FilesystemStackTraceProcessor.class));
+        FilesystemStackTraceProcessor fs = (FilesystemStackTraceProcessor) stackTraceProcessor;
+        assertEquals(logFile.getParent(), fs.getDestination());
+    }
+
+    @Test
     public void configureDestination_shouldNotStoreStackTracesInTheFileSystem_whenLoggingToAStreamAndStoringStackTracesHasNotExplicitlyBeenConfigured() throws Exception {
         InfrastructureFactory factory = new InfrastructureFactory(
                 Optional.empty(),
