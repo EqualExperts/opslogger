@@ -75,13 +75,13 @@ public class InfrastructureFactory {
                 return Optional.empty(); //explicitly disabled
             }
 
-            if (!stackTraceStoragePath.isPresent() && !logfilePath.isPresent()) {
-                throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
+            if (stackTraceStoragePath.isPresent()) {
+                //use the explicitly provided location when one is set
+                return stackTraceStoragePath;
             }
 
-            if (stackTraceStoragePath.isPresent()) {
-                //use the explicitly provided location
-                return stackTraceStoragePath;
+            if (!logfilePath.isPresent()) {
+                throw new IllegalStateException("Cannot store stack traces in the filesystem without providing a path");
             }
         }
 
