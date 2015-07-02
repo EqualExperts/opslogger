@@ -1,14 +1,13 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.OpsLogger;
 
 import java.time.Clock;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /** OpsLogger which writes each entry directly to the Destination */
 
@@ -17,11 +16,11 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
     private final Lock lock;
-    private final Supplier<Map<String,String>> correlationIdSupplier;
+    private final ContextSupplier contextSupplier;
 
-    public BasicOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
+    public BasicOpsLogger(Clock clock, ContextSupplier contextSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
         this.clock = clock;
-        this.correlationIdSupplier = correlationIdSupplier;
+        this.contextSupplier = contextSupplier;
         this.destination = destination;
         this.lock = lock;
         this.errorHandler = errorHandler;
@@ -53,7 +52,7 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     }
 
     private LogicalLogRecord<T> constructLogRecord(T message, Optional<Throwable> o, Object... details) {
-        return new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, o, details);
+        return new LogicalLogRecord<>(clock.instant(), contextSupplier.getMessageContext(), message, o, details);
     }
 
     private void publish(LogicalLogRecord<T> record) throws Exception {
@@ -78,8 +77,8 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         return destination;
     }
 
-    public Supplier<Map<String, String>> getCorrelationIdSupplier() {
-        return correlationIdSupplier;
+    public ContextSupplier getContextSupplier() {
+        return contextSupplier;
     }
 
     public Lock getLock() {

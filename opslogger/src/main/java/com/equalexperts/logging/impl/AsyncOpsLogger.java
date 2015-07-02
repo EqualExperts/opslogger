@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.OpsLogger;
 
@@ -28,13 +29,13 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     private final Future<?> processingThread;
     private final LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue;
     private final Clock clock;
-    private final Supplier<Map<String, String>> correlationIdSupplier;
+    private final ContextSupplier contextSupplier;
     private final Destination<T> destination;
     private final Consumer<Throwable> errorHandler;
 
-    public AsyncOpsLogger(Clock clock, Supplier<Map<String, String>> correlationIdSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
+    public AsyncOpsLogger(Clock clock, ContextSupplier contextSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
         this.clock = clock;
-        this.correlationIdSupplier = correlationIdSupplier;
+        this.contextSupplier = contextSupplier;
         this.destination = destination;
         this.errorHandler = errorHandler;
         this.transferQueue = transferQueue;
@@ -44,7 +45,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     @Override
     public void log(T message, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, Optional.empty(), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), contextSupplier.getMessageContext(), message, Optional.empty(), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -54,7 +55,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     @Override
     public void log(T message, Throwable cause, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), correlationIdSupplier.get(), message, Optional.of(cause), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), contextSupplier.getMessageContext(), message, Optional.of(cause), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -124,8 +125,8 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         return destination;
     }
 
-    public Supplier<Map<String, String>> getCorrelationIdSupplier() {
-        return correlationIdSupplier;
+    public ContextSupplier getContextSupplier() {
+        return contextSupplier;
     }
 
     public Consumer<Throwable> getErrorHandler() {

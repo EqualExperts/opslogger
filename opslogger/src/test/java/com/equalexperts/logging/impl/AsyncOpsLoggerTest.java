@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.OpsLogger;
 import org.hamcrest.BaseMatcher;
@@ -19,7 +20,6 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static java.util.Collections.emptyMap;
@@ -36,7 +36,7 @@ public class AsyncOpsLoggerTest {
     public static final int EXPECTED_MAX_BATCH_SIZE = AsyncOpsLogger.MAX_BATCH_SIZE;
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
     @Mock private Destination<TestMessages> destination;
-    @Mock private Supplier<Map<String,String>> correlationIdSupplier;
+    @Mock private ContextSupplier contextSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Mock private LinkedTransferQueue<Optional<LogicalLogRecord<TestMessages>>> transferQueue;
     @Mock private AsyncExecutor executor;
@@ -53,7 +53,7 @@ public class AsyncOpsLoggerTest {
 
         when(executor.execute(runnableCaptor.capture())).thenAnswer((i) -> processingThread);
 
-        logger = new AsyncOpsLogger<>(fixedClock, correlationIdSupplier, destination, exceptionConsumer, transferQueue, executor);
+        logger = new AsyncOpsLogger<>(fixedClock, contextSupplier, destination, exceptionConsumer, transferQueue, executor);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class AsyncOpsLoggerTest {
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstance() throws Exception {
         Map<String,String> expectedCorrelationIds = generateCorrelationIds();
-        when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
+        when(contextSupplier.getMessageContext()).thenReturn(expectedCorrelationIds);
         doNothing().when(transferQueue).put(captor.capture());
 
         logger.log(TestMessages.Bar, 64, "Hello, World");
@@ -91,7 +91,7 @@ public class AsyncOpsLoggerTest {
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIds() throws Exception {
         Error expectedThrowable = new Error();
-        when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
+        when(contextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
         logger.log(TestMessages.Foo);
 
@@ -112,7 +112,7 @@ public class AsyncOpsLoggerTest {
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowable() throws Exception {
         Map<String, String> expectedCorrelationIds = generateCorrelationIds();
-        when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
+        when(contextSupplier.getMessageContext()).thenReturn(expectedCorrelationIds);
 
         Throwable expectedCause = new RuntimeException();
 
@@ -142,7 +142,7 @@ public class AsyncOpsLoggerTest {
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsAndAThrowable() throws Exception {
         Error expectedThrowable = new Error();
-        when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
+        when(contextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
         logger.log(TestMessages.Foo, new RuntimeException());
 
@@ -395,7 +395,7 @@ public class AsyncOpsLoggerTest {
         };
     }
 
-    private static enum TestMessages implements LogMessage {
+    private enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event occurred"),
         Bar("CODE-Bar", "An event with %d %s messages");
 

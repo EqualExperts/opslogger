@@ -21,7 +21,7 @@ public class OpsLoggerFactory {
     private Optional<Boolean> storeStackTracesInFilesystem = Optional.empty();
     private Optional<Path> stackTraceStoragePath = Optional.empty();
     private Optional<Consumer<Throwable>> errorHandler = Optional.empty();
-    private Optional<Supplier<Map<String,String>>> correlationIdSupplier = Optional.empty();
+    private Optional<ContextSupplier> contextSupplier = Optional.empty();
 
     private Optional<OpsLogger<?>> cachedInstance = Optional.empty();
 
@@ -120,7 +120,7 @@ public class OpsLoggerFactory {
      */
     public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
         clearCachedInstance();
-        this.correlationIdSupplier = Optional.ofNullable(supplier);
+        this.contextSupplier = Optional.ofNullable(supplier::get);
         return this;
     }
 
@@ -162,7 +162,7 @@ public class OpsLoggerFactory {
     }
 
     private <T extends Enum<T> & LogMessage> OpsLogger<T> buildNewInstance() throws IOException {
-        InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, correlationIdSupplier, errorHandler);
+        InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, contextSupplier, errorHandler);
         if (async) {
             return asyncOpsLoggerFactory.build(infrastructureFactory);
         }

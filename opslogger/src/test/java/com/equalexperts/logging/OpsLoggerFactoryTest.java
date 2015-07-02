@@ -67,7 +67,7 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
-        assertEquals(InfrastructureFactory.EMPTY_CORRELATION_ID_SUPPLIER, basicLogger.getCorrelationIdSupplier());
+        assertEquals(InfrastructureFactory.EMPTY_CONTEXT_SUPPLIER, basicLogger.getContextSupplier());
         OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
@@ -176,16 +176,23 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void build_shouldPassTheProvidedCorrelationIdSupplierToTheInternalFactory() throws Exception {
-        Supplier<Map<String, String>> expectedSupplier = HashMap::new;
+    public void build_shouldConvertTheProvidedCorrelationIdSupplierIntoAContextSupplierAndPassItToTheInternalFactory() throws Exception {
+        HashMap<String, String> expectedContext = new HashMap<>();
+
+        @SuppressWarnings("unchecked")
+        Supplier<Map<String, String>> mockSupplier = (Supplier<Map<String, String>>) mock(Supplier.class);
+        when(mockSupplier.get()).thenReturn(expectedContext);
 
         factory
-            .setCorrelationIdSupplier(expectedSupplier)
+            .setCorrelationIdSupplier(mockSupplier)
             .build();
 
         InfrastructureFactory capturedFactory = captureProvidedInfrastructureFactory();
 
-        assertSame(expectedSupplier, capturedFactory.getCorrelationIdSupplier().get());
+        ContextSupplier contextSupplier = capturedFactory.getContextSupplier().get();
+        Map<String, String> actualContext = contextSupplier.getMessageContext();
+        assertSame(expectedContext, actualContext);
+        verify(mockSupplier).get();
     }
 
     @SuppressWarnings("AssertEqualsBetweenInconvertibleTypes") //empty optional isn't typed
@@ -201,7 +208,7 @@ public class OpsLoggerFactoryTest {
         assertEquals(Optional.empty(), capturedFactory.getStoreStackTracesInFilesystem());
         assertEquals(Optional.empty(), capturedFactory.getStackTraceStoragePath());
         assertEquals(Optional.empty(), capturedFactory.getErrorHandler());
-        assertEquals(Optional.empty(), capturedFactory.getCorrelationIdSupplier());
+        assertEquals(Optional.empty(), capturedFactory.getContextSupplier());
     }
 
     @Test
@@ -493,4 +500,5 @@ public class OpsLoggerFactoryTest {
         verify(asyncOpsLoggerFactoryMock, Mockito.atMost(1)).build(captor.capture());
         return captor.getValue();
     }
+
 }

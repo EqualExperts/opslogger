@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 
 import java.io.IOException;
@@ -7,26 +8,24 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Constructs the various non-trivial dependencies that OpsLogger implementations need.
  */
 public class InfrastructureFactory {
     public static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
-    public static final Supplier<Map<String, String>> EMPTY_CORRELATION_ID_SUPPLIER = Collections::emptyMap;
+    public static final ContextSupplier EMPTY_CONTEXT_SUPPLIER = Collections::emptyMap;
 
     private final Optional<Path> logfilePath;
     private final Optional<PrintStream> loggerOutput;
     private final Optional<Boolean> storeStackTracesInFilesystem;
     private final Optional<Path> stackTraceStoragePath;
-    private final Optional<Supplier<Map<String, String>>> correlationIdSupplier;
+    private final Optional<ContextSupplier> correlationIdSupplier;
     private final Optional<Consumer<Throwable>> errorHandler;
 
-    public InfrastructureFactory(Optional<Path> logfilePath, Optional<PrintStream> loggerOutput, Optional<Boolean> storeStackTracesInFilesystem, Optional<Path> stackTraceStoragePath, Optional<Supplier<Map<String, String>>> correlationIdSupplier, Optional<Consumer<Throwable>> errorHandler) {
+    public InfrastructureFactory(Optional<Path> logfilePath, Optional<PrintStream> loggerOutput, Optional<Boolean> storeStackTracesInFilesystem, Optional<Path> stackTraceStoragePath, Optional<ContextSupplier> correlationIdSupplier, Optional<Consumer<Throwable>> errorHandler) {
         this.logfilePath = logfilePath;
         this.loggerOutput = loggerOutput;
         this.storeStackTracesInFilesystem = storeStackTracesInFilesystem;
@@ -52,8 +51,8 @@ public class InfrastructureFactory {
         return errorHandler.orElse(DEFAULT_ERROR_HANDLER);
     }
 
-    public Supplier<Map<String, String>> configureCorrelationIdSupplier() {
-        return correlationIdSupplier.orElse(EMPTY_CORRELATION_ID_SUPPLIER);
+    public ContextSupplier configureContextSupplier() {
+        return correlationIdSupplier.orElse(EMPTY_CONTEXT_SUPPLIER);
     }
 
     private StackTraceProcessor configureStackTraceProcessor() throws IOException {
@@ -106,7 +105,7 @@ public class InfrastructureFactory {
         return stackTraceStoragePath;
     }
 
-    public Optional<Supplier<Map<String, String>>> getCorrelationIdSupplier() {
+    public Optional<ContextSupplier> getContextSupplier() {
         return correlationIdSupplier;
     }
 

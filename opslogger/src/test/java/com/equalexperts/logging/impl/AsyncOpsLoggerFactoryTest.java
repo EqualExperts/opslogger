@@ -1,6 +1,7 @@
 package com.equalexperts.logging.impl;
 
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,9 +9,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.time.Clock;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -19,7 +18,7 @@ import static org.mockito.Mockito.*;
 public class AsyncOpsLoggerFactoryTest {
     private OutputStreamDestination<TestMessages> expectedDestination = new OutputStreamDestination<>(System.out, new SimpleStackTraceProcessor());
     private Consumer<Throwable> expectedErrorHandler = t -> {};
-    private Supplier<Map<String, String>> expectedCorrelationIdSupplier = HashMap::new;
+    private ContextSupplier expectedContextSupplier = HashMap::new;
 
     private InfrastructureFactory infrastructure = mock(InfrastructureFactory.class);
     private AsyncExecutor mockAsyncExecutor = mock(AsyncExecutor.class);
@@ -30,7 +29,7 @@ public class AsyncOpsLoggerFactoryTest {
     public void setup() throws IOException {
         factory.setAsyncExecutor(mockAsyncExecutor);
         when(infrastructure.<TestMessages>configureDestination()).thenReturn(expectedDestination);
-        when(infrastructure.configureCorrelationIdSupplier()).thenReturn(expectedCorrelationIdSupplier);
+        when(infrastructure.configureContextSupplier()).thenReturn(expectedContextSupplier);
         when(infrastructure.configureErrorHandler()).thenReturn(expectedErrorHandler);
     }
 
@@ -40,7 +39,7 @@ public class AsyncOpsLoggerFactoryTest {
         AsyncOpsLogger<TestMessages> result = factory.build(infrastructure);
 
         assertEquals(Clock.systemUTC(), result.getClock());
-        assertSame(expectedCorrelationIdSupplier, result.getCorrelationIdSupplier());
+        assertSame(expectedContextSupplier, result.getContextSupplier());
         assertSame(expectedDestination, result.getDestination());
         assertSame(expectedErrorHandler, result.getErrorHandler());
         assertNotNull(result.getTransferQueue());

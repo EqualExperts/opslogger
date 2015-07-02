@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.OpsLogger;
 import org.junit.Before;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 public class BasicOpsLoggerTest {
     private Clock fixedClock = Clock.fixed(Instant.parse("2014-02-01T14:57:12.500Z"), ZoneOffset.UTC);
     @Mock private Destination<TestMessages> destination;
-    @Mock private Supplier<Map<String,String>> correlationIdSupplier;
+    @Mock private ContextSupplier contextSupplier;
     @Mock private Consumer<Throwable> exceptionConsumer;
     @Mock private Lock lock;
     @Captor private ArgumentCaptor<LogicalLogRecord<TestMessages>> captor;
@@ -33,20 +33,20 @@ public class BasicOpsLoggerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        logger = new BasicOpsLogger<>(fixedClock, correlationIdSupplier, destination, lock, exceptionConsumer);
+        logger = new BasicOpsLogger<>(fixedClock, contextSupplier, destination, lock, exceptionConsumer);
     }
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
         Map<String,String> expectedCorrelationIds = generateCorrelationIds();
-        when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
+        when(contextSupplier.getMessageContext()).thenReturn(expectedCorrelationIds);
         doNothing().when(destination).publish(captor.capture());
 
         logger.log(TestMessages.Bar, 64, "Hello, World");
 
         verify(destination, times(1)).publish(any());
-        verify(correlationIdSupplier).get();
-        verifyNoMoreInteractions(correlationIdSupplier);
+        verify(contextSupplier).getMessageContext();
+        verifyNoMoreInteractions(contextSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
@@ -86,7 +86,7 @@ public class BasicOpsLoggerTest {
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIds() throws Exception {
         Error expectedThrowable = new Error();
-        when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
+        when(contextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
         logger.log(TestMessages.Foo);
 
@@ -95,7 +95,7 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldNotAcquireALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIds() throws Exception {
-        when(correlationIdSupplier.get()).thenThrow(new RuntimeException());
+        when(contextSupplier.getMessageContext()).thenThrow(new RuntimeException());
 
         logger.log(TestMessages.Foo);
 
@@ -129,15 +129,15 @@ public class BasicOpsLoggerTest {
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
         Map<String, String> expectedCorrelationIds = generateCorrelationIds();
-        when(correlationIdSupplier.get()).thenReturn(expectedCorrelationIds);
+        when(contextSupplier.getMessageContext()).thenReturn(expectedCorrelationIds);
         doNothing().when(destination).publish(captor.capture());
         RuntimeException expectedException = new RuntimeException("expected");
 
         logger.log(TestMessages.Bar, expectedException, 64, "Hello, World");
 
         verify(destination, times(1)).publish(any());
-        verify(correlationIdSupplier).get();
-        verifyNoMoreInteractions(correlationIdSupplier);
+        verify(contextSupplier).getMessageContext();
+        verifyNoMoreInteractions(contextSupplier);
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
@@ -201,7 +201,7 @@ public class BasicOpsLoggerTest {
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
         Error expectedThrowable = new Error();
-        when(correlationIdSupplier.get()).thenThrow(expectedThrowable);
+        when(contextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
         logger.log(TestMessages.Foo, new RuntimeException());
 
@@ -210,7 +210,7 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
-        when(correlationIdSupplier.get()).thenThrow(new RuntimeException());
+        when(contextSupplier.getMessageContext()).thenThrow(new RuntimeException());
 
         logger.log(TestMessages.Foo, new Exception());
 
@@ -231,7 +231,7 @@ public class BasicOpsLoggerTest {
         return result;
     }
 
-    private static enum TestMessages implements LogMessage {
+    private enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred"),
         Bar("CODE-Bar", "An event with %d %s messages");
 

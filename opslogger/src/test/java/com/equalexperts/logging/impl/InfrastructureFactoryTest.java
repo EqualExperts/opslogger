@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.ContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.RestoreSystemStreamsFixture;
 import com.equalexperts.logging.TempFileFixture;
@@ -15,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.*;
@@ -36,12 +36,12 @@ public class InfrastructureFactoryTest {
     private static final Optional<PrintStream> SAMPLE_LOGGER_OUTPUT = Optional.of(System.out);
     private static final Optional<Boolean> SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM = Optional.of(false);
     private static final Optional<Path> SAMPLE_STACK_TRACE_STORAGE_PATH = Optional.empty();
-    private static final Optional<Supplier<Map<String, String>>> SAMPLE_CORRELATION_ID_SUPPLIER = Optional.empty();
+    private static final Optional<ContextSupplier> SAMPLE_CONTEXT_SUPPLIER = Optional.empty();
     private static final Optional<Consumer<Throwable>> SAMPLE_ERROR_HANDLER = Optional.of(e -> {});
 
     @Test
     public void emptyCorrelationIdSupplier_shouldAlwaysProduceAnEmptyMap() throws Exception {
-        Map<String, String> defaultCorrelationIds = InfrastructureFactory.EMPTY_CORRELATION_ID_SUPPLIER.get();
+        Map<String, String> defaultCorrelationIds = InfrastructureFactory.EMPTY_CONTEXT_SUPPLIER.getMessageContext();
         assertNotNull(defaultCorrelationIds);
         assertEquals(0, defaultCorrelationIds.size());
     }
@@ -57,7 +57,7 @@ public class InfrastructureFactoryTest {
 
     @Test
     public void configureCorrelationIdSupplier_shouldReturnTheProvidedSupplier_whenOneIsProvided() throws Exception {
-        Supplier<Map<String, String>> expectedSupplier = HashMap::new; //don't use Collections.emptyMap, because that's the default
+        ContextSupplier expectedSupplier = HashMap::new; //don't use Collections.emptyMap, because that's the default
 
         InfrastructureFactory factory = new InfrastructureFactory(
                 SAMPLE_LOGFILE_PATH,
@@ -67,7 +67,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(expectedSupplier),
                 SAMPLE_ERROR_HANDLER);
 
-        Supplier<Map<String, String>> actualSupplier = factory.configureCorrelationIdSupplier();
+        ContextSupplier actualSupplier = factory.configureContextSupplier();
 
         assertSame(expectedSupplier, actualSupplier);
     }
@@ -82,9 +82,9 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 SAMPLE_ERROR_HANDLER);
 
-        Supplier<Map<String, String>> actualSupplier = factory.configureCorrelationIdSupplier();
+        ContextSupplier actualSupplier = factory.configureContextSupplier();
 
-        assertSame(InfrastructureFactory.EMPTY_CORRELATION_ID_SUPPLIER, actualSupplier);
+        assertSame(InfrastructureFactory.EMPTY_CONTEXT_SUPPLIER, actualSupplier);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class InfrastructureFactoryTest {
                 SAMPLE_LOGGER_OUTPUT,
                 SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM,
                 SAMPLE_STACK_TRACE_STORAGE_PATH,
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 Optional.of(expectedErrorHandler));
 
         Consumer<Throwable> actualErrorHandler = factory.configureErrorHandler();
@@ -111,7 +111,7 @@ public class InfrastructureFactoryTest {
                 SAMPLE_LOGGER_OUTPUT,
                 SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM,
                 SAMPLE_STACK_TRACE_STORAGE_PATH,
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 Optional.empty());
 
         Consumer<Throwable> actualErrorHandler = factory.configureErrorHandler();
@@ -126,7 +126,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -141,7 +141,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(System.err),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -158,7 +158,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(true), //will always be true when a path is provided
                 Optional.of(expectedStackTraceStoragePath),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -177,7 +177,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(System.err),
                 Optional.of(true), //will always be true when a path is provided
                 Optional.of(expectedStackTraceStoragePath),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -195,7 +195,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -213,7 +213,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(true),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -230,7 +230,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(System.err),
                 Optional.empty(),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         StackTraceProcessor stackTraceProcessor = factory.<TestMessages>configureDestination().getStackTraceProcessor();
@@ -244,7 +244,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(System.err),
                 Optional.of(true),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         try {
@@ -264,7 +264,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(System.err),
                 Optional.of(true),
                 Optional.of(storagePath),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         factory.configureDestination();
@@ -284,7 +284,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(System.err),
                 Optional.of(true),
                 Optional.of(symLinkDestination),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         factory.configureDestination(); //a FileAlreadyExistsException will be thrown if the code doesn't do the right thing
@@ -297,7 +297,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         Destination<TestMessages> destination = factory.configureDestination();
@@ -315,7 +315,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(ps),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         Destination<TestMessages> destination = factory.configureDestination();
@@ -333,7 +333,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         Destination<TestMessages> destination = factory.configureDestination();
@@ -351,7 +351,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM,
                 SAMPLE_STACK_TRACE_STORAGE_PATH,
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         Destination<TestMessages> destination = factory.configureDestination();
@@ -371,7 +371,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM,
                 SAMPLE_STACK_TRACE_STORAGE_PATH,
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         PathDestination<TestMessages> psd = (PathDestination<TestMessages>) factory.<TestMessages>configureDestination();
@@ -390,7 +390,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         factory.configureDestination();
@@ -410,7 +410,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 Optional.of(false),
                 Optional.empty(),
-                SAMPLE_CORRELATION_ID_SUPPLIER,
+                SAMPLE_CONTEXT_SUPPLIER,
                 SAMPLE_ERROR_HANDLER);
 
         factory.configureDestination(); //a FileAlreadyExistsException will be thrown if the code doesn't do the right thing
