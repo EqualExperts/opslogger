@@ -50,3 +50,8 @@ bintray {
 }
 
 bintrayUpload.dependsOn createPom
+
+install {
+    description = 'Install artifacts into the local maven repository.'
+    group = "Maven"
+}
