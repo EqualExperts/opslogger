@@ -1,5 +1,8 @@
 package com.equalexperts.logging;
 
+/**
+ * To be implemented by enumerations of log messages in applications.
+ */
 public interface LogMessage {
     /**
      * @return unique code for this particular log message.  Example "QA001"
