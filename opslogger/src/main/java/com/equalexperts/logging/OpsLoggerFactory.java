@@ -103,9 +103,21 @@ public class OpsLoggerFactory {
     }
 
     /**
+     * <p>Deprecated. Please use <code>setContextSupplier</code> instead.</p>
+     * <p>This method will be removed in a future release.</p>
+     *
+     * @param supplier the map supplier.  (for example: <code>()-&gt;map</code>)
+     * @deprecated replaced by <code>OpsLoggerFactory.setContextSupplier(ContextSupplier)</code>.
+     * @return <code>this</code> for further configuration
+     */
+    public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
+        return setContextSupplier(supplier != null ? supplier::get : null);
+    }
+
+    /**
      * <p>Set the supplier of the map to print for each log entry.</p>
      * <p>The correlation id map is printed out as part of the message logged:</p>
-     * <p>Example code: (where <code>setCorrelationIdSupplier(()-&gt;map)</code> has been invoked in the OpsLoggerFactory
+     * <p>Example code: (where <code>setContextSupplier(()-&gt;map)</code> has been invoked in the OpsLoggerFactory
      * invocation, and Failure has the message code "FOO-012345")</p>
      * <pre>
      * map.put("A", "113");
@@ -115,12 +127,12 @@ public class OpsLoggerFactory {
      * <pre>
      * 2014-10-22T10:59:19.891Z,A=113,FOO-012345,Did not do anything. java.lang.RuntimeException: Argh (file:///tmp/stacktraces/stacktrace_7rSxGtIroLrznTg8bt1BrQ.txt)
      * </pre>
-     * @param supplier the map supplier.  (for example: <code>()-&gt;map</code>)
+     * @param supplier the context supplier.  (for example: <code>()-&gt;map</code>)
      * @return <code>this</code> for further configuration
      */
-    public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
+    public OpsLoggerFactory setContextSupplier(ContextSupplier supplier) {
         clearCachedInstance();
-        this.contextSupplier = Optional.ofNullable(supplier::get);
+        this.contextSupplier = Optional.ofNullable(supplier);
         return this;
     }
 

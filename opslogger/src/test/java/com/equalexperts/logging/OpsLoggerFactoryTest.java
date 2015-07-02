@@ -16,10 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -175,8 +172,10 @@ public class OpsLoggerFactoryTest {
         assertSame(errorHandler, capturedFactory.getErrorHandler().get());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void build_shouldConvertTheProvidedCorrelationIdSupplierIntoAContextSupplierAndPassItToTheInternalFactory() throws Exception {
+        ContextSupplier unExpectedSupplier = TreeMap::new;
         HashMap<String, String> expectedContext = new HashMap<>();
 
         @SuppressWarnings("unchecked")
@@ -184,6 +183,7 @@ public class OpsLoggerFactoryTest {
         when(mockSupplier.get()).thenReturn(expectedContext);
 
         factory
+            .setContextSupplier(unExpectedSupplier)
             .setCorrelationIdSupplier(mockSupplier)
             .build();
 
@@ -193,6 +193,22 @@ public class OpsLoggerFactoryTest {
         Map<String, String> actualContext = contextSupplier.getMessageContext();
         assertSame(expectedContext, actualContext);
         verify(mockSupplier).get();
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void build_shouldPassTheProvidedContextSupplierToTheInternalFactory() throws Exception {
+        Supplier<Map<String,String>> oldSupplier = TreeMap::new;
+        ContextSupplier expectedSupplier = HashMap::new;
+
+        factory
+            .setCorrelationIdSupplier(oldSupplier)
+            .setContextSupplier(expectedSupplier)
+            .build();
+
+        InfrastructureFactory capturedFactory = captureProvidedInfrastructureFactory();
+
+        assertSame(expectedSupplier, capturedFactory.getContextSupplier().get());
     }
 
     @SuppressWarnings("AssertEqualsBetweenInconvertibleTypes") //empty optional isn't typed
@@ -283,6 +299,7 @@ public class OpsLoggerFactoryTest {
         assertNotSame(first, third);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void setCorrelationIdSupplier_shouldClearTheCachedInstance() throws Exception {
         Supplier<Map<String, String>> correlationIdSupplier = Collections::emptyMap;
@@ -291,6 +308,29 @@ public class OpsLoggerFactoryTest {
         OpsLogger<TestMessages> first = factory.build();
         OpsLogger<TestMessages> second = factory.build();
         OpsLogger<TestMessages> third = factory.setCorrelationIdSupplier(correlationIdSupplier).build(); //even with the same argument
+
+        assertSame(first, second);
+        assertNotSame(first, third);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void setCorrelationIdSupplier_shouldWorkAsExpected_givenNull() throws Exception {
+        factory.setCorrelationIdSupplier(null).build();
+
+        InfrastructureFactory capturedFactory = captureProvidedInfrastructureFactory();
+
+        assertFalse("should pass an empty optional", capturedFactory.getContextSupplier().isPresent());
+    }
+
+    @Test
+    public void setContextSupplier_shouldClearTheCachedInstance() throws Exception {
+        ContextSupplier contextSupplier = Collections::emptyMap;
+        factory.setContextSupplier(contextSupplier);
+
+        OpsLogger<TestMessages> first = factory.build();
+        OpsLogger<TestMessages> second = factory.build();
+        OpsLogger<TestMessages> third = factory.setContextSupplier(contextSupplier).build(); //even with the same argument
 
         assertSame(first, second);
         assertNotSame(first, third);
