@@ -5,6 +5,7 @@ import com.equalexperts.logging.LogMessage;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -34,17 +35,21 @@ public class InfrastructureFactory {
         this.errorHandler = errorHandler;
     }
 
-    public <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws IOException {
-        StackTraceProcessor stackTraceProcessor = this.configureStackTraceProcessor();
-        if (logfilePath.isPresent()) {
-            if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
-                Files.createDirectories(logfilePath.get().getParent());
+    public <T extends Enum<T> & LogMessage> Destination<T> configureDestination() throws UncheckedIOException {
+        try {
+            StackTraceProcessor stackTraceProcessor = this.configureStackTraceProcessor();
+            if (logfilePath.isPresent()) {
+                if (!Files.isSymbolicLink(logfilePath.get().getParent())) {
+                    Files.createDirectories(logfilePath.get().getParent());
+                }
+                FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
+                ActiveRotationRegistry registry = ActiveRotationRegistry.getSingletonInstance();
+                return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
             }
-            FileChannelProvider provider = new FileChannelProvider(logfilePath.get());
-            ActiveRotationRegistry registry = ActiveRotationRegistry.getSingletonInstance();
-            return registry.add(new PathDestination<>(provider, stackTraceProcessor, registry));
+            return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        return new OutputStreamDestination<>(loggerOutput.orElse(System.out), stackTraceProcessor);
     }
 
     public Consumer<Throwable> configureErrorHandler() {

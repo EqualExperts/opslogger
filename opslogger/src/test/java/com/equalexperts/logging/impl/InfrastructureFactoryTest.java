@@ -8,7 +8,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -414,6 +416,27 @@ public class InfrastructureFactoryTest {
                 SAMPLE_ERROR_HANDLER);
 
         factory.configureDestination(); //a FileAlreadyExistsException will be thrown if the code doesn't do the right thing
+    }
+
+    @Test
+    public void configureDestination_shouldThrowAnUncheckedIOException_givenAProblemCreatingDirectories() throws Exception {
+        Path invalidParent = tempFiles.createTempFile(".log");
+        Path logFile = invalidParent.resolve("foo.log");
+
+        InfrastructureFactory factory = new InfrastructureFactory(
+                Optional.of(logFile),
+                Optional.empty(),
+                Optional.of(false),
+                Optional.empty(),
+                SAMPLE_CONTEXT_SUPPLIER,
+                SAMPLE_ERROR_HANDLER);
+
+        try {
+            factory.configureDestination();
+            fail("expected an UncheckedUIException");
+        } catch (UncheckedIOException e) {
+            assertThat(e.getCause(), instanceOf(IOException.class));
+        }
     }
 
     private enum TestMessages implements LogMessage {
