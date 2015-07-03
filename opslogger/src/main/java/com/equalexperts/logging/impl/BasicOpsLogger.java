@@ -12,6 +12,9 @@ import java.util.function.Consumer;
 /** OpsLogger which writes each entry directly to the Destination */
 
 public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
+
+    private static final DiagnosticContextSupplier NO_LOCAL_DIAGNOSTIC_CONTEXT_SUPPLIER = null;
+
     private final Clock clock;
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
@@ -33,8 +36,13 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
 
     @Override
     public void log(T message, Object... details) {
+        log(message, NO_LOCAL_DIAGNOSTIC_CONTEXT_SUPPLIER, details);
+    }
+
+    @Override
+    public void log(T message, DiagnosticContextSupplier localContextSupplier, Object... details) {
         try {
-            LogicalLogRecord<T> record = constructLogRecord(message, Optional.empty(), details);
+            LogicalLogRecord<T> record = constructLogRecord(message, localContextSupplier, Optional.empty(), details);
             publish(record);
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -43,16 +51,21 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
+        log(message, NO_LOCAL_DIAGNOSTIC_CONTEXT_SUPPLIER, cause, details);
+    }
+
+    @Override
+    public void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details) {
         try {
-            LogicalLogRecord<T> record = constructLogRecord(message, Optional.of(cause), details);
+            LogicalLogRecord<T> record = constructLogRecord(message, localContextSupplier, Optional.of(cause), details);
             publish(record);
         } catch (Throwable t) {
             errorHandler.accept(t);
         }
     }
 
-    private LogicalLogRecord<T> constructLogRecord(T message, Optional<Throwable> o, Object... details) {
-        return new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier), message, o, details);
+    private LogicalLogRecord<T> constructLogRecord(T message, DiagnosticContextSupplier localContextSupplier, Optional<Throwable> o, Object... details) {
+        return new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier, localContextSupplier), message, o, details);
     }
 
     private void publish(LogicalLogRecord<T> record) throws Exception {
