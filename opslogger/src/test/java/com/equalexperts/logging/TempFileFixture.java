@@ -6,6 +6,7 @@ import org.junit.runners.model.Statement;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,20 +25,28 @@ public class TempFileFixture implements TestRule {
                 .forEach(File::delete));
     }
 
-    public Path createTempFile(String suffix) throws IOException {
-        return register(Files.createTempFile("", suffix));
+    public Path createTempFile(String suffix) {
+        try {
+            return register(Files.createTempFile("", suffix));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
-    public Path createTempDirectory() throws IOException {
-        return register(Files.createTempDirectory(null));
+    public Path createTempDirectory() {
+        try {
+            return register(Files.createTempDirectory(null));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
-    public Path createTempFileThatDoesNotExist(String suffix) throws IOException {
+    public Path createTempFileThatDoesNotExist(String suffix) {
         Path result = Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString() + suffix);
         return register(result);
     }
 
-    public Path createTempDirectoryThatDoesNotExist() throws IOException {
+    public Path createTempDirectoryThatDoesNotExist() {
         Path result = Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
         return register(result);
     }
