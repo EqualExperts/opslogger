@@ -1,9 +1,11 @@
 package com.equalexperts.logging;
 
-import com.equalexperts.logging.impl.*;
+import com.equalexperts.logging.impl.AsyncOpsLoggerFactory;
+import com.equalexperts.logging.impl.BasicOpsLoggerFactory;
+import com.equalexperts.logging.impl.InfrastructureFactory;
 
-import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -175,17 +177,17 @@ public class OpsLoggerFactory {
      *
      * @param <T> LogMessage enum of all possible logger objects.
      * @return ready to use OpsLogger
-     * @throws IOException if a problem occurs creating parent directories for log files and/or stack traces
+     * @throws UncheckedIOException if a problem occurs creating parent directories for log files and/or stack traces
      */
     @SuppressWarnings("unchecked")
-    public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws IOException {
+    public <T extends Enum<T> & LogMessage> OpsLogger<T> build() throws UncheckedIOException {
         if (!cachedInstance.isPresent()) {
             cachedInstance = Optional.of(buildNewInstance());
         }
         return (OpsLogger<T>) cachedInstance.get();
     }
 
-    private <T extends Enum<T> & LogMessage> OpsLogger<T> buildNewInstance() throws IOException {
+    private <T extends Enum<T> & LogMessage> OpsLogger<T> buildNewInstance() throws UncheckedIOException {
         InfrastructureFactory infrastructureFactory = new InfrastructureFactory(logfilePath, loggerOutput, storeStackTracesInFilesystem, stackTraceStoragePath, contextSupplier, errorHandler);
         if (async) {
             return asyncOpsLoggerFactory.build(infrastructureFactory);

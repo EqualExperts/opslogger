@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 public class BasicOpsLoggerFactory {
 
-    public <T extends Enum<T> & LogMessage> BasicOpsLogger<T> build(InfrastructureFactory infrastructureFactory) throws IOException {
+    public <T extends Enum<T> & LogMessage> BasicOpsLogger<T> build(InfrastructureFactory infrastructureFactory) {
         DiagnosticContextSupplier correlationIdSupplier = infrastructureFactory.configureContextSupplier();
         Consumer<Throwable> errorHandler = infrastructureFactory.configureErrorHandler();
         Destination<T> destination = infrastructureFactory.configureDestination();

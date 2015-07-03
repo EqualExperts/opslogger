@@ -13,7 +13,7 @@ public class AsyncOpsLoggerFactory {
 
     private AsyncExecutor asyncExecutor = new AsyncExecutor(Executors.defaultThreadFactory());
 
-    public <T extends Enum<T> & LogMessage> AsyncOpsLogger<T> build(InfrastructureFactory infrastructureFactory) throws IOException {
+    public <T extends Enum<T> & LogMessage> AsyncOpsLogger<T> build(InfrastructureFactory infrastructureFactory) {
         DiagnosticContextSupplier diagnosticContextSupplier = infrastructureFactory.configureContextSupplier();
         Consumer<Throwable> errorHandler = infrastructureFactory.configureErrorHandler();
         Destination<T> destination = infrastructureFactory.configureDestination();
