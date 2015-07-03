@@ -162,7 +162,7 @@ public class LogicalLogRecordTest {
         assertEquals("2014-04-01T13:37:00.123Z,user=joeUser;foo=bar,CODE-Foo,An event of some kind occurred", result);
     }
 
-    private static enum TestMessages implements LogMessage {
+    private enum TestMessages implements LogMessage {
         Foo("CODE-Foo", "An event of some kind occurred"),
         Bar("CODE-Bar", "A Bar event occurred, with argument %d");
 
