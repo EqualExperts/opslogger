@@ -183,7 +183,7 @@ public class OpsLoggerFactoryTest {
         when(mockSupplier.get()).thenReturn(expectedContext);
 
         factory
-            .setDiagnosticContextSupplier(unExpectedSupplier)
+            .setGlobalDiagnosticContextSupplier(unExpectedSupplier)
             .setCorrelationIdSupplier(mockSupplier)
             .build();
 
@@ -197,13 +197,13 @@ public class OpsLoggerFactoryTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void build_shouldPassTheProvidedContextSupplierToTheInternalFactory() throws Exception {
+    public void build_shouldPassTheProvidedGlobalContextSupplierToTheInternalFactory() throws Exception {
         Supplier<Map<String,String>> oldSupplier = TreeMap::new;
         DiagnosticContextSupplier expectedSupplier = HashMap::new;
 
         factory
             .setCorrelationIdSupplier(oldSupplier)
-            .setDiagnosticContextSupplier(expectedSupplier)
+            .setGlobalDiagnosticContextSupplier(expectedSupplier)
             .build();
 
         InfrastructureFactory capturedFactory = captureProvidedInfrastructureFactory();
@@ -324,13 +324,13 @@ public class OpsLoggerFactoryTest {
     }
 
     @Test
-    public void setContextSupplier_shouldClearTheCachedInstance() throws Exception {
+    public void setGlobalDiagnosticContextSupplier_shouldClearTheCachedInstance() throws Exception {
         DiagnosticContextSupplier diagnosticContextSupplier = Collections::emptyMap;
-        factory.setDiagnosticContextSupplier(diagnosticContextSupplier);
+        factory.setGlobalDiagnosticContextSupplier(diagnosticContextSupplier);
 
         OpsLogger<TestMessages> first = factory.build();
         OpsLogger<TestMessages> second = factory.build();
-        OpsLogger<TestMessages> third = factory.setDiagnosticContextSupplier(diagnosticContextSupplier).build(); //even with the same argument
+        OpsLogger<TestMessages> third = factory.setGlobalDiagnosticContextSupplier(diagnosticContextSupplier).build(); //even with the same argument
 
         assertSame(first, second);
         assertNotSame(first, third);

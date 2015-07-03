@@ -114,18 +114,18 @@ public class OpsLoggerFactory {
      * <p>This method will be removed in a future release.</p>
      *
      * @param supplier the map supplier.  (for example: <code>()-&gt;map</code>)
-     * @deprecated Replaced by {@link #setDiagnosticContextSupplier(DiagnosticContextSupplier)}.
+     * @deprecated Replaced by {@link #setGlobalDiagnosticContextSupplier(DiagnosticContextSupplier)}.
      * @return <code>this</code> for further configuration
      */
     @Deprecated
     public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
-        return setDiagnosticContextSupplier(supplier != null ? supplier::get : null);
+        return setGlobalDiagnosticContextSupplier(supplier != null ? supplier::get : null);
     }
 
     /**
      * <p>Set the supplier of the map to print for each log entry.</p>
      * <p>The correlation id map is printed out as part of the message logged:</p>
-     * <p>Example code: (where <code>setDiagnosticContextSupplier(()-&gt;map)</code> has been invoked in the OpsLoggerFactory
+     * <p>Example code: (where <code>setGlobalDiagnosticContextSupplier(()-&gt;map)</code> has been invoked in the OpsLoggerFactory
      * invocation, and Failure has the message code "FOO-012345")</p>
      * <pre>
      * map.put("A", "113");
@@ -138,7 +138,7 @@ public class OpsLoggerFactory {
      * @param supplier the context supplier.  (for example: <code>()-&gt;map</code>)
      * @return <code>this</code> for further configuration
      */
-    public OpsLoggerFactory setDiagnosticContextSupplier(DiagnosticContextSupplier supplier) {
+    public OpsLoggerFactory setGlobalDiagnosticContextSupplier(DiagnosticContextSupplier supplier) {
         clearCachedInstance();
         this.contextSupplier = Optional.ofNullable(supplier);
         return this;
