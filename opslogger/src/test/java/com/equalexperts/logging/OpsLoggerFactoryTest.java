@@ -1,6 +1,9 @@
 package com.equalexperts.logging;
 
 import com.equalexperts.logging.impl.*;
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,9 +12,11 @@ import org.mockito.Mockito;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 
+import javax.inject.Inject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -363,7 +368,7 @@ public class OpsLoggerFactoryTest {
 
         assertNotEquals(originalStackTraceDestination, capturedFactory.getStackTraceStoragePath());
     }
-    
+
     @Test
     public void setStoreStackTracesInFileSystem_shouldWorkIfItIsCalledBeforeAPathIsSet() throws Exception {
         Path parent = tempFiles.createTempDirectoryThatDoesNotExist();
@@ -491,13 +496,54 @@ public class OpsLoggerFactoryTest {
         context.close();
     }
 
+    @Test
+    public void factory_shouldWorkWithDagger() throws Exception {
+        ObjectGraph objectGraph = ObjectGraph.create(new DaggerModule());
+        DaggerApp app = objectGraph.get(DaggerApp.class);
+
+        assertNotNull(app.getLogger());
+        assertThat(app.getLogger(), instanceOf(BasicOpsLogger.class));
+    }
+
+    //region Dagger module and test app
+
+    @Module(injects = DaggerApp.class)
+    class DaggerModule {
+        @Provides
+        OpsLogger<TestMessages> logger() {
+            try {
+                return new OpsLoggerFactory()
+                    .setPath(tempFiles.createTempFileThatDoesNotExist(".log"))
+                    .build();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
+    static class DaggerApp {
+        private final OpsLogger<TestMessages> logger;
+
+        @Inject
+
+        public DaggerApp(OpsLogger<TestMessages> logger) {
+            this.logger = logger;
+        }
+
+        public OpsLogger<TestMessages> getLogger() {
+            return logger;
+        }
+    }
+
+    //endregion
+
     private void ensureCorrectlyConfigured(BasicOpsLogger<TestMessages> logger) {
         assertEquals(Clock.systemUTC(), logger.getClock());
         assertEquals(InfrastructureFactory.DEFAULT_ERROR_HANDLER, logger.getErrorHandler());
         assertThat(logger.getLock(), instanceOf(ReentrantLock.class));
     }
 
-    private enum TestMessages implements LogMessage {
+    enum TestMessages implements LogMessage {
         ; //don't actually need any messages for these tests
 
         //region LogMessage implementation guts

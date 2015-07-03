@@ -5,7 +5,8 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 dependencies {
-    testCompile junit, hamcrest, mockito, spring
+    testCompile junit, hamcrest, mockito
+    testCompile dagger, spring
 }
 
 group = 'com.equalexperts'
