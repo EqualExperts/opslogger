@@ -1,6 +1,6 @@
 package com.equalexperts.logging.impl;
 
-import com.equalexperts.logging.ContextSupplier;
+import com.equalexperts.logging.DiagnosticContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.OpsLogger;
 
@@ -16,11 +16,11 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     private final Consumer<Throwable> errorHandler;
     private final Destination<T> destination;
     private final Lock lock;
-    private final ContextSupplier contextSupplier;
+    private final DiagnosticContextSupplier diagnosticContextSupplier;
 
-    public BasicOpsLogger(Clock clock, ContextSupplier contextSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
+    public BasicOpsLogger(Clock clock, DiagnosticContextSupplier diagnosticContextSupplier, Destination<T> destination, Lock lock, Consumer<Throwable> errorHandler) {
         this.clock = clock;
-        this.contextSupplier = contextSupplier;
+        this.diagnosticContextSupplier = diagnosticContextSupplier;
         this.destination = destination;
         this.lock = lock;
         this.errorHandler = errorHandler;
@@ -52,7 +52,7 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     }
 
     private LogicalLogRecord<T> constructLogRecord(T message, Optional<Throwable> o, Object... details) {
-        return new LogicalLogRecord<>(clock.instant(), contextSupplier.getMessageContext(), message, o, details);
+        return new LogicalLogRecord<>(clock.instant(), diagnosticContextSupplier.getMessageContext(), message, o, details);
     }
 
     private void publish(LogicalLogRecord<T> record) throws Exception {
@@ -77,8 +77,8 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         return destination;
     }
 
-    public ContextSupplier getContextSupplier() {
-        return contextSupplier;
+    public DiagnosticContextSupplier getDiagnosticContextSupplier() {
+        return diagnosticContextSupplier;
     }
 
     public Lock getLock() {

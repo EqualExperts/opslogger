@@ -1,6 +1,6 @@
 package com.equalexperts.logging.impl;
 
-import com.equalexperts.logging.ContextSupplier;
+import com.equalexperts.logging.DiagnosticContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.RestoreSystemStreamsFixture;
 import com.equalexperts.logging.TempFileFixture;
@@ -36,7 +36,7 @@ public class InfrastructureFactoryTest {
     private static final Optional<PrintStream> SAMPLE_LOGGER_OUTPUT = Optional.of(System.out);
     private static final Optional<Boolean> SAMPLE_STORE_STACK_TRACES_IN_FILESYSTEM = Optional.of(false);
     private static final Optional<Path> SAMPLE_STACK_TRACE_STORAGE_PATH = Optional.empty();
-    private static final Optional<ContextSupplier> SAMPLE_CONTEXT_SUPPLIER = Optional.empty();
+    private static final Optional<DiagnosticContextSupplier> SAMPLE_CONTEXT_SUPPLIER = Optional.empty();
     private static final Optional<Consumer<Throwable>> SAMPLE_ERROR_HANDLER = Optional.of(e -> {});
 
     @Test
@@ -57,7 +57,7 @@ public class InfrastructureFactoryTest {
 
     @Test
     public void configureCorrelationIdSupplier_shouldReturnTheProvidedSupplier_whenOneIsProvided() throws Exception {
-        ContextSupplier expectedSupplier = HashMap::new; //don't use Collections.emptyMap, because that's the default
+        DiagnosticContextSupplier expectedSupplier = HashMap::new; //don't use Collections.emptyMap, because that's the default
 
         InfrastructureFactory factory = new InfrastructureFactory(
                 SAMPLE_LOGFILE_PATH,
@@ -67,7 +67,7 @@ public class InfrastructureFactoryTest {
                 Optional.of(expectedSupplier),
                 SAMPLE_ERROR_HANDLER);
 
-        ContextSupplier actualSupplier = factory.configureContextSupplier();
+        DiagnosticContextSupplier actualSupplier = factory.configureContextSupplier();
 
         assertSame(expectedSupplier, actualSupplier);
     }
@@ -82,7 +82,7 @@ public class InfrastructureFactoryTest {
                 Optional.empty(),
                 SAMPLE_ERROR_HANDLER);
 
-        ContextSupplier actualSupplier = factory.configureContextSupplier();
+        DiagnosticContextSupplier actualSupplier = factory.configureContextSupplier();
 
         assertSame(InfrastructureFactory.EMPTY_CONTEXT_SUPPLIER, actualSupplier);
     }

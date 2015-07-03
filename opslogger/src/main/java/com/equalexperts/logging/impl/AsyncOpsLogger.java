@@ -1,18 +1,16 @@
 package com.equalexperts.logging.impl;
 
-import com.equalexperts.logging.ContextSupplier;
+import com.equalexperts.logging.DiagnosticContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import com.equalexperts.logging.OpsLogger;
 
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toList;
 
@@ -29,13 +27,13 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     private final Future<?> processingThread;
     private final LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue;
     private final Clock clock;
-    private final ContextSupplier contextSupplier;
+    private final DiagnosticContextSupplier diagnosticContextSupplier;
     private final Destination<T> destination;
     private final Consumer<Throwable> errorHandler;
 
-    public AsyncOpsLogger(Clock clock, ContextSupplier contextSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
+    public AsyncOpsLogger(Clock clock, DiagnosticContextSupplier diagnosticContextSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
         this.clock = clock;
-        this.contextSupplier = contextSupplier;
+        this.diagnosticContextSupplier = diagnosticContextSupplier;
         this.destination = destination;
         this.errorHandler = errorHandler;
         this.transferQueue = transferQueue;
@@ -45,7 +43,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     @Override
     public void log(T message, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), contextSupplier.getMessageContext(), message, Optional.empty(), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContextSupplier.getMessageContext(), message, Optional.empty(), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -55,7 +53,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     @Override
     public void log(T message, Throwable cause, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), contextSupplier.getMessageContext(), message, Optional.of(cause), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContextSupplier.getMessageContext(), message, Optional.of(cause), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -125,8 +123,8 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         return destination;
     }
 
-    public ContextSupplier getContextSupplier() {
-        return contextSupplier;
+    public DiagnosticContextSupplier getDiagnosticContextSupplier() {
+        return diagnosticContextSupplier;
     }
 
     public Consumer<Throwable> getErrorHandler() {

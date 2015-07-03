@@ -64,7 +64,7 @@ public class OpsLoggerFactoryTest {
 
         BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
         assertThat(basicLogger.getDestination(), instanceOf(OutputStreamDestination.class));
-        assertEquals(InfrastructureFactory.EMPTY_CONTEXT_SUPPLIER, basicLogger.getContextSupplier());
+        assertEquals(InfrastructureFactory.EMPTY_CONTEXT_SUPPLIER, basicLogger.getDiagnosticContextSupplier());
         OutputStreamDestination<TestMessages> destination = (OutputStreamDestination<TestMessages>) basicLogger.getDestination();
         assertSame(System.out, destination.getOutput());
         assertThat(destination.getStackTraceProcessor(), instanceOf(SimpleStackTraceProcessor.class));
@@ -175,7 +175,7 @@ public class OpsLoggerFactoryTest {
     @SuppressWarnings("deprecation")
     @Test
     public void build_shouldConvertTheProvidedCorrelationIdSupplierIntoAContextSupplierAndPassItToTheInternalFactory() throws Exception {
-        ContextSupplier unExpectedSupplier = TreeMap::new;
+        DiagnosticContextSupplier unExpectedSupplier = TreeMap::new;
         HashMap<String, String> expectedContext = new HashMap<>();
 
         @SuppressWarnings("unchecked")
@@ -183,14 +183,14 @@ public class OpsLoggerFactoryTest {
         when(mockSupplier.get()).thenReturn(expectedContext);
 
         factory
-            .setContextSupplier(unExpectedSupplier)
+            .setDiagnosticContextSupplier(unExpectedSupplier)
             .setCorrelationIdSupplier(mockSupplier)
             .build();
 
         InfrastructureFactory capturedFactory = captureProvidedInfrastructureFactory();
 
-        ContextSupplier contextSupplier = capturedFactory.getContextSupplier().get();
-        Map<String, String> actualContext = contextSupplier.getMessageContext();
+        DiagnosticContextSupplier diagnosticContextSupplier = capturedFactory.getContextSupplier().get();
+        Map<String, String> actualContext = diagnosticContextSupplier.getMessageContext();
         assertSame(expectedContext, actualContext);
         verify(mockSupplier).get();
     }
@@ -199,11 +199,11 @@ public class OpsLoggerFactoryTest {
     @Test
     public void build_shouldPassTheProvidedContextSupplierToTheInternalFactory() throws Exception {
         Supplier<Map<String,String>> oldSupplier = TreeMap::new;
-        ContextSupplier expectedSupplier = HashMap::new;
+        DiagnosticContextSupplier expectedSupplier = HashMap::new;
 
         factory
             .setCorrelationIdSupplier(oldSupplier)
-            .setContextSupplier(expectedSupplier)
+            .setDiagnosticContextSupplier(expectedSupplier)
             .build();
 
         InfrastructureFactory capturedFactory = captureProvidedInfrastructureFactory();
@@ -325,12 +325,12 @@ public class OpsLoggerFactoryTest {
 
     @Test
     public void setContextSupplier_shouldClearTheCachedInstance() throws Exception {
-        ContextSupplier contextSupplier = Collections::emptyMap;
-        factory.setContextSupplier(contextSupplier);
+        DiagnosticContextSupplier diagnosticContextSupplier = Collections::emptyMap;
+        factory.setDiagnosticContextSupplier(diagnosticContextSupplier);
 
         OpsLogger<TestMessages> first = factory.build();
         OpsLogger<TestMessages> second = factory.build();
-        OpsLogger<TestMessages> third = factory.setContextSupplier(contextSupplier).build(); //even with the same argument
+        OpsLogger<TestMessages> third = factory.setDiagnosticContextSupplier(diagnosticContextSupplier).build(); //even with the same argument
 
         assertSame(first, second);
         assertNotSame(first, third);

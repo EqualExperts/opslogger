@@ -1,6 +1,6 @@
 package com.equalexperts.logging.impl;
 
-import com.equalexperts.logging.ContextSupplier;
+import com.equalexperts.logging.DiagnosticContextSupplier;
 import com.equalexperts.logging.LogMessage;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class BasicOpsLoggerFactoryTest {
 
     private OutputStreamDestination<TestMessages> expectedDestination = new OutputStreamDestination<>(System.out, new SimpleStackTraceProcessor());
     private Consumer<Throwable> expectedErrorHandler = t -> {};
-    private ContextSupplier expectedContextSupplier = HashMap::new;
+    private DiagnosticContextSupplier expectedDiagnosticContextSupplier = HashMap::new;
 
     private InfrastructureFactory infrastructure = mock(InfrastructureFactory.class);
 
@@ -29,7 +29,7 @@ public class BasicOpsLoggerFactoryTest {
     @Before
     public void setup() throws IOException {
         when(infrastructure.<TestMessages>configureDestination()).thenReturn(expectedDestination);
-        when(infrastructure.configureContextSupplier()).thenReturn(expectedContextSupplier);
+        when(infrastructure.configureContextSupplier()).thenReturn(expectedDiagnosticContextSupplier);
         when(infrastructure.configureErrorHandler()).thenReturn(expectedErrorHandler);
     }
 
@@ -40,7 +40,7 @@ public class BasicOpsLoggerFactoryTest {
         BasicOpsLogger<TestMessages> result = factory.build(infrastructure);
 
         assertEquals(Clock.systemUTC(), result.getClock());
-        assertSame(expectedContextSupplier, result.getContextSupplier());
+        assertSame(expectedDiagnosticContextSupplier, result.getDiagnosticContextSupplier());
         assertSame(expectedDestination, result.getDestination());
         assertNotNull(result.getLock());
         assertThat(result.getLock(), instanceOf(ReentrantLock.class));

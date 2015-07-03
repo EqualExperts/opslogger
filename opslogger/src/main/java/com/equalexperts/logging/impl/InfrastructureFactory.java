@@ -1,6 +1,6 @@
 package com.equalexperts.logging.impl;
 
-import com.equalexperts.logging.ContextSupplier;
+import com.equalexperts.logging.DiagnosticContextSupplier;
 import com.equalexperts.logging.LogMessage;
 
 import java.io.IOException;
@@ -16,16 +16,16 @@ import java.util.function.Consumer;
  */
 public class InfrastructureFactory {
     public static final Consumer<Throwable> DEFAULT_ERROR_HANDLER = (error) -> error.printStackTrace(System.err);
-    public static final ContextSupplier EMPTY_CONTEXT_SUPPLIER = Collections::emptyMap;
+    public static final DiagnosticContextSupplier EMPTY_CONTEXT_SUPPLIER = Collections::emptyMap;
 
     private final Optional<Path> logfilePath;
     private final Optional<PrintStream> loggerOutput;
     private final Optional<Boolean> storeStackTracesInFilesystem;
     private final Optional<Path> stackTraceStoragePath;
-    private final Optional<ContextSupplier> correlationIdSupplier;
+    private final Optional<DiagnosticContextSupplier> correlationIdSupplier;
     private final Optional<Consumer<Throwable>> errorHandler;
 
-    public InfrastructureFactory(Optional<Path> logfilePath, Optional<PrintStream> loggerOutput, Optional<Boolean> storeStackTracesInFilesystem, Optional<Path> stackTraceStoragePath, Optional<ContextSupplier> correlationIdSupplier, Optional<Consumer<Throwable>> errorHandler) {
+    public InfrastructureFactory(Optional<Path> logfilePath, Optional<PrintStream> loggerOutput, Optional<Boolean> storeStackTracesInFilesystem, Optional<Path> stackTraceStoragePath, Optional<DiagnosticContextSupplier> correlationIdSupplier, Optional<Consumer<Throwable>> errorHandler) {
         this.logfilePath = logfilePath;
         this.loggerOutput = loggerOutput;
         this.storeStackTracesInFilesystem = storeStackTracesInFilesystem;
@@ -51,7 +51,7 @@ public class InfrastructureFactory {
         return errorHandler.orElse(DEFAULT_ERROR_HANDLER);
     }
 
-    public ContextSupplier configureContextSupplier() {
+    public DiagnosticContextSupplier configureContextSupplier() {
         return correlationIdSupplier.orElse(EMPTY_CONTEXT_SUPPLIER);
     }
 
@@ -105,7 +105,7 @@ public class InfrastructureFactory {
         return stackTraceStoragePath;
     }
 
-    public Optional<ContextSupplier> getContextSupplier() {
+    public Optional<DiagnosticContextSupplier> getContextSupplier() {
         return correlationIdSupplier;
     }
 
