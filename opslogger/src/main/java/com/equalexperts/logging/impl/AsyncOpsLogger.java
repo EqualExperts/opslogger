@@ -43,7 +43,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     @Override
     public void log(T message, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContextSupplier.getMessageContext(), message, Optional.empty(), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier.getMessageContext()), message, Optional.empty(), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
             errorHandler.accept(t);
@@ -53,7 +53,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     @Override
     public void log(T message, Throwable cause, Object... details) {
         try {
-            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContextSupplier.getMessageContext(), message, Optional.of(cause), details);
+            LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier.getMessageContext()), message, Optional.of(cause), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
             errorHandler.accept(t);

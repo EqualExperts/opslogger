@@ -74,7 +74,7 @@ public class AsyncOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue().get();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertEquals(expectedCorrelationIds, record.getCorrelationIds());
+        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getMergedContext());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertFalse(record.getCause().isPresent());
@@ -124,7 +124,7 @@ public class AsyncOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue().get();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertEquals(expectedCorrelationIds, record.getCorrelationIds());
+        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getMergedContext());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertTrue(record.getCause().isPresent());
@@ -367,7 +367,7 @@ public class AsyncOpsLoggerTest {
     }
 
     private LogicalLogRecord<TestMessages> constructLogicalLogMessage(TestMessages message, Object... args) {
-        return new LogicalLogRecord<>(Instant.now(), emptyMap(), message, Optional.empty(), args);
+        return new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(emptyMap()), message, Optional.empty(), args);
     }
 
     private Map<String, String> generateCorrelationIds() {

@@ -16,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.equalexperts.logging.impl.FileChannelProvider.Result;
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -48,7 +49,7 @@ public class PathDestinationTest {
 
     @Test
     public void publish_shouldFormatTheLogRecordAndWriteItToTheFile() throws Exception {
-        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(emptyMap()), TestMessages.Foo, Optional.empty());
         record = spy(record); //use a spy so we can verify at the bottom
         destination.beginBatch();
 
@@ -61,7 +62,7 @@ public class PathDestinationTest {
 
     @Test
     public void publish_shouldNotFlushTheWriter() throws Exception {
-        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(emptyMap()), TestMessages.Foo, Optional.empty());
         destination.beginBatch();
 
         destination.publish(record);
@@ -143,7 +144,7 @@ public class PathDestinationTest {
 
     @Test
     public void refreshFileHandles_shouldReturnImmediately_whenTheDestinationIsNotCurrentlyInUse() throws Exception {
-        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(emptyMap()), TestMessages.Foo, Optional.empty());
         destination.beginBatch();
         destination.publish(record);
         destination.endBatch();

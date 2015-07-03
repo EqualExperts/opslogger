@@ -6,8 +6,10 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 
+import static java.util.Collections.emptyMap;
 import static org.junit.Assert.*;
 
 public class OutputStreamDestinationTest {
@@ -21,7 +23,7 @@ public class OutputStreamDestinationTest {
 
     @Test
     public void publish_shouldPublishAFormattedLogRecord() throws Exception {
-        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), null, TestMessages.Foo, Optional.empty());
+        LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(emptyMap()), TestMessages.Foo, Optional.empty());
         String expectedMessage = record.format(processor) + System.getProperty("line.separator");
 
         destination.publish(record);
