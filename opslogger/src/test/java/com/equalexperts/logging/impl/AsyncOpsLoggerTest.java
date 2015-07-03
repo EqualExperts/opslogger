@@ -21,6 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
@@ -62,6 +63,8 @@ public class AsyncOpsLoggerTest {
         verify(executor).execute(any());
     }
 
+    //region tests for log(Message, Object...)
+
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstance() throws Exception {
         Map<String,String> expectedCorrelationIds = generateCorrelationIds();
@@ -89,7 +92,7 @@ public class AsyncOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIds() throws Exception {
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingTheGlobalDiagnosticContext() throws Exception {
         Error expectedThrowable = new Error();
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
@@ -108,6 +111,9 @@ public class AsyncOpsLoggerTest {
         verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
     }
 
+    //endregion
+
+    //region tests for log(Message, Throwable, Object...)
 
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowable() throws Exception {
@@ -159,6 +165,182 @@ public class AsyncOpsLoggerTest {
         verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
     }
 
+    //endregion
+
+    //region tests for log(Message, DiagnosticContextSupplier, Object...)
+
+    @Test
+    public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndADiagnosticContextSupplier() throws Exception {
+        Map<String,String> globalDiagnosticContext = generateCorrelationIds();
+        when(diagnosticContextSupplier.getMessageContext()).thenReturn(globalDiagnosticContext);
+
+        Map<String,String> localDiagnosticContext = generateCorrelationIds();
+
+        doNothing().when(transferQueue).put(captor.capture());
+
+        logger.log(TestMessages.Bar, () -> localDiagnosticContext, 64, "Hello, World");
+
+        verify(transferQueue).put(captor.capture());
+
+        LogicalLogRecord<TestMessages> record = captor.getValue().get();
+        assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertEquals(merge(globalDiagnosticContext, localDiagnosticContext), record.getDiagnosticContext().getMergedContext());
+        assertEquals(TestMessages.Bar, record.getMessage());
+        assertNotNull(record.getCause());
+        assertFalse(record.getCause().isPresent());
+        assertArrayEquals(new Object[]{64, "Hello, World"}, record.getDetails());
+    }
+
+    @Test
+    public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndANullDiagnosticContextSupplier() throws Exception {
+        Map<String,String> globalDiagnosticContext = generateCorrelationIds();
+        when(diagnosticContextSupplier.getMessageContext()).thenReturn(globalDiagnosticContext);
+
+        doNothing().when(transferQueue).put(captor.capture());
+
+        logger.log(TestMessages.Bar, (DiagnosticContextSupplier) null, 64, "Hello, World");
+
+        verify(transferQueue).put(captor.capture());
+
+        LogicalLogRecord<TestMessages> record = captor.getValue().get();
+        assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertEquals(globalDiagnosticContext, record.getDiagnosticContext().getMergedContext());
+        assertEquals(TestMessages.Bar, record.getMessage());
+        assertNotNull(record.getCause());
+        assertFalse(record.getCause().isPresent());
+        assertArrayEquals(new Object[] {64, "Hello, World"}, record.getDetails());
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordAndADiagnosticContextSupplier() throws Exception {
+        logger.log(null, Collections::emptyMap);
+
+        verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingTheGlobalDiagnosticContextAndADiagnosticContextSupplier() throws Exception {
+        Error expectedThrowable = new Error();
+        when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
+
+        logger.log(TestMessages.Foo, Collections::emptyMap);
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingTheLocalDiagnosticContextAndADiagnosticContextSupplier() throws Exception {
+        Error expectedThrowable = new Error();
+        when(diagnosticContextSupplier.getMessageContext()).thenReturn(emptyMap());
+        DiagnosticContextSupplier dcs = () -> { throw expectedThrowable; };
+
+        logger.log(TestMessages.Foo, dcs);
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemAddingAMessageToTheQueueAndADiagnosticContextSupplier() throws Exception {
+        RuntimeException expectedThrowable = new RuntimeException("blah");
+        doThrow(expectedThrowable).when(transferQueue).put(any());
+
+        logger.log(TestMessages.Foo, Collections::emptyMap);
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    //endregion
+
+    //region tests for log(Message, DiagnosticContextSupplier, Throwable, Object...)
+
+    @Test
+    public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+        Map<String, String> globalContext = generateCorrelationIds();
+        when(diagnosticContextSupplier.getMessageContext()).thenReturn(globalContext);
+
+        Map<String, String> localContext = generateCorrelationIds();
+
+        Throwable expectedCause = new RuntimeException();
+
+        doNothing().when(transferQueue).put(captor.capture());
+
+        logger.log(TestMessages.Bar, () -> localContext, expectedCause, 64, "Hello, World");
+
+        verify(transferQueue).put(captor.capture());
+
+        LogicalLogRecord<TestMessages> record = captor.getValue().get();
+        assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertEquals(merge(globalContext, localContext), record.getDiagnosticContext().getMergedContext());
+        assertEquals(TestMessages.Bar, record.getMessage());
+        assertNotNull(record.getCause());
+        assertTrue(record.getCause().isPresent());
+        assertSame(expectedCause, record.getCause().get());
+        assertArrayEquals(new Object[] {64, "Hello, World"}, record.getDetails());
+    }
+
+    @Test
+    public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowableAndANullDiagnosticContextSupplier() throws Exception {
+        Map<String, String> globalContext = generateCorrelationIds();
+        when(diagnosticContextSupplier.getMessageContext()).thenReturn(globalContext);
+
+        Throwable expectedCause = new RuntimeException();
+
+        doNothing().when(transferQueue).put(captor.capture());
+
+        logger.log(TestMessages.Bar, (DiagnosticContextSupplier) null, expectedCause, 64, "Hello, World");
+
+        verify(transferQueue).put(captor.capture());
+
+        LogicalLogRecord<TestMessages> record = captor.getValue().get();
+        assertEquals(fixedClock.instant(), record.getTimestamp());
+        assertEquals(globalContext, record.getDiagnosticContext().getMergedContext());
+        assertEquals(TestMessages.Bar, record.getMessage());
+        assertNotNull(record.getCause());
+        assertTrue(record.getCause().isPresent());
+        assertSame(expectedCause, record.getCause().get());
+        assertArrayEquals(new Object[] {64, "Hello, World"}, record.getDetails());
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+        logger.log(null, Collections::emptyMap, new RuntimeException());
+
+        verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingTheGlobalDiagnosticContextAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+        Error expectedThrowable = new Error();
+        when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
+
+        logger.log(TestMessages.Foo, Collections::emptyMap, new RuntimeException());
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingTheLocalDiagnosticContextAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+        Error expectedThrowable = new Error();
+        when(diagnosticContextSupplier.getMessageContext()).thenReturn(emptyMap());
+        DiagnosticContextSupplier dcs = () -> { throw expectedThrowable; };
+
+        logger.log(TestMessages.Foo, dcs, new RuntimeException());
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    @Test
+    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemAddingAMessageToTheQueueAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+        RuntimeException expectedThrowable = new RuntimeException("blah");
+        doThrow(expectedThrowable).when(transferQueue).put(any());
+
+        logger.log(TestMessages.Foo, Collections::emptyMap, new Exception());
+
+        verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
+    }
+
+    //endregion
+
     @Test
     public void close_shouldSendAStopSignalToTheProcessingThreadWaitForItToFinishAndCloseTheDestination() throws Exception {
         logger.close();
@@ -171,7 +353,7 @@ public class AsyncOpsLoggerTest {
 
     @Test
     public void close_shouldCloseTheDestination_whenAnExceptionIsThrownWaitingForTheProcessingThreadToFinish() throws Exception {
-        when (processingThread.get()).thenThrow(new InterruptedException());
+        when(processingThread.get()).thenThrow(new InterruptedException());
 
         try {
             logger.close();
@@ -367,13 +549,15 @@ public class AsyncOpsLoggerTest {
     }
 
     private LogicalLogRecord<TestMessages> constructLogicalLogMessage(TestMessages message, Object... args) {
-        return new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(emptyMap()), message, Optional.empty(), args);
+        return new LogicalLogRecord<>(Instant.now(), new DiagnosticContext(Collections::emptyMap), message, Optional.empty(), args);
     }
 
     private Map<String, String> generateCorrelationIds() {
         Map<String, String> result = new HashMap<>();
-        result.put("foo", "fooValue");
-        result.put("bar", "barValue");
+        result.put("foo", UUID.randomUUID().toString());
+        result.put(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        result.put(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+
         return result;
     }
 
@@ -393,6 +577,13 @@ public class AsyncOpsLoggerTest {
                 description.appendText("an empty optional");
             }
         };
+    }
+
+    @SafeVarargs
+    private static Map<String, String> merge(Map<String,String>... contexts) {
+        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        Stream.of(contexts).forEachOrdered(result::putAll);
+        return result;
     }
 
     private enum TestMessages implements LogMessage {

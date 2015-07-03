@@ -1,5 +1,6 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.DiagnosticContextSupplier;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 public class DiagnosticContextTest {
     @Test
     public void constructor_shouldSafelyCopyAllProvidedContextInformationIntoASingleMergedContext() throws Exception {
@@ -28,7 +30,7 @@ public class DiagnosticContextTest {
         Map<String, String> globalContextSpy = spy(globalContext);
         Map<String, String> localContextSpy = spy(localContext);
 
-        DiagnosticContext dc = new DiagnosticContext(globalContext, localContext);
+        DiagnosticContext dc = new DiagnosticContext(() -> globalContext, () -> localContext);
 
         Map<String, String> mergedContext = dc.getMergedContext();
 
@@ -51,8 +53,8 @@ public class DiagnosticContextTest {
         localContext.put("foo", "b");
         localContext.put("baz", "b");
 
-        assertEquals("b", new DiagnosticContext(globalContext, localContext).getMergedContext().get("foo"));
-        assertEquals("a", new DiagnosticContext(localContext, globalContext).getMergedContext().get("foo"));
+        assertEquals("b", new DiagnosticContext(() -> globalContext, () -> localContext).getMergedContext().get("foo"));
+        assertEquals("a", new DiagnosticContext(() -> localContext, () -> globalContext).getMergedContext().get("foo"));
     }
 
     @Test
@@ -66,7 +68,7 @@ public class DiagnosticContextTest {
         localContext.put("able", "b");
         localContext.put("dog", "b");
 
-        Map<String, String> mergedContext = new DiagnosticContext(globalContext, localContext).getMergedContext();
+        Map<String, String> mergedContext = new DiagnosticContext(() -> globalContext, () -> localContext).getMergedContext();
 
         List<String> keysInOrder = mergedContext.keySet().stream().collect(toList());
         assertThat(keysInOrder, contains("baker", "able", "charlie", "dog"));
@@ -77,8 +79,8 @@ public class DiagnosticContextTest {
         Map<String, String> context = new HashMap<>();
         context.put("foo", "a");
 
-        assertEquals(context, new DiagnosticContext(context, null).getMergedContext());
-        assertEquals(context, new DiagnosticContext(null, context).getMergedContext());
+        assertEquals(context, new DiagnosticContext(() -> context, null).getMergedContext());
+        assertEquals(context, new DiagnosticContext(null, () -> context).getMergedContext());
     }
 
     @Test
@@ -92,17 +94,17 @@ public class DiagnosticContextTest {
             new DiagnosticContext();
             fail("expected an IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "Must provide at least one context");
+            assertEquals(e.getMessage(), "Must provide at least one DiagnosticContextSupplier");
         }
     }
     
     @Test
     public void constructor_shouldThrowAnIllegalArgumentException_givenANullVarargs() throws Exception {
         try {
-            new DiagnosticContext((Map<String,String>[]) null);
+            new DiagnosticContext((DiagnosticContextSupplier[]) null);
             fail("expected an IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "Must provide at least one context");
+            assertEquals(e.getMessage(), "Must provide at least one DiagnosticContextSupplier");
         }
     }
 
@@ -115,7 +117,7 @@ public class DiagnosticContextTest {
 
         StringBuilder sb = new StringBuilder();
 
-        new DiagnosticContext(context).printContextInformation(sb);
+        new DiagnosticContext(() -> context).printContextInformation(sb);
 
         assertEquals(sb.toString(), "baker=a;able=b;charlie=c,");
     }
@@ -129,7 +131,7 @@ public class DiagnosticContextTest {
 
         StringBuilder sb = new StringBuilder();
 
-        new DiagnosticContext(context).printContextInformation(sb);
+        new DiagnosticContext(() -> context).printContextInformation(sb);
 
         assertEquals(sb.toString(), "baker=a;charlie=c,");
     }
@@ -143,7 +145,7 @@ public class DiagnosticContextTest {
 
         StringBuilder sb = new StringBuilder();
 
-        new DiagnosticContext(context).printContextInformation(sb);
+        new DiagnosticContext(() -> context).printContextInformation(sb);
 
         assertEquals(sb.toString(), "baker=a;charlie=c,");
     }
@@ -158,9 +160,9 @@ public class DiagnosticContextTest {
 
         StringBuilder sb = new StringBuilder();
 
-        new DiagnosticContext(emptyValue).printContextInformation(sb);
-        new DiagnosticContext(nullValue).printContextInformation(sb);
-        new DiagnosticContext((Map<String, String>) null).printContextInformation(sb);
+        new DiagnosticContext(() -> emptyValue).printContextInformation(sb);
+        new DiagnosticContext(() -> nullValue).printContextInformation(sb);
+        new DiagnosticContext((DiagnosticContextSupplier) null).printContextInformation(sb);
 
         assertEquals(sb.toString(), "");
     }

@@ -16,6 +16,10 @@ public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable
      * */
     void log(T message, Object... details);
 
+    default void log(T message, DiagnosticContextSupplier localContext, Object... details) {
+        throw new UnsupportedOperationException("not implemented");
+    }
+
     /** Log message using message.getMessagePattern as the format and details as the format arguments, with
      * the processed cause added.
      * @param message enum to log.
@@ -24,6 +28,10 @@ public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable
      *
      * */
     void log(T message, Throwable cause, Object... details);
+
+    default void log(T message, DiagnosticContextSupplier localContext, Throwable cause, Object... details) {
+        throw new UnsupportedOperationException("not implemented");
+    }
 
     /**
      * Refreshes file handles for all log files, providing active rotation support.

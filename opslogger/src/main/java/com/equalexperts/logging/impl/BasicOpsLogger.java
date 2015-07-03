@@ -52,7 +52,7 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     }
 
     private LogicalLogRecord<T> constructLogRecord(T message, Optional<Throwable> o, Object... details) {
-        return new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier.getMessageContext()), message, o, details);
+        return new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier), message, o, details);
     }
 
     private void publish(LogicalLogRecord<T> record) throws Exception {

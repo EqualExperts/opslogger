@@ -1,5 +1,7 @@
 package com.equalexperts.logging.impl;
 
+import com.equalexperts.logging.DiagnosticContextSupplier;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,13 +14,17 @@ public class DiagnosticContext {
 
     private final Map<String, String> mergedContext;
 
-    @SafeVarargs
-    public DiagnosticContext(Map<String, String>... contexts) {
-        if (contexts == null || contexts.length == 0) {
-            throw new IllegalArgumentException("Must provide at least one context");
+    public DiagnosticContext(DiagnosticContextSupplier... contextSuppliers) {
+        if (contextSuppliers == null || contextSuppliers.length == 0) {
+            throw new IllegalArgumentException("Must provide at least one DiagnosticContextSupplier");
         }
+
         Map<String,String> mergedContext = new LinkedHashMap<>();
-        Stream.of(contexts).filter(Objects::nonNull).forEach(mergedContext::putAll);
+        Stream.of(contextSuppliers)
+                .filter(Objects::nonNull)
+                .map(DiagnosticContextSupplier::getMessageContext)
+                .filter(Objects::nonNull)
+                .forEachOrdered(mergedContext::putAll);
         this.mergedContext = Collections.unmodifiableMap(mergedContext);
     }
 

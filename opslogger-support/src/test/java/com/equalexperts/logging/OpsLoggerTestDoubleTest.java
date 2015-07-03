@@ -174,7 +174,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenANullThrowable() throws Exception {
         try {
-            logger.log(TestMessages.Bar, null, "a");
+            logger.log(TestMessages.Bar, (Throwable) null, "a");
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("Throwable instance must be provided"));

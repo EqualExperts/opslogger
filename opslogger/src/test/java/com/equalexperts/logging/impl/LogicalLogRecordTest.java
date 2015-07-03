@@ -4,6 +4,7 @@ import com.equalexperts.logging.LogMessage;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,7 +19,7 @@ import static org.mockito.Mockito.verify;
 public class LogicalLogRecordTest {
 
     static final StackTraceProcessor PROCESSOR_SHOULD_NOT_BE_CALLED = (t, out) -> fail("should not be called");
-    static final DiagnosticContext SAMPLE_DIAGNOSTIC_CONTEXT = new DiagnosticContext(emptyMap());
+    static final DiagnosticContext SAMPLE_DIAGNOSTIC_CONTEXT = new DiagnosticContext(Collections::emptyMap);
 
     @Test
     public void constructor_shouldThrowANullPointerException_givenANullTimestamp() throws Exception {
@@ -112,7 +113,7 @@ public class LogicalLogRecordTest {
 
         Map<String, String> correlationIds = new HashMap<>();
         correlationIds.put("user", "joeUser");
-        DiagnosticContext dc = spy(new DiagnosticContext(correlationIds));
+        DiagnosticContext dc = spy(new DiagnosticContext(() -> correlationIds));
 
         LogicalLogRecord<TestMessages> record = new LogicalLogRecord<>(instant, dc, TestMessages.Bar, Optional.empty(), 42);
 
