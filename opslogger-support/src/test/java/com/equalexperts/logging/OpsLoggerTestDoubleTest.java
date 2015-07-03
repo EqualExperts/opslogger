@@ -9,6 +9,9 @@ import java.util.UUID;
 
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class OpsLoggerTestDoubleTest {
     private final OpsLogger<TestMessages> logger = new OpsLoggerTestDouble<>();
@@ -119,6 +122,17 @@ public class OpsLoggerTestDoubleTest {
         } catch (MutabilityAssertionError e) {
             assertThat(e.getMessage(), containsString("StringBuilder"));
         }
+    }
+
+    @Test
+    public void log_shouldNotCallAnOverloadedMethod() throws Exception {
+        //calling another method inside this log method can cause trouble with spying frameworks
+        OpsLogger<TestMessages> logger = spy(this.logger);
+
+        logger.log(TestMessages.Foo);
+
+        verify(logger).log(TestMessages.Foo);
+        verifyNoMoreInteractions(logger);
     }
 
     //endregion
@@ -236,6 +250,18 @@ public class OpsLoggerTestDoubleTest {
         } catch (MutabilityAssertionError e) {
             assertThat(e.getMessage(), containsString("StringBuilder"));
         }
+    }
+
+    @Test
+    public void log_shouldNotCallAnOverloadedMethod_givenAThrowable() throws Exception {
+        //calling another method inside this log method can cause trouble with spying frameworks
+        OpsLogger<TestMessages> logger = spy(this.logger);
+        RuntimeException ex = new RuntimeException();
+
+        logger.log(TestMessages.Foo, ex);
+
+        verify(logger).log(TestMessages.Foo, ex);
+        verifyNoMoreInteractions(logger);
     }
 
     //endregion

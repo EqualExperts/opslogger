@@ -6,6 +6,7 @@ targetCompatibility = "1.8"
 dependencies {
     compile junit, mutabilityDetector
     compile project(":opslogger")
+    testCompile mockito
 }
 
 group = 'com.equalexperts'
