@@ -4,8 +4,24 @@ apply from: rootProject.file("jacoco-support.gradle")
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
+configurations {
+    provided {
+        dependencies.all { dep ->
+            configurations.default.exclude group: dep.group, module: dep.name
+        }
+    }
+    compile.extendsFrom provided
+}
+
+sourceSets {
+    main {
+        compileClasspath += configurations.provided
+    }
+}
+
 dependencies {
-    compile project(":opslogger"), spring
+    compile project(":opslogger"), spring, dagger
+    provided daggerCompiler
     testCompile project(":opslogger-support"), junit, mockito
 }
 
