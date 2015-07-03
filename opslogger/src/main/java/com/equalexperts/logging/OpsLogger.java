@@ -10,28 +10,40 @@ import com.equalexperts.logging.impl.ActiveRotationRegistry;
  * accessed by multiple threads.</p>
  */
 public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable {
-    /** Log message using message.getMessagePattern as the format and details as the format arguments.
-     * @param message enum to log.
+    /**
+     * Log message using message.getMessagePattern as the format and details as the format arguments.
+     * @param message enum to log
      * @param details format string arguments to message.getMessagePattern()
-     * */
+     */
     void log(T message, Object... details);
 
-    default void log(T message, DiagnosticContextSupplier localContext, Object... details) {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    /** Log message using message.getMessagePattern as the format and details as the format arguments, with
-     * the processed cause added.
-     * @param message enum to log.
+    /**
+     * Log message using message.getMessagePattern as the format and details as the format arguments.
+     * This method takes a local DiagnosticContextSupplier, which is often convenient during parallel stream processing.
+     * @param message enum to log
+     * @param localContextSupplier a supplier for a local diagnostic context
      * @param details format string arguments to message.getMessagePattern()
-     * @param cause stack trace to process and include in the log message.
-     *
-     * */
+     */
+    void log(T message, DiagnosticContextSupplier localContextSupplier, Object... details);
+
+    /**
+     * Log message using message.getMessagePattern as the format and details as the format arguments, with
+     * the processed cause added.
+     * @param message enum to log
+     * @param cause stack trace to process and include in the log message
+     * @param details format string arguments to message.getMessagePattern()
+     */
     void log(T message, Throwable cause, Object... details);
 
-    default void log(T message, DiagnosticContextSupplier localContext, Throwable cause, Object... details) {
-        throw new UnsupportedOperationException("not implemented");
-    }
+    /**
+     * Log message using message.getMessagePattern as the format and details as the format arguments, with
+     * the processed cause added.
+     * @param message enum to log
+     * @param localContextSupplier a supplier for a local diagnostic context
+     * @param cause stack trace to process and include in the log message
+     * @param details format string arguments to message.getMessagePattern()
+     */
+    void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details);
 
     /**
      * Refreshes file handles for all log files, providing active rotation support.
