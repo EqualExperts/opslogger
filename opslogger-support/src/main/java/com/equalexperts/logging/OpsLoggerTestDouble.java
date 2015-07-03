@@ -23,6 +23,11 @@ import static org.mutabilitydetector.unittesting.MutabilityMatchers.areImmutable
 public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements OpsLogger<T> {
     @Override
     public void log(T message, Object... details) {
+        log(message, () -> null, details);
+    }
+
+    @Override
+    public void log(T message, DiagnosticContextSupplier localContextSupplier, Object... details) {
         validate(message);
         ensureImmutableDetails(details);
         checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
@@ -31,6 +36,11 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
+        log(message, null, cause, details);
+    }
+
+    @Override
+    public void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details) {
         validate(message);
         ensureImmutableDetails(details);
         assertNotNull("Throwable instance must be provided", cause);

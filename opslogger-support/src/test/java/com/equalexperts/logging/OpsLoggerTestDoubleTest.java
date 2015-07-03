@@ -3,6 +3,7 @@ package com.equalexperts.logging;
 import org.junit.Test;
 import org.mutabilitydetector.unittesting.MutabilityAssertionError;
 
+import java.util.Collections;
 import java.util.IllegalFormatException;
 import java.util.UUID;
 
@@ -11,6 +12,8 @@ import static org.junit.Assert.*;
 
 public class OpsLoggerTestDoubleTest {
     private final OpsLogger<TestMessages> logger = new OpsLoggerTestDouble<>();
+
+    //region tests for log(Message, Object...)
 
     @Test
     public void log_shouldAllowValidCalls() throws Exception {
@@ -117,6 +120,10 @@ public class OpsLoggerTestDoubleTest {
             assertThat(e.getMessage(), containsString("StringBuilder"));
         }
     }
+
+    //endregion
+
+    //region tests for log(Message, Throwable, Object...)
 
     @Test
     public void log_shouldAllowValidCalls_givenAThrowable() throws Exception {
@@ -230,6 +237,235 @@ public class OpsLoggerTestDoubleTest {
             assertThat(e.getMessage(), containsString("StringBuilder"));
         }
     }
+
+    //endregion
+
+    //region tests for log(Message, DiagnosticContextSupplier, Object...)
+
+    @Test
+    public void log_shouldAllowValidCalls_givenADiagnosticContextSupplier() throws Exception {
+        logger.log(TestMessages.Foo, Collections::emptyMap);
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArguments_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.BadFormatString, Collections::emptyMap, 42);
+            fail("expected an exception");
+        } catch (IllegalFormatException e) {
+            //this exception is expected
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_whenNotEnoughFormatStringArgumentsAreProvided_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.Bar, Collections::emptyMap);
+            fail("expected an exception");
+        } catch (IllegalFormatException e) {
+            //this exception is expected
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_whenTooManyFormatStringArgumentsAreProvided_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.Bar, Collections::emptyMap, "Foo", "Bar");
+            fail("expected an exception");
+        } catch (IllegalArgumentException e) {
+            //this exception is expected
+            assertEquals("Too many format string arguments provided", e.getMessage());
+        }
+    }
+
+    @Test
+    public void log_shouldCorrectlyAllowLogMessagesWithTwoOrMoreFormatStringArguments_givenADiagnosticContextSupplier() throws Exception {
+        logger.log(TestMessages.MessageWithMultipleArguments, Collections::emptyMap, "Foo", "Bar");
+    }
+
+    @Test
+    public void log_shouldAllowALogMessageWithAUUIDAsAnArgument_givenADiagnosticContextSupplier() throws Exception {
+        logger.log(TestMessages.Bar, Collections::emptyMap, UUID.randomUUID());
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenANullLogMessage_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(null, Collections::emptyMap);
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("LogMessage must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenANullMessageCode_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidNullCode, Collections::emptyMap);
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessageCode must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAnEmptyMessageCode_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidEmptyCode, Collections::emptyMap);
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessageCode must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenANullMessagePattern_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidNullFormat, Collections::emptyMap);
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAnEmptyMessagePattern_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidEmptyFormat, Collections::emptyMap);
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAMutableFormatStringArgument_givenADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.MessageWithMultipleArguments, Collections::emptyMap, "foo", new StringBuilder("bar"));
+            fail("expected an exception");
+        } catch (MutabilityAssertionError e) {
+            assertThat(e.getMessage(), containsString("StringBuilder"));
+        }
+    }
+
+    //endregion
+
+    //region tests for log(Message, Throwable, Object...)
+
+    @Test
+    public void log_shouldAllowValidCalls_givenAThrowableAndADiagnosticContextSupplier() throws Exception {
+        logger.log(TestMessages.Foo, Collections::emptyMap, new RuntimeException());
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArgumentsAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.BadFormatString, Collections::emptyMap, new RuntimeException(), 42);
+            fail("expected an exception");
+        } catch (IllegalFormatException e) {
+            //this exception is expected
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenNotEnoughFormatStringArgumentsAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+
+        try {
+            logger.log(TestMessages.Bar, Collections::emptyMap, new RuntimeException());
+            fail("expected an exception");
+        } catch (IllegalFormatException e) {
+            //this exception is expected
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenTooManyFormatStringArgumentsAndAThrowableAndADiagnosticContextSupplier() throws Exception {
+
+        try {
+            logger.log(TestMessages.Bar, Collections::emptyMap, new RuntimeException(), "Foo", "Bar");
+            fail("expected an exception");
+        } catch (IllegalArgumentException e) {
+            //this exception is expected
+            assertEquals("Too many format string arguments provided", e.getMessage());
+        }
+    }
+
+    @Test
+    public void log_shouldAllowCorrectLogMessages_givenTwoOrMoreFormatStringArgumentsAndThrowableAndADiagnosticContextSupplier() throws Exception {
+        logger.log(TestMessages.MessageWithMultipleArguments, Collections::emptyMap, new RuntimeException(), "Foo", "Bar");
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenANullLogMessageAndThrowableAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(null, Collections::emptyMap, new RuntimeException());
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("LogMessage must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenANullThrowableAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.Bar, Collections::emptyMap, null, "a");
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("Throwable instance must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAThrowableAndNullMessageCodeAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidNullCode, Collections::emptyMap, new RuntimeException());
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessageCode must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAThrowableAndAnEmptyMessageCodeAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidEmptyCode, Collections::emptyMap, new RuntimeException());
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessageCode must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAThrowableAndNullMessageFormatAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidNullFormat, Collections::emptyMap, new RuntimeException());
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAThrowableAndAnEmptyMessageFormatAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.InvalidEmptyFormat, Collections::emptyMap, new RuntimeException());
+            fail("expected an exception");
+        } catch (AssertionError e) {
+            assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
+        }
+    }
+
+    @Test
+    public void log_shouldThrowAnException_givenAThrowableAndAMutableFormatStringArgumentAndADiagnosticContextSupplier() throws Exception {
+        try {
+            logger.log(TestMessages.MessageWithMultipleArguments, Collections::emptyMap, new RuntimeException(), "foo", new StringBuilder("bar"));
+            fail("expected an exception");
+        } catch (MutabilityAssertionError e) {
+            assertThat(e.getMessage(), containsString("StringBuilder"));
+        }
+    }
+
+    //endregion
 
     @Test
     public void close_shouldThrowAnException() throws Exception {
