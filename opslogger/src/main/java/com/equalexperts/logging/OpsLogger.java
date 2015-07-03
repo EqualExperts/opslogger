@@ -2,7 +2,13 @@ package com.equalexperts.logging;
 
 import com.equalexperts.logging.impl.ActiveRotationRegistry;
 
-/** OpsLogger is the interface loggers show to the application */
+/**
+ * <p>OpsLogger is the interface used to log messages by the application. Instances are usually constructed as singletons
+ * and injected into application classes via the application's usual dependency injection mechanism.</p>
+ *
+ * <p>All instances produced by {@link OpsLoggerFactory#build()} are thread-safe, and can be safely
+ * accessed by multiple threads.</p>
+ */
 public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable {
     /** Log message using message.getMessagePattern as the format and details as the format arguments.
      * @param message enum to log.

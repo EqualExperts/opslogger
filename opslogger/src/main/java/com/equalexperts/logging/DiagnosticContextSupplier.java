@@ -6,9 +6,9 @@ import java.util.Map;
  * <p>Provides contextual information for log messages.</p>
  *
  * <p>This is a set of name value pairs that should be
- * added to <i>every</i> log message when available.</p>
- *
- * <p>Two common examples of contextual information are the current username and the current request id.</p>
+ * added to <i>every</i> log message when available.
+ * Two common examples of contextual information are the current username
+ * and the current request id.</p>
  *
  * <p>Contextual name-value pairs are only added to log messages when the value is not null or empty.</p>
  * <p>For example, in the case of username, a username=XXX name value pair would not be added to log messages
@@ -19,8 +19,7 @@ public interface DiagnosticContextSupplier {
     /**
      * <p> Provide contextual information about the current log message.</p>
      *
-     * <p>This method should generally return a different map each time it is called. * <p>A common implementation strategy is to access thread-local information about the current request to build an
-     * appropriate map of name-value pairs for each individual request.</p>
+     * <p>This method should generally return a different map each time it is called.
      *
      * <p>A common implementation strategy is to access thread-local information about the current request to build an
      * appropriate map of name-value pairs for each individual request.</p>

@@ -12,6 +12,14 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * <p>Constructs <code>OpsLogger</code> instances.</p>
+ *
+ * <p>Instances of this class are not thread-safe, and should not be accessed by multiple
+ * threads.</p>
+ *
+ * @see OpsLogger
+ */
 public class OpsLoggerFactory {
 
     private Optional<PrintStream> loggerOutput = Optional.empty();
@@ -103,13 +111,13 @@ public class OpsLoggerFactory {
     }
 
     /**
-     * <p>Deprecated. Please use <code>setDiagnosticContextSupplier</code> instead.</p>
      * <p>This method will be removed in a future release.</p>
      *
      * @param supplier the map supplier.  (for example: <code>()-&gt;map</code>)
-     * @deprecated replaced by <code>OpsLoggerFactory.setDiagnosticContextSupplier(DiagnosticContextSupplier)</code>.
+     * @deprecated Replaced by {@link #setDiagnosticContextSupplier(DiagnosticContextSupplier)}.
      * @return <code>this</code> for further configuration
      */
+    @Deprecated
     public OpsLoggerFactory setCorrelationIdSupplier(Supplier<Map<String,String>> supplier) {
         return setDiagnosticContextSupplier(supplier != null ? supplier::get : null);
     }
@@ -159,7 +167,11 @@ public class OpsLoggerFactory {
     }
 
     /**
-     * Build and return the OpsLogger corresponding to the configuration provided.
+     * Build and return the <code>OpsLogger</code> corresponding to the configuration provided.
+     *
+     * Calling <code>build</code> multiple times on a single instance of this class without
+     * changing the configuration (by calling a <code>set</code> method) will return the
+     * same <code>OpsLogger</code> instance each time.
      *
      * @param <T> LogMessage enum of all possible logger objects.
      * @return ready to use OpsLogger
