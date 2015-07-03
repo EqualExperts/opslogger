@@ -16,7 +16,6 @@ import javax.inject.Inject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -509,15 +508,12 @@ public class OpsLoggerFactoryTest {
 
     @Module(injects = DaggerApp.class)
     class DaggerModule {
+        @SuppressWarnings("unused")
         @Provides
         OpsLogger<TestMessages> logger() {
-            try {
-                return new OpsLoggerFactory()
-                    .setPath(tempFiles.createTempFileThatDoesNotExist(".log"))
-                    .build();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            return new OpsLoggerFactory()
+                .setPath(tempFiles.createTempFileThatDoesNotExist(".log"))
+                .build();
         }
     }
 
