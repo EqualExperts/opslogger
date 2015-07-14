@@ -8,14 +8,14 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class ClassThatLogsTest {
-    private final OpsLogger<CollectorLogMessage> mockLogger = spy(new OpsLoggerTestDouble<>());
+    private final OpsLogger<CollectorLogMessages> mockLogger = spy(new OpsLoggerTestDouble<>());
     private final ClassThatLogs theClass = new ClassThatLogs(mockLogger);
 
     @Test
     public void foo_shouldLogASuccessMessage() throws Exception {
         theClass.foo();
 
-        verify(mockLogger).log(CollectorLogMessage.Success, 42);
+        verify(mockLogger).log(CollectorLogMessages.SUCCESS, 42);
         verifyNoMoreInteractions(mockLogger);
     }
 
@@ -25,7 +25,7 @@ public class ClassThatLogsTest {
             theClass.bar();
             fail("expected an exception");
         } catch (RuntimeException e) {
-            verify(mockLogger).log(CollectorLogMessage.UnknownError, e);
+            verify(mockLogger).log(CollectorLogMessages.UNKNOWN_ERROR, e);
         }
     }
 

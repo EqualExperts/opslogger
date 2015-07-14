@@ -6,13 +6,21 @@ import dagger.Module;
 import dagger.ObjectGraph;
 import dagger.Provides;
 
+import javax.inject.Singleton;
 import java.nio.file.Paths;
 
-public class DaggerMain {
+/** Example using Dagger 1.
+ *
+ * Intellij IDEA must have annotation processing explicitly enabled:
+ * https://www.jetbrains.com/idea/help/compiler-annotation-processors.html
+ *
+ */
+public class Dagger1Main {
     @Module(injects=ClassThatLogs.class)
     public static class SampleApplicationModule {
         @Provides
-        OpsLogger<CollectorLogMessage> logger() {
+        @Singleton
+        OpsLogger<CollectorLogMessages> getLogger() {
             return new OpsLoggerFactory()
                     .setDestination(System.out)
                     .setStackTraceStoragePath(Paths.get("/tmp/stacktraces"))
@@ -20,7 +28,7 @@ public class DaggerMain {
         }
 
         @Provides
-        ClassThatLogs classThatLogs(OpsLogger<CollectorLogMessage> logger) {
+        ClassThatLogs classThatLogs(OpsLogger<CollectorLogMessages> logger) {
             return new ClassThatLogs(logger);
         }
     }
@@ -28,6 +36,7 @@ public class DaggerMain {
     public static void main(String... args) {
         ObjectGraph graph = ObjectGraph.create(new SampleApplicationModule());
         ClassThatLogs classThatLogs = graph.get(ClassThatLogs.class);
+
         classThatLogs.foo();
     }
 }

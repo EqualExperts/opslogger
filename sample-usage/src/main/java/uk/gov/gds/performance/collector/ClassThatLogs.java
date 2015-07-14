@@ -2,20 +2,23 @@ package uk.gov.gds.performance.collector;
 
 import com.equalexperts.logging.OpsLogger;
 
-public class ClassThatLogs {
-    private final OpsLogger<CollectorLogMessage> logger;
+import static uk.gov.gds.performance.collector.CollectorLogMessages.SUCCESS;
+import static uk.gov.gds.performance.collector.CollectorLogMessages.UNKNOWN_ERROR;
 
-    public ClassThatLogs(OpsLogger<CollectorLogMessage> logger) {
+public class ClassThatLogs {
+    private final OpsLogger<CollectorLogMessages> logger;
+
+    public ClassThatLogs(OpsLogger<CollectorLogMessages> logger) {
         this.logger = logger;
     }
 
     public void foo() {
-        logger.log(CollectorLogMessage.Success, 42);
+        logger.log(SUCCESS, 42);
     }
 
     public void bar() {
         RuntimeException e = new RuntimeException();
-        logger.log(CollectorLogMessage.UnknownError, e);
+        logger.log(UNKNOWN_ERROR, e);
         throw e;
     }
 

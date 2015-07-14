@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String... args) throws Exception {
-        OpsLogger<CollectorLogMessage> logger = new OpsLoggerFactory()
+        OpsLogger<CollectorLogMessages> logger = new OpsLoggerFactory()
                 .setDestination(System.out)
                 .setStackTraceStoragePath(Paths.get("/tmp/stacktraces"))
                 .build();
