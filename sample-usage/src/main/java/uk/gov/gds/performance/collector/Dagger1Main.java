@@ -9,7 +9,8 @@ import dagger.Provides;
 import javax.inject.Singleton;
 import java.nio.file.Paths;
 
-/** Example using Dagger 1.
+/**
+ * Example using Dagger 1.
  *
  * Intellij IDEA must have annotation processing explicitly enabled:
  * https://www.jetbrains.com/idea/help/compiler-annotation-processors.html
