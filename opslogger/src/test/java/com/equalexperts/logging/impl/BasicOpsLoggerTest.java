@@ -482,6 +482,22 @@ public class BasicOpsLoggerTest {
     //endregion
 
     @Test
+    public void with_shouldReturnANewBasicOpsLoggerWithAnOverriddenDiagnosticContextSupplier_givenADiagnosticContextSupplier() throws Exception {
+        DiagnosticContextSupplier localSupplier = Collections::emptyMap;
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+
+        BasicOpsLogger<TestMessages> result = basicLogger.with(localSupplier);
+
+        assertNotSame(basicLogger, result);
+        assertSame(basicLogger.getClock(), result.getClock());
+        assertSame(basicLogger.getErrorHandler(), result.getErrorHandler());
+        assertSame(basicLogger.getDestination(), result.getDestination());
+        assertSame(basicLogger.getLock(), result.getLock());
+        assertSame(localSupplier, result.getDiagnosticContextSupplier());
+        assertNotSame(basicLogger.getDiagnosticContextSupplier(), result.getDiagnosticContextSupplier());
+    }
+
+    @Test
     public void close_shouldCloseTheDestination() throws Exception {
         logger.close();
 

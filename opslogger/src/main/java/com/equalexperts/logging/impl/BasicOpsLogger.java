@@ -64,6 +64,10 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         }
     }
 
+    public BasicOpsLogger<T> with(DiagnosticContextSupplier localContextSupplier) {
+        return new BasicOpsLogger<>(clock, localContextSupplier, destination, lock, errorHandler);
+    }
+
     private LogicalLogRecord<T> constructLogRecord(T message, DiagnosticContextSupplier localContextSupplier, Optional<Throwable> o, Object... details) {
         return new LogicalLogRecord<>(clock.instant(), new DiagnosticContext(diagnosticContextSupplier, localContextSupplier), message, o, details);
     }
