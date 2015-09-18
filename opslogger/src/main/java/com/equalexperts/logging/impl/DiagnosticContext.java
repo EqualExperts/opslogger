@@ -14,18 +14,17 @@ public class DiagnosticContext {
 
     private final Map<String, String> mergedContext;
 
-    public DiagnosticContext(DiagnosticContextSupplier... contextSuppliers) {
-        if (contextSuppliers == null || contextSuppliers.length == 0) {
-            throw new IllegalArgumentException("Must provide at least one DiagnosticContextSupplier");
+    public DiagnosticContext(DiagnosticContextSupplier supplier) {
+        if (supplier == null) {
+            mergedContext = Collections.emptyMap();
+        } else {
+            Map<String, String> rawContext = supplier.getMessageContext();
+            if (rawContext == null) {
+                mergedContext = Collections.emptyMap();
+            } else {
+                mergedContext = Collections.unmodifiableMap(new LinkedHashMap<>(rawContext));
+            }
         }
-
-        Map<String,String> mergedContext = new LinkedHashMap<>();
-        Stream.of(contextSuppliers)
-                .filter(Objects::nonNull)
-                .map(DiagnosticContextSupplier::getMessageContext)
-                .filter(Objects::nonNull)
-                .forEachOrdered(mergedContext::putAll);
-        this.mergedContext = Collections.unmodifiableMap(mergedContext);
     }
 
     public Map<String, String> getMergedContext() {
