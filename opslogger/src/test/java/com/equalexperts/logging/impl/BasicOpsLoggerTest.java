@@ -54,7 +54,7 @@ public class BasicOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getMergedContext());
+        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getContext());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertFalse(record.getCause().isPresent());
@@ -149,7 +149,7 @@ public class BasicOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getMergedContext());
+        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getContext());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertSame(expectedException, record.getCause().get());

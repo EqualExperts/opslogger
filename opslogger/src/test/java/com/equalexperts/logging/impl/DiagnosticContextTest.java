@@ -1,6 +1,5 @@
 package com.equalexperts.logging.impl;
 
-import com.equalexperts.logging.DiagnosticContextSupplier;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -15,12 +14,12 @@ import static org.junit.Assert.*;
 public class DiagnosticContextTest {
     @Test
     public void constructor_shouldCreateAnEmptyContext_givenANullProvider() throws Exception {
-        assertEquals(emptyMap(), new DiagnosticContext(null).getMergedContext());
+        assertEquals(emptyMap(), new DiagnosticContext(null).getContext());
     }
 
     @Test
     public void constructor_shouldCreateAnEmptyContext_givenAProviderThatReturnsNull() throws Exception {
-        assertEquals(emptyMap(), new DiagnosticContext(() -> null).getMergedContext());
+        assertEquals(emptyMap(), new DiagnosticContext(() -> null).getContext());
     }
 
     @Test
@@ -30,7 +29,7 @@ public class DiagnosticContextTest {
         expectedContext.put("able", "a");
         expectedContext.put("charlie", "a");
 
-        Map<String, String> actualContext = new DiagnosticContext(() -> expectedContext).getMergedContext();
+        Map<String, String> actualContext = new DiagnosticContext(() -> expectedContext).getContext();
 
         assertNotSame(expectedContext, actualContext);
         assertEquals(expectedContext, actualContext);
@@ -59,7 +58,7 @@ public class DiagnosticContextTest {
         Map<String, String> expectedContext = new LinkedHashMap<>();
         expectedContext.put("foo", "bar");
 
-        Map<String, String> actualContext = new DiagnosticContext(() -> expectedContext).getMergedContext();
+        Map<String, String> actualContext = new DiagnosticContext(() -> expectedContext).getContext();
         ensureUnmodifiableMap(actualContext);
     }
 

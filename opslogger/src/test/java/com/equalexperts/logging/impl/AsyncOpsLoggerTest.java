@@ -75,7 +75,7 @@ public class AsyncOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue().get();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getMergedContext());
+        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getContext());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertFalse(record.getCause().isPresent());
@@ -128,7 +128,7 @@ public class AsyncOpsLoggerTest {
 
         LogicalLogRecord<TestMessages> record = captor.getValue().get();
         assertEquals(fixedClock.instant(), record.getTimestamp());
-        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getMergedContext());
+        assertEquals(expectedCorrelationIds, record.getDiagnosticContext().getContext());
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertTrue(record.getCause().isPresent());
