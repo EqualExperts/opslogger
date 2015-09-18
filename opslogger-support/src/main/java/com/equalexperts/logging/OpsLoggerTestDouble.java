@@ -47,24 +47,7 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
     }
 
     @Override
-    public void log(T message, DiagnosticContextSupplier localContextSupplier, Object... details) {
-        validate(message);
-        ensureImmutableDetails(details);
-        checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
-        validateFormatString(message.getMessagePattern(), details);
-    }
-
-    @Override
     public void log(T message, Throwable cause, Object... details) {
-        validate(message);
-        ensureImmutableDetails(details);
-        assertNotNull("Throwable instance must be provided", cause);
-        checkForTooManyFormatStringArguments(message.getMessagePattern(), details);
-        validateFormatString(message.getMessagePattern(), details);
-    }
-
-    @Override
-    public void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details) {
         validate(message);
         ensureImmutableDetails(details);
         assertNotNull("Throwable instance must be provided", cause);

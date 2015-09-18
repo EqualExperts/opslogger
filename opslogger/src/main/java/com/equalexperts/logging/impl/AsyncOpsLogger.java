@@ -23,8 +23,6 @@ import static java.util.stream.Collectors.toList;
 
 public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger<T> {
 
-    private static final DiagnosticContextSupplier NO_LOCAL_DIAGNOSTIC_CONTEXT_SUPPLIER = null;
-
     static final int MAX_BATCH_SIZE = 100;
     private final Future<?> processingThread;
     private final LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue;
@@ -56,14 +54,9 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
 
     @Override
     public void log(T message, Object... details) {
-        log(message, NO_LOCAL_DIAGNOSTIC_CONTEXT_SUPPLIER, details);
-    }
-
-    @Override
-    public void log(T message, DiagnosticContextSupplier localContextSupplier, Object... details) {
         try {
 
-            DiagnosticContext diagnosticContext = new DiagnosticContext(diagnosticContextSupplier, localContextSupplier);
+            DiagnosticContext diagnosticContext = new DiagnosticContext(diagnosticContextSupplier);
             LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContext, message, Optional.empty(), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
@@ -73,13 +66,8 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
 
     @Override
     public void log(T message, Throwable cause, Object... details) {
-        log(message, NO_LOCAL_DIAGNOSTIC_CONTEXT_SUPPLIER, cause, details);
-    }
-
-    @Override
-    public void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details) {
         try {
-            DiagnosticContext diagnosticContext = new DiagnosticContext(diagnosticContextSupplier, localContextSupplier);
+            DiagnosticContext diagnosticContext = new DiagnosticContext(diagnosticContextSupplier);
             LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContext, message, Optional.of(cause), details);
             transferQueue.put(Optional.of(record));
         } catch (Throwable t) {
