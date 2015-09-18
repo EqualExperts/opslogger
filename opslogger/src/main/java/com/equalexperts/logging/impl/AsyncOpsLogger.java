@@ -87,6 +87,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         }
     }
 
+    @Override
     public AsyncOpsLogger<T> with(DiagnosticContextSupplier override) {
         return new AsyncOpsLogger<>(clock, override, destination, errorHandler, transferQueue, processingThread, false);
     }

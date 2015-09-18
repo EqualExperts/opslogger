@@ -77,7 +77,7 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
         throw new IllegalStateException("OpsLogger instances should not be closed by application code.");
     }
 
-//    @Override //TODO: add @Override once support is in the interface
+    @Override
     public OpsLogger<T> with(DiagnosticContextSupplier contextSupplier) {
         return nestedLoggers.computeIfAbsent(contextSupplier.getMessageContext(), k -> createNestedLogger());
     }

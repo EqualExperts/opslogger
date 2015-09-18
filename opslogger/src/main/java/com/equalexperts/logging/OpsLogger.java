@@ -46,6 +46,18 @@ public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable
     void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details);
 
     /**
+     * Create a nested logger that uses a local DiagnosticContextSupplier, which is often
+     * convenient during parallel stream processing.
+     *
+     * Note: OpsLogger instances created by calling this method should not be closed,
+     * and will ignore calls to the close() method.
+     *
+     * @param override a supplier for a local diagnostic context
+     * @return a new OpsLogger instance which will use the provided DiagnosticContextSupplier instead of the global one
+     */
+    OpsLogger<T> with(DiagnosticContextSupplier override);
+
+    /**
      * Refreshes file handles for all log files, providing active rotation support.
      * This method should be called between rotating the original file, and manipulating (archiving, compressing, etc)
      * it. The <code>postRotate</code> block in logRotate is an excellent example of when to use this method.
