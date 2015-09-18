@@ -8,6 +8,8 @@ import org.mutabilitydetector.locations.Dotted;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.junit.Assert.assertNotNull;
@@ -21,6 +23,21 @@ import static org.mutabilitydetector.unittesting.MutabilityMatchers.areImmutable
  * log anything. Very useful for unit tests.
  */
 public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements OpsLogger<T> {
+    private final Function<OpsLogger<T>, OpsLogger<T>> nestedLoggerDecorator;
+    private final Map<Map<String, String>, OpsLogger<T>> nestedLoggers = new ConcurrentHashMap<>();
+
+    public OpsLoggerTestDouble() {
+        this(Function.identity());
+    }
+
+    OpsLoggerTestDouble(Function<OpsLogger<T>, OpsLogger<T>> nestedLoggerDecorator) {
+        this.nestedLoggerDecorator = nestedLoggerDecorator;
+    }
+
+    public static <T extends Enum<T> & LogMessage> OpsLogger<T> withSpyFunction(Function<OpsLogger<T>, OpsLogger<T>> spyFunction) {
+        return spyFunction.apply(new OpsLoggerTestDouble<>(spyFunction));
+    }
+
     @Override
     public void log(T message, Object... details) {
         validate(message);
@@ -58,6 +75,19 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
     @Override
     public void close() throws IOException {
         throw new IllegalStateException("OpsLogger instances should not be closed by application code.");
+    }
+
+//    @Override //TODO: add @Override once support is in the interface
+    public OpsLogger<T> with(DiagnosticContextSupplier contextSupplier) {
+        return nestedLoggers.computeIfAbsent(contextSupplier.getMessageContext(), k -> createNestedLogger());
+    }
+
+    Function<OpsLogger<T>, OpsLogger<T>> getNestedLoggerDecorator() {
+        return nestedLoggerDecorator;
+    }
+
+    private OpsLogger<T> createNestedLogger() {
+        return nestedLoggerDecorator.apply(new OpsLoggerTestDouble<>(nestedLoggerDecorator));
     }
 
     private void validateFormatString(String pattern, Object... details) {

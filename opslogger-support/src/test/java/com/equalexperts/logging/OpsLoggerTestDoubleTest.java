@@ -1,20 +1,33 @@
 package com.equalexperts.logging;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mutabilitydetector.unittesting.MutabilityAssertionError;
 
-import java.util.Collections;
-import java.util.IllegalFormatException;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 public class OpsLoggerTestDoubleTest {
     private final OpsLogger<TestMessages> logger = new OpsLoggerTestDouble<>();
+
+    @Captor
+    private ArgumentCaptor<OpsLoggerTestDouble<TestMessages>> captor;
+
+    @Mock
+    private Function<OpsLogger<TestMessages>, OpsLogger<TestMessages>> mockSpyFunction;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     //region tests for log(Message, Object...)
 
@@ -491,6 +504,77 @@ public class OpsLoggerTestDoubleTest {
         }
     }
 
+    //endregion
+
+    //region tests for withSpyFunction
+    @SuppressWarnings("unchecked")
+    @Test
+    public void withSpyFunction_shouldReturnAnOpsLoggerTestDoubleWrappedByTheSpyFunction() throws Exception {
+        OpsLogger<TestMessages> expectedResult = (OpsLogger<TestMessages>) mock(OpsLogger.class);
+        doReturn(expectedResult).when(mockSpyFunction).apply(any(OpsLoggerTestDouble.class));
+
+        OpsLogger<TestMessages> result = OpsLoggerTestDouble.withSpyFunction(mockSpyFunction);
+
+        //noinspection unchecked
+        verify(mockSpyFunction).apply(captor.capture());
+        verifyNoMoreInteractions(mockSpyFunction);
+        assertSame(expectedResult, result);
+        assertEquals(mockSpyFunction, captor.getValue().getNestedLoggerDecorator());
+    }
+    //endregion
+
+    //region tests for with
+    @SuppressWarnings("unchecked")
+    @Test
+    public void with_shouldReturnANestedOpsLoggerTestDoubleWrappedByTheSpyFunction() throws Exception {
+        OpsLogger<TestMessages> expectedResult = (OpsLogger<TestMessages>) mock(OpsLogger.class);
+        doReturn(expectedResult).when(mockSpyFunction).apply(any(OpsLoggerTestDouble.class));
+
+        OpsLoggerTestDouble<TestMessages> logger = new OpsLoggerTestDouble<>(mockSpyFunction);
+
+
+        OpsLogger<TestMessages> result = logger.with(Collections::emptyMap);
+
+        //noinspection unchecked
+        verify(mockSpyFunction).apply(captor.capture());
+        verifyNoMoreInteractions(mockSpyFunction);
+        assertSame(expectedResult, result);
+        assertEquals(mockSpyFunction, captor.getValue().getNestedLoggerDecorator());
+    }
+
+    @Test
+    public void with_shouldReturnTheSameNestedLogger_givenAnEquivalentContextSupplier() throws Exception {
+        OpsLoggerTestDouble<TestMessages> logger = new OpsLoggerTestDouble<>(Function.identity());
+
+        Map<String, String> context = new HashMap<>();
+        context.put("foo", "bar");
+
+        HashMap<String, String> equivalentContext = new HashMap<>(context); //a different context with the same contents
+
+        DiagnosticContextSupplier supplier = () -> context;
+        DiagnosticContextSupplier equivalentSupplier = () -> equivalentContext;
+
+        assertNotEquals("precondition: suppliers should not be equal", supplier, equivalentSupplier);
+
+        assertSame(logger.with(supplier), logger.with(equivalentSupplier));
+    }
+
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    @Test
+    public void with_shouldReturnADifferentNestedLogger_givenADifferentContextSupplier() throws Exception {
+        OpsLoggerTestDouble<TestMessages> logger = new OpsLoggerTestDouble<>(Function.identity());
+
+        Map<String, String> context = new HashMap<>();
+        context.put("foo", "bar");
+
+        HashMap<String, String> differentContext = new HashMap<>();
+        differentContext.put("foo", "baz");
+
+        DiagnosticContextSupplier supplier = () -> context;
+        DiagnosticContextSupplier differentSupplier = () -> differentContext;
+
+        assertNotSame(logger.with(supplier), logger.with(differentSupplier));
+    }
     //endregion
 
     @Test
