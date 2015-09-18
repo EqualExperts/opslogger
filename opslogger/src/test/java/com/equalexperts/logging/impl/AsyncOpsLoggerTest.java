@@ -342,6 +342,22 @@ public class AsyncOpsLoggerTest {
     //endregion
 
     @Test
+    public void with_shouldReturnANewAsyncOpsLoggerWithAnOverriddenDiagnosticContextSupplier_givenADiagnosticContextSupplier() throws Exception {
+        DiagnosticContextSupplier localSupplier = Collections::emptyMap;
+        AsyncOpsLogger<TestMessages> asyncLogger = (AsyncOpsLogger<TestMessages>) logger;
+
+        AsyncOpsLogger<TestMessages> result = asyncLogger.with(localSupplier);
+
+        assertNotSame(asyncLogger, result);
+        assertSame(asyncLogger.getClock(), result.getClock());
+        assertSame(asyncLogger.getErrorHandler(), result.getErrorHandler());
+        assertSame(asyncLogger.getDestination(), result.getDestination());
+        assertSame(asyncLogger.getTransferQueue(), result.getTransferQueue());
+        assertSame(localSupplier, result.getDiagnosticContextSupplier());
+        assertNotSame(asyncLogger.getDiagnosticContextSupplier(), result.getDiagnosticContextSupplier());
+    }
+
+    @Test
     public void close_shouldSendAStopSignalToTheProcessingThreadWaitForItToFinishAndCloseTheDestination() throws Exception {
         logger.close();
 
@@ -360,6 +376,17 @@ public class AsyncOpsLoggerTest {
         } catch (InterruptedException ignore) {}
 
         verify(destination).close();
+    }
+
+    @Test
+    public void close_shouldIgnoreCalls_givenANestedLoggerCreatedByWith() throws Exception {
+        AsyncOpsLogger<TestMessages> asyncLogger = (AsyncOpsLogger<TestMessages>) logger;
+
+        AsyncOpsLogger<TestMessages> nested = asyncLogger.with(Collections::emptyMap);
+
+        nested.close();
+
+        verifyZeroInteractions(destination, transferQueue, processingThread);
     }
 
     @Test

@@ -32,6 +32,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     private final DiagnosticContextSupplier diagnosticContextSupplier;
     private final Destination<T> destination;
     private final Consumer<Throwable> errorHandler;
+    private final boolean closeable;
 
     public AsyncOpsLogger(Clock clock, DiagnosticContextSupplier diagnosticContextSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, AsyncExecutor executor) {
         this.clock = clock;
@@ -40,6 +41,17 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         this.errorHandler = errorHandler;
         this.transferQueue = transferQueue;
         processingThread = executor.execute(this::process);
+        this.closeable = true;
+    }
+
+    private AsyncOpsLogger(Clock clock, DiagnosticContextSupplier diagnosticContextSupplier, Destination<T> destination, Consumer<Throwable> errorHandler, LinkedTransferQueue<Optional<LogicalLogRecord<T>>> transferQueue, Future<?> processingThread, boolean closeable) {
+        this.clock = clock;
+        this.diagnosticContextSupplier = diagnosticContextSupplier;
+        this.destination = destination;
+        this.errorHandler = errorHandler;
+        this.transferQueue = transferQueue;
+        this.processingThread = processingThread;
+        this.closeable = closeable;
     }
 
     @Override
@@ -75,13 +87,19 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
         }
     }
 
+    public AsyncOpsLogger<T> with(DiagnosticContextSupplier localContextSupplier) {
+        return new AsyncOpsLogger<>(clock, localContextSupplier, destination, errorHandler, transferQueue, processingThread, false);
+    }
+
     @Override
     public void close() throws Exception {
-        try {
-            transferQueue.put(Optional.empty()); //an empty optional is the shutdown signal
-            processingThread.get();
-        } finally {
-            destination.close();
+        if (closeable) {
+            try {
+                transferQueue.put(Optional.empty()); //an empty optional is the shutdown signal
+                processingThread.get();
+            } finally {
+                destination.close();
+            }
         }
     }
 
