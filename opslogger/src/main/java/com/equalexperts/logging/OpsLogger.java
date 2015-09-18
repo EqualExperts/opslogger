@@ -18,15 +18,6 @@ public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable
     void log(T message, Object... details);
 
     /**
-     * Log message using message.getMessagePattern as the format and details as the format arguments.
-     * This method takes a local DiagnosticContextSupplier, which is often convenient during parallel stream processing.
-     * @param message enum to log
-     * @param localContextSupplier a supplier for a local diagnostic context
-     * @param details format string arguments to message.getMessagePattern()
-     */
-    void log(T message, DiagnosticContextSupplier localContextSupplier, Object... details);
-
-    /**
      * Log message using message.getMessagePattern as the format and details as the format arguments, with
      * the processed cause added.
      * @param message enum to log
@@ -34,16 +25,6 @@ public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable
      * @param details format string arguments to message.getMessagePattern()
      */
     void log(T message, Throwable cause, Object... details);
-
-    /**
-     * Log message using message.getMessagePattern as the format and details as the format arguments, with
-     * the processed cause added.
-     * @param message enum to log
-     * @param localContextSupplier a supplier for a local diagnostic context
-     * @param cause stack trace to process and include in the log message
-     * @param details format string arguments to message.getMessagePattern()
-     */
-    void log(T message, DiagnosticContextSupplier localContextSupplier, Throwable cause, Object... details);
 
     /**
      * Create a nested logger that uses a local DiagnosticContextSupplier, which is often
