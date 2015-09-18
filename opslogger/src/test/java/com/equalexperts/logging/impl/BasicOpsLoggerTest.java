@@ -397,7 +397,7 @@ public class BasicOpsLoggerTest {
         assertEquals(TestMessages.Bar, record.getMessage());
         assertNotNull(record.getCause());
         assertSame(expectedException, record.getCause().get());
-        assertArrayEquals(new Object[] {64, "Hello, World"}, record.getDetails());
+        assertArrayEquals(new Object[]{64, "Hello, World"}, record.getDetails());
     }
 
     @Test
@@ -502,6 +502,16 @@ public class BasicOpsLoggerTest {
         logger.close();
 
         verify(destination).close();
+    }
+
+    @Test
+    public void close_shouldIgnoreCalls_givenANestedLoggerCreatedByWith() throws Exception {
+        BasicOpsLogger<TestMessages> basicLogger = (BasicOpsLogger<TestMessages>) logger;
+        BasicOpsLogger<TestMessages> nested = basicLogger.with(Collections::emptyMap);
+
+        nested.close();
+
+        verifyZeroInteractions(destination);
     }
 
     private Map<String, String> generateCorrelationIds() {
