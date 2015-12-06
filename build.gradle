@@ -8,7 +8,7 @@ task ci(type: GradleBuild) {
     tasks = ['clean', 'build', 'jacocoTestReport']
 }
 
-version = "0.3.0"
+version = "0.4.0"
 
 buildscript {
     repositories {
