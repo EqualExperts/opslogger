@@ -24,7 +24,7 @@ public class ClassThatLogs {
 
     public void bar() {
         RuntimeException e = new RuntimeException();
-        logger.log(UNKNOWN_ERROR, e);
+        logger.logThrowable(UNKNOWN_ERROR, e);
         throw e;
     }
 

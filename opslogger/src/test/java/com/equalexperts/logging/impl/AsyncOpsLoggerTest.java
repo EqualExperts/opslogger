@@ -122,7 +122,7 @@ public class AsyncOpsLoggerTest {
 
         doNothing().when(transferQueue).put(captor.capture());
 
-        logger.log(TestMessages.Bar, expectedCause, 64, "Hello, World");
+        logger.logThrowable(TestMessages.Bar, expectedCause, 64, "Hello, World");
 
         verify(transferQueue).put(captor.capture());
 
@@ -138,7 +138,7 @@ public class AsyncOpsLoggerTest {
 
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordAndAThrowable() throws Exception {
-        logger.log(null, new RuntimeException());
+        logger.logThrowable(null, new RuntimeException());
 
         verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
     }
@@ -148,7 +148,7 @@ public class AsyncOpsLoggerTest {
         Error expectedThrowable = new Error();
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
-        logger.log(TestMessages.Foo, new RuntimeException());
+        logger.logThrowable(TestMessages.Foo, new RuntimeException());
 
         verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
     }
@@ -158,7 +158,7 @@ public class AsyncOpsLoggerTest {
         RuntimeException expectedThrowable = new RuntimeException("blah");
         doThrow(expectedThrowable).when(transferQueue).put(any());
 
-        logger.log(TestMessages.Foo, new Exception());
+        logger.logThrowable(TestMessages.Foo, new Exception());
 
         verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
     }

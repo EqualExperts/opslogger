@@ -47,7 +47,7 @@ public class OpsLoggerTestDouble <T extends Enum<T> & LogMessage> implements Ops
     }
 
     @Override
-    public void log(T message, Throwable cause, Object... details) {
+    public void logThrowable(T message, Throwable cause, Object... details) {
         validate(message);
         ensureImmutableDetails(details);
         assertNotNull("Throwable instance must be provided", cause);

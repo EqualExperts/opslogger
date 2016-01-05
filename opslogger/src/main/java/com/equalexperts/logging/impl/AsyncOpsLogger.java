@@ -65,7 +65,7 @@ public class AsyncOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     }
 
     @Override
-    public void log(T message, Throwable cause, Object... details) {
+    public void logThrowable(T message, Throwable cause, Object... details) {
         try {
             DiagnosticContext diagnosticContext = new DiagnosticContext(diagnosticContextSupplier);
             LogicalLogRecord<T> record = new LogicalLogRecord<>(clock.instant(), diagnosticContext, message, Optional.of(cause), details);

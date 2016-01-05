@@ -26,7 +26,7 @@ public class ClassThatLogsTest {
             theClass.bar();
             fail("expected an exception");
         } catch (RuntimeException e) {
-            verify(mockLogger).log(CollectorLogMessages.UNKNOWN_ERROR, e);
+            verify(mockLogger).logThrowable(CollectorLogMessages.UNKNOWN_ERROR, e);
         }
     }
 

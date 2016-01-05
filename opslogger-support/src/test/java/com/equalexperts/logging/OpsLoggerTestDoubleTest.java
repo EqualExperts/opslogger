@@ -126,7 +126,7 @@ public class OpsLoggerTestDoubleTest {
             assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
         }
     }
-    
+
     @Test
     public void log_shouldThrowAnException_givenAMutableFormatStringArgument() throws Exception {
         try {
@@ -150,17 +150,17 @@ public class OpsLoggerTestDoubleTest {
 
     //endregion
 
-    //region tests for log(Message, Throwable, Object...)
+    //region tests for logThrowable(Message, Throwable, Object...)
 
     @Test
     public void log_shouldAllowValidCalls_givenAThrowable() throws Exception {
-        logger.log(TestMessages.Foo, new RuntimeException());
+        logger.logThrowable(TestMessages.Foo, new RuntimeException());
     }
 
     @Test
     public void log_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArgumentsAndAThrowable() throws Exception {
         try {
-            logger.log(TestMessages.BadFormatString, new RuntimeException(), 42);
+            logger.logThrowable(TestMessages.BadFormatString, new RuntimeException(), 42);
             fail("expected an exception");
         } catch (IllegalFormatException e) {
             //this exception is expected
@@ -171,7 +171,7 @@ public class OpsLoggerTestDoubleTest {
     public void log_shouldThrowAnException_givenNotEnoughFormatStringArgumentsAndAThrowable() throws Exception {
 
         try {
-            logger.log(TestMessages.Bar, new RuntimeException());
+            logger.logThrowable(TestMessages.Bar, new RuntimeException());
             fail("expected an exception");
         } catch (IllegalFormatException e) {
             //this exception is expected
@@ -182,7 +182,7 @@ public class OpsLoggerTestDoubleTest {
     public void log_shouldThrowAnException_givenTooManyFormatStringArgumentsAndAThrowable() throws Exception {
 
         try {
-            logger.log(TestMessages.Bar, new RuntimeException(), "Foo", "Bar");
+            logger.logThrowable(TestMessages.Bar, new RuntimeException(), "Foo", "Bar");
             fail("expected an exception");
         } catch (IllegalArgumentException e) {
             //this exception is expected
@@ -192,13 +192,13 @@ public class OpsLoggerTestDoubleTest {
 
     @Test
     public void log_shouldAllowCorrectLogMessages_givenTwoOrMoreFormatStringArgumentsAndThrowable() throws Exception {
-        logger.log(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "Foo", "Bar");
+        logger.logThrowable(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "Foo", "Bar");
     }
 
     @Test
     public void log_shouldThrowAnException_givenANullLogMessageAndThrowable() throws Exception {
         try {
-            logger.log(null, new RuntimeException());
+            logger.logThrowable(null, new RuntimeException());
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("LogMessage must be provided"));
@@ -208,7 +208,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenANullThrowable() throws Exception {
         try {
-            logger.log(TestMessages.Bar, null, "a");
+            logger.logThrowable(TestMessages.Bar, null, "a");
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("Throwable instance must be provided"));
@@ -218,7 +218,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenAThrowableAndNullMessageCode() throws Exception {
         try {
-            logger.log(TestMessages.InvalidNullCode, new RuntimeException());
+            logger.logThrowable(TestMessages.InvalidNullCode, new RuntimeException());
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("MessageCode must be provided"));
@@ -228,7 +228,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenAThrowableAndAnEmptyMessageCode() throws Exception {
         try {
-            logger.log(TestMessages.InvalidEmptyCode, new RuntimeException());
+            logger.logThrowable(TestMessages.InvalidEmptyCode, new RuntimeException());
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("MessageCode must be provided"));
@@ -238,7 +238,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenAThrowableAndNullMessageFormat() throws Exception {
         try {
-            logger.log(TestMessages.InvalidNullFormat, new RuntimeException());
+            logger.logThrowable(TestMessages.InvalidNullFormat, new RuntimeException());
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
@@ -248,7 +248,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenAThrowableAndAnEmptyMessageFormat() throws Exception {
         try {
-            logger.log(TestMessages.InvalidEmptyFormat, new RuntimeException());
+            logger.logThrowable(TestMessages.InvalidEmptyFormat, new RuntimeException());
             fail("expected an exception");
         } catch (AssertionError e) {
             assertThat(e.getMessage(), containsString("MessagePattern must be provided"));
@@ -258,7 +258,7 @@ public class OpsLoggerTestDoubleTest {
     @Test
     public void log_shouldThrowAnException_givenAThrowableAndAMutableFormatStringArgument() throws Exception {
         try {
-            logger.log(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "foo", new StringBuilder("bar"));
+            logger.logThrowable(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "foo", new StringBuilder("bar"));
             fail("expected an exception");
         } catch (MutabilityAssertionError e) {
             assertThat(e.getMessage(), containsString("StringBuilder"));
@@ -271,9 +271,9 @@ public class OpsLoggerTestDoubleTest {
         OpsLogger<TestMessages> logger = spy(this.logger);
         RuntimeException ex = new RuntimeException();
 
-        logger.log(TestMessages.Foo, ex);
+        logger.logThrowable(TestMessages.Foo, ex);
 
-        verify(logger).log(TestMessages.Foo, ex);
+        verify(logger).logThrowable(TestMessages.Foo, ex);
         verifyNoMoreInteractions(logger);
     }
 

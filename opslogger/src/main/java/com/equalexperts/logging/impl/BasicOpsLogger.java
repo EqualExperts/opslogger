@@ -51,7 +51,7 @@ public class BasicOpsLogger<T extends Enum<T> & LogMessage> implements OpsLogger
     }
 
     @Override
-    public void log(T message, Throwable cause, Object... details) {
+    public void logThrowable(T message, Throwable cause, Object... details) {
         try {
             LogicalLogRecord<T> record = constructLogRecord(message, Optional.of(cause), details);
             publish(record);

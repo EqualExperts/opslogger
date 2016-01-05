@@ -24,7 +24,7 @@ public interface OpsLogger<T extends Enum<T> & LogMessage> extends AutoCloseable
      * @param cause stack trace to process and include in the log message
      * @param details format string arguments to message.getMessagePattern()
      */
-    void log(T message, Throwable cause, Object... details);
+    void logThrowable(T message, Throwable cause, Object... details);
 
     /**
      * Create a nested logger that uses a local DiagnosticContextSupplier, which is often

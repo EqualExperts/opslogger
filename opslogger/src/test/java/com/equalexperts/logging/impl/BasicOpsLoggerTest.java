@@ -141,7 +141,7 @@ public class BasicOpsLoggerTest {
         doNothing().when(destination).publish(captor.capture());
         RuntimeException expectedException = new RuntimeException("expected");
 
-        logger.log(TestMessages.Bar, expectedException, 64, "Hello, World");
+        logger.logThrowable(TestMessages.Bar, expectedException, 64, "Hello, World");
 
         verify(destination, times(1)).publish(any());
         verify(diagnosticContextSupplier).getMessageContext();
@@ -158,7 +158,7 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldObtainAndReleaseALockAndBeginAndEndADestinationBatch_givenALogMessageInstanceAndAThrowable() throws Exception {
-        logger.log(TestMessages.Foo, new RuntimeException());
+        logger.logThrowable(TestMessages.Foo, new RuntimeException());
 
         InOrder inOrder = inOrder(lock, destination);
         inOrder.verify(lock).lock();
@@ -170,14 +170,14 @@ public class BasicOpsLoggerTest {
 
     @Test
     public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
-        logger.log(TestMessages.Foo, (Throwable) null);
+        logger.logThrowable(TestMessages.Foo, null);
 
         verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
     }
 
     @Test
     public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
-        logger.log(null, new Throwable());
+        logger.logThrowable(null, new Throwable());
 
         verifyZeroInteractions(lock, destination);
     }
@@ -187,7 +187,7 @@ public class BasicOpsLoggerTest {
         Exception expectedException = new IOException("Couldn't write to the output stream");
         doThrow(expectedException).when(destination).publish(any());
 
-        logger.log(TestMessages.Foo, new NullPointerException());
+        logger.logThrowable(TestMessages.Foo, new NullPointerException());
 
         verify(exceptionConsumer).accept(Mockito.same(expectedException));
     }
@@ -196,7 +196,7 @@ public class BasicOpsLoggerTest {
     public void log_shouldEndTheBatchAndReleaseTheLock_givenAProblemPublishingTheLogRecordWithAThrowable() throws Exception {
         doThrow(new RuntimeException()).when(destination).publish(any());
 
-        logger.log(TestMessages.Foo, new Error());
+        logger.logThrowable(TestMessages.Foo, new Error());
 
         InOrder inOrder = inOrder(lock, destination);
         inOrder.verify(lock).lock();
@@ -211,7 +211,7 @@ public class BasicOpsLoggerTest {
         Error expectedThrowable = new Error();
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
-        logger.log(TestMessages.Foo, new RuntimeException());
+        logger.logThrowable(TestMessages.Foo, new RuntimeException());
 
         verify(exceptionConsumer).accept(Mockito.same(expectedThrowable));
     }
@@ -220,7 +220,7 @@ public class BasicOpsLoggerTest {
     public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(new RuntimeException());
 
-        logger.log(TestMessages.Foo, new Exception());
+        logger.logThrowable(TestMessages.Foo, new Exception());
 
         verifyZeroInteractions(lock, destination);
     }
