@@ -38,7 +38,7 @@ public class BasicOpsLoggerTest {
         logger = new BasicOpsLogger<>(fixedClock, diagnosticContextSupplier, destination, lock, exceptionConsumer);
     }
 
-    //region tests for log(Message, Object...)
+    //region tests for log
 
     @Test
     public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstance() throws Exception {
@@ -132,10 +132,10 @@ public class BasicOpsLoggerTest {
 
     //endregion
 
-    //region tests for log(Message, Throwable, Object...)
+    //region tests for logThrowable
 
     @Test
-    public void log_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
+    public void logThrowable_shouldWriteALogicalLogRecordToTheDestination_givenALogMessageInstanceAndAThrowable() throws Exception {
         Map<String, String> expectedCorrelationIds = generateCorrelationIds();
         when(diagnosticContextSupplier.getMessageContext()).thenReturn(expectedCorrelationIds);
         doNothing().when(destination).publish(captor.capture());
@@ -157,7 +157,7 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldObtainAndReleaseALockAndBeginAndEndADestinationBatch_givenALogMessageInstanceAndAThrowable() throws Exception {
+    public void logThrowable_shouldObtainAndReleaseALockAndBeginAndEndADestinationBatch_givenALogMessageInstanceAndAThrowable() throws Exception {
         logger.logThrowable(TestMessages.Foo, new RuntimeException());
 
         InOrder inOrder = inOrder(lock, destination);
@@ -169,21 +169,21 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
+    public void logThrowable_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
         logger.logThrowable(TestMessages.Foo, null);
 
         verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
     }
 
     @Test
-    public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
+    public void logThrowable_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemCreatingTheLogRecordWithAThrowable() throws Exception {
         logger.logThrowable(null, new Throwable());
 
         verifyZeroInteractions(lock, destination);
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecordWithAThrowable() throws Exception {
+    public void logThrowable_shouldExposeAnExceptionToTheHandler_givenAProblemPublishingALogRecordWithAThrowable() throws Exception {
         Exception expectedException = new IOException("Couldn't write to the output stream");
         doThrow(expectedException).when(destination).publish(any());
 
@@ -193,7 +193,7 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldEndTheBatchAndReleaseTheLock_givenAProblemPublishingTheLogRecordWithAThrowable() throws Exception {
+    public void logThrowable_shouldEndTheBatchAndReleaseTheLock_givenAProblemPublishingTheLogRecordWithAThrowable() throws Exception {
         doThrow(new RuntimeException()).when(destination).publish(any());
 
         logger.logThrowable(TestMessages.Foo, new Error());
@@ -207,7 +207,7 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
+    public void logThrowable_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
         Error expectedThrowable = new Error();
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
@@ -217,7 +217,7 @@ public class BasicOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
+    public void logThrowable_shouldNotObtainALockOrInteractWithTheDestination_givenAProblemObtainingCorrelationIdsWithAThrowable() throws Exception {
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(new RuntimeException());
 
         logger.logThrowable(TestMessages.Foo, new Exception());

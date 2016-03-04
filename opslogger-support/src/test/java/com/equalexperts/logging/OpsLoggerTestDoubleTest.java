@@ -29,7 +29,7 @@ public class OpsLoggerTestDoubleTest {
         MockitoAnnotations.initMocks(this);
     }
 
-    //region tests for log(Message, Object...)
+    //region tests for log
 
     @Test
     public void log_shouldAllowValidCalls() throws Exception {
@@ -150,15 +150,15 @@ public class OpsLoggerTestDoubleTest {
 
     //endregion
 
-    //region tests for logThrowable(Message, Throwable, Object...)
+    //region tests for logThrowable
 
     @Test
-    public void log_shouldAllowValidCalls_givenAThrowable() throws Exception {
+    public void logThrowable_shouldAllowValidCalls_givenAThrowable() throws Exception {
         logger.logThrowable(TestMessages.Foo, new RuntimeException());
     }
 
     @Test
-    public void log_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArgumentsAndAThrowable() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenAnInvalidFormatStringWithTheRightArgumentsAndAThrowable() throws Exception {
         try {
             logger.logThrowable(TestMessages.BadFormatString, new RuntimeException(), 42);
             fail("expected an exception");
@@ -168,7 +168,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenNotEnoughFormatStringArgumentsAndAThrowable() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenNotEnoughFormatStringArgumentsAndAThrowable() throws Exception {
 
         try {
             logger.logThrowable(TestMessages.Bar, new RuntimeException());
@@ -179,7 +179,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenTooManyFormatStringArgumentsAndAThrowable() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenTooManyFormatStringArgumentsAndAThrowable() throws Exception {
 
         try {
             logger.logThrowable(TestMessages.Bar, new RuntimeException(), "Foo", "Bar");
@@ -191,12 +191,12 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldAllowCorrectLogMessages_givenTwoOrMoreFormatStringArgumentsAndThrowable() throws Exception {
+    public void logThrowable_shouldAllowCorrectLogMessages_givenTwoOrMoreFormatStringArgumentsAndThrowable() throws Exception {
         logger.logThrowable(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "Foo", "Bar");
     }
 
     @Test
-    public void log_shouldThrowAnException_givenANullLogMessageAndThrowable() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenANullLogMessageAndThrowable() throws Exception {
         try {
             logger.logThrowable(null, new RuntimeException());
             fail("expected an exception");
@@ -206,7 +206,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenANullThrowable() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenANullThrowable() throws Exception {
         try {
             logger.logThrowable(TestMessages.Bar, null, "a");
             fail("expected an exception");
@@ -216,7 +216,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenAThrowableAndNullMessageCode() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenAThrowableAndNullMessageCode() throws Exception {
         try {
             logger.logThrowable(TestMessages.InvalidNullCode, new RuntimeException());
             fail("expected an exception");
@@ -226,7 +226,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenAThrowableAndAnEmptyMessageCode() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenAThrowableAndAnEmptyMessageCode() throws Exception {
         try {
             logger.logThrowable(TestMessages.InvalidEmptyCode, new RuntimeException());
             fail("expected an exception");
@@ -236,7 +236,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenAThrowableAndNullMessageFormat() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenAThrowableAndNullMessageFormat() throws Exception {
         try {
             logger.logThrowable(TestMessages.InvalidNullFormat, new RuntimeException());
             fail("expected an exception");
@@ -246,7 +246,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenAThrowableAndAnEmptyMessageFormat() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenAThrowableAndAnEmptyMessageFormat() throws Exception {
         try {
             logger.logThrowable(TestMessages.InvalidEmptyFormat, new RuntimeException());
             fail("expected an exception");
@@ -256,7 +256,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldThrowAnException_givenAThrowableAndAMutableFormatStringArgument() throws Exception {
+    public void logThrowable_shouldThrowAnException_givenAThrowableAndAMutableFormatStringArgument() throws Exception {
         try {
             logger.logThrowable(TestMessages.MessageWithMultipleArguments, new RuntimeException(), "foo", new StringBuilder("bar"));
             fail("expected an exception");
@@ -266,7 +266,7 @@ public class OpsLoggerTestDoubleTest {
     }
 
     @Test
-    public void log_shouldNotCallAnOverloadedMethod_givenAThrowable() throws Exception {
+    public void logThrowable_shouldNotCallAnOverloadedMethod_givenAThrowable() throws Exception {
         //calling another method inside this log method can cause trouble with spying frameworks
         OpsLogger<TestMessages> logger = spy(this.logger);
         RuntimeException ex = new RuntimeException();

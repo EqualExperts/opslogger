@@ -61,7 +61,7 @@ public class AsyncOpsLoggerTest {
         verify(executor).execute(any());
     }
 
-    //region tests for log(Message, Object...)
+    //region tests for log
 
     @Test
     public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstance() throws Exception {
@@ -111,10 +111,10 @@ public class AsyncOpsLoggerTest {
 
     //endregion
 
-    //region tests for log(Message, Throwable, Object...)
+    //region tests for logThrowable
 
     @Test
-    public void log_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowable() throws Exception {
+    public void logThrowable_shouldAddALogicalLogRecordToTheQueue_givenALogMessageInstanceAndAThrowable() throws Exception {
         Map<String, String> expectedCorrelationIds = generateCorrelationIds();
         when(diagnosticContextSupplier.getMessageContext()).thenReturn(expectedCorrelationIds);
 
@@ -137,14 +137,14 @@ public class AsyncOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordAndAThrowable() throws Exception {
+    public void logThrowable_shouldExposeAnExceptionToTheHandler_givenAProblemCreatingTheLogRecordAndAThrowable() throws Exception {
         logger.logThrowable(null, new RuntimeException());
 
         verify(exceptionConsumer).accept(Mockito.isA(NullPointerException.class));
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsAndAThrowable() throws Exception {
+    public void logThrowable_shouldExposeAnExceptionToTheHandler_givenAProblemObtainingCorrelationIdsAndAThrowable() throws Exception {
         Error expectedThrowable = new Error();
         when(diagnosticContextSupplier.getMessageContext()).thenThrow(expectedThrowable);
 
@@ -154,7 +154,7 @@ public class AsyncOpsLoggerTest {
     }
 
     @Test
-    public void log_shouldExposeAnExceptionToTheHandler_givenAProblemAddingAMessageToTheQueueAndAThrowable() throws Exception {
+    public void logThrowable_shouldExposeAnExceptionToTheHandler_givenAProblemAddingAMessageToTheQueueAndAThrowable() throws Exception {
         RuntimeException expectedThrowable = new RuntimeException("blah");
         doThrow(expectedThrowable).when(transferQueue).put(any());
 
