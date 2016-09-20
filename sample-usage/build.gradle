@@ -39,7 +39,8 @@ task generateLoggingDocumentation {
     }
 
     dependsOn(compileJava, compileTestJava)
-    inputs.source sourceSets.main.allSource, sourceSets.test.runtimeClasspath
+    inputs.files sourceSets.main.allSource
+    inputs.files sourceSets.test.runtimeClasspath
     outputs.file outputFile
 }
 assemble.dependsOn(generateLoggingDocumentation)
